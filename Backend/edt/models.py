@@ -1,0 +1,132 @@
+from django.db import models
+
+class Etablissement(models.Model):
+    numEtablissement=models.AutoField(primary_key=True)
+    nom=models.CharField(max_length=50)
+    adresse=models.CharField(max_length=50, null=True)
+    email=models.EmailField(max_length=50)
+    slogant=models.CharField(max_length=255, null=True)
+    logo=models.CharField(max_length=100, null=True)
+    contact=models.CharField(max_length=17)
+
+    class Meta:
+        db_table='etablissement'
+    def __str__(self):
+        return self.nom
+
+
+class Professeur(models.Model):
+    numProfesseur=models.AutoField(primary_key=True)
+    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE)
+    nomProfesseur=models.CharField(max_length=50)
+    grade=models.CharField(max_length=50, null=True)
+    sexe=models.CharField(max_length=1)
+    adresse=models.CharField(max_length=50, null=True)
+    contact=models.CharField(max_length=17, null=True)
+    description=models.CharField(max_length=255, null=True)
+
+    class Meta:
+        db_table='professeur'
+    def __str__(self):
+        return self.nomProfesseur
+    
+
+class Mention(models.Model):
+    numMention=models.AutoField(primary_key=True)
+    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE)
+    nomMention=models.CharField(max_length=50)
+
+    class Meta:
+        db_table='mention'
+    def __str__(self):
+        return self.nomMention
+    
+
+class Parcours(models.Model):
+    numParcours=models.AutoField(primary_key=True)
+    numMention=models.ForeignKey(Mention, on_delete=models.CASCADE)
+    nomParcours=models.CharField(max_length=50)
+
+    class Meta:
+        db_table='parcours'
+    def __str__(self):
+        return self.nomParcours
+    
+
+class Matiere(models.Model):
+    numMatiere=models.AutoField(primary_key=True)
+    nomMatiere=models.CharField(max_length=50)
+
+    class Meta:
+        db_table='matiere'
+    def __str__(self):
+        return self.nomMatiere
+
+class Classe(models.Model):
+    numClasse=models.AutoField(primary_key=True)
+    niveau=models.CharField(max_length=5)
+    groupe=models.CharField(max_length=10, null=True)
+
+    class Meta:
+        db_table='classe'
+    def __str__(self):
+        return self.niveau
+      
+
+class Salle(models.Model):
+    numSalle=models.AutoField(primary_key=True)
+    nomSalle=models.CharField(max_length=30)
+
+    class Meta:
+        db_table='salle'
+    def __str__(self):
+        return self.nomSalle
+    
+
+class Edt(models.Model):
+    numEdt=models.AutoField(primary_key=True)
+    numMatiere=models.ForeignKey(Matiere, on_delete=models.CASCADE)
+    numParcours=models.ForeignKey(Parcours, on_delete=models.SET_NULL, null=True)
+    numSalle=models.ForeignKey(Salle, on_delete=models.SET_NULL, null=True)
+    numClasse=models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True)
+    date=models.DateField()
+    heureDebut=models.TimeField()
+    heureFin=models.TimeField()
+
+    class Meta:
+        db_table='edt'
+    def __str__(self):
+        return f"{self.heureDebut} à {self.heureFin}"
+    
+
+class Constituer(models.Model):
+    numConstituer=models.AutoField(primary_key=True)
+    numParcours=models.ForeignKey(Parcours, on_delete=models.CASCADE)
+    numClasse=models.ForeignKey(Classe, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table='constituer'
+    def __str__(self):
+        return f"{self.numConstituer} dans une classe {self.numClasse}"
+
+
+class Avoir(models.Model):
+    numAvoir=models.AutoField(primary_key=True)
+    numEdt=models.ForeignKey(Edt, on_delete=models.CASCADE)
+    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table='avoir'
+    def __str__(self):
+        return f"{self.numAvoir} pour {self.numEdt}"
+    
+
+class Enseigner(models.Model):
+    numEnseigner=models.AutoField(primary_key=True)
+    numProfesseur=models.ForeignKey(Professeur, on_delete=models.CASCADE)
+    numMatiere=models.ForeignKey(Matiere, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table='enseigner'
+    def __str__(self):
+        return f"{self.numEnseigner} par {self.numProfesseur}"
