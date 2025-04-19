@@ -2,7 +2,7 @@ from django.db import models
 
 class Etablissement(models.Model):
     numEtablissement=models.AutoField(primary_key=True)
-    nom=models.CharField(max_length=50)
+    nomEtablissement=models.CharField(max_length=50)
     adresse=models.CharField(max_length=50, null=True)
     email=models.EmailField(max_length=50)
     slogant=models.CharField(max_length=255, null=True)
@@ -17,8 +17,9 @@ class Etablissement(models.Model):
 
 class Professeur(models.Model):
     numProfesseur=models.AutoField(primary_key=True)
-    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE)
+    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE, db_column='numEtablissement')
     nomProfesseur=models.CharField(max_length=50)
+    prenomProfesseur=models.CharField(max_length=50, null=True)
     grade=models.CharField(max_length=50, null=True)
     sexe=models.CharField(max_length=1)
     adresse=models.CharField(max_length=50, null=True)
@@ -33,7 +34,7 @@ class Professeur(models.Model):
 
 class Mention(models.Model):
     numMention=models.AutoField(primary_key=True)
-    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE)
+    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE, db_column='numEtablissement')
     nomMention=models.CharField(max_length=50)
 
     class Meta:
@@ -44,7 +45,7 @@ class Mention(models.Model):
 
 class Parcours(models.Model):
     numParcours=models.AutoField(primary_key=True)
-    numMention=models.ForeignKey(Mention, on_delete=models.CASCADE)
+    numMention=models.ForeignKey(Mention, on_delete=models.CASCADE, db_column='numMention')
     nomParcours=models.CharField(max_length=50)
 
     class Meta:
@@ -85,10 +86,10 @@ class Salle(models.Model):
 
 class Edt(models.Model):
     numEdt=models.AutoField(primary_key=True)
-    numMatiere=models.ForeignKey(Matiere, on_delete=models.CASCADE)
-    numParcours=models.ForeignKey(Parcours, on_delete=models.SET_NULL, null=True)
-    numSalle=models.ForeignKey(Salle, on_delete=models.SET_NULL, null=True)
-    numClasse=models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True)
+    numMatiere=models.ForeignKey(Matiere, on_delete=models.CASCADE, db_column='numMatiere')
+    numParcours=models.ForeignKey(Parcours, on_delete=models.SET_NULL, null=True, db_column='numParcours')
+    numSalle=models.ForeignKey(Salle, on_delete=models.SET_NULL, null=True, db_column='numSalle')
+    numClasse=models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True, db_column='numClasse')
     date=models.DateField()
     heureDebut=models.TimeField()
     heureFin=models.TimeField()
