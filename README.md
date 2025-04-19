@@ -77,3 +77,19 @@ pip install pymysql
 ```bash
 python manage.py makemigrations
 python manage.py migrate
+
+
+### 2. Envoye d'une email
+
+Configurer le 'settings.py'
+
+```python
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'tonemail@gmail.com'  # Ton adresse Gmail
+EMAIL_HOST_PASSWORD = 'motdepasse_app'  # Le mot de passe d'application 
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
