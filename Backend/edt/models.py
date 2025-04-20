@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class Etablissement(models.Model):
@@ -102,8 +103,8 @@ class Edt(models.Model):
 
 class Constituer(models.Model):
     numConstituer=models.AutoField(primary_key=True)
-    numParcours=models.ForeignKey(Parcours, on_delete=models.CASCADE)
-    numClasse=models.ForeignKey(Classe, on_delete=models.CASCADE)
+    numParcours=models.ForeignKey(Parcours, on_delete=models.CASCADE, db_column='numParcours')
+    numClasse=models.ForeignKey(Classe, on_delete=models.CASCADE, db_column='numClasse')
 
     class Meta:
         db_table='constituer'
@@ -113,8 +114,8 @@ class Constituer(models.Model):
 
 class Avoir(models.Model):
     numAvoir=models.AutoField(primary_key=True)
-    numEdt=models.ForeignKey(Edt, on_delete=models.CASCADE)
-    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE)
+    numEdt=models.ForeignKey(Edt, on_delete=models.CASCADE, db_column='numEdt')
+    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE, db_column='numEtablissement')
 
     class Meta:
         db_table='avoir'
@@ -124,10 +125,37 @@ class Avoir(models.Model):
 
 class Enseigner(models.Model):
     numEnseigner=models.AutoField(primary_key=True)
-    numProfesseur=models.ForeignKey(Professeur, on_delete=models.CASCADE)
-    numMatiere=models.ForeignKey(Matiere, on_delete=models.CASCADE)
+    numProfesseur=models.ForeignKey(Professeur, on_delete=models.CASCADE, db_column='numProfesseur')
+    numMatiere=models.ForeignKey(Matiere, on_delete=models.CASCADE, db_column='numMatiere')
 
     class Meta:
         db_table='enseigner'
     def __str__(self):
         return f"{self.numEnseigner} par {self.numProfesseur}"
+    
+
+class Utilisateur(AbstractUser):
+    contact=models.CharField(max_length=17)
+    datenaiss=models.DateField()
+    description=models.TextField(null=True)
+    image=models.CharField(max_length=255, null=True)
+
+    class Meta:
+        db_table='utilisateur'
+    def __str__(self):
+        return self.username
+
+
+class Action(models.Model):
+    numAction=models.AutoField(primary_key=True)
+    user_id=models.ForeignKey(Utilisateur, null=True, on_delete=models.SET_NULL, db_column='user_id')
+    type=models.CharField(max_length=20)
+    text=models.CharField(max_length=100, null=True)
+    table=models.CharField(max_length=20, null=True)
+    statut=models.BooleanField(default=False)
+
+    class Meta:
+        db_table='action'
+    def __str__(self):
+        return self.description
+    

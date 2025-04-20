@@ -36,6 +36,8 @@ EMAIL_HOST_PASSWORD = 'cxdzxtwdmbhwhyxb'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
+AUTH_USER_MODEL = 'edt.Utilisateur'
+
 # Application definition
 
 INSTALLED_APPS = [
