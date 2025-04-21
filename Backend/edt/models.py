@@ -136,10 +136,13 @@ class Enseigner(models.Model):
 
 class Utilisateur(AbstractUser):
     contact=models.CharField(max_length=17)
-    datenaiss=models.DateField()
+    datenaiss=models.DateField(null=True)
     description=models.TextField(null=True)
     image=models.CharField(max_length=255, null=True)
 
+    is_superuser=models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
     class Meta:
         db_table='utilisateur'
     def __str__(self):
