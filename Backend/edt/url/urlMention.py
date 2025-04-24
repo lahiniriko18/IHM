@@ -1,9 +1,9 @@
 from django.urls import path
-from ..views import viewsMention
+from ..views.viewsMention import MentionView
 
 urlpatterns = [
-    path('', viewsMention.listMention, name='mention'),
-    path('ajouter/', viewsMention.ajoutMention, name='mention.ajouter'),
-    path('modifier/<int:numMention>', viewsMention.modifMention, name='mention.modifier'),
-    path('supprimer/<int:numMention>', viewsMention.supprimeMention, name='mention.supprimer')
+    path('', MentionView.as_view(), name='mention'),
+    path('ajouter/', MentionView.as_view(), name='mention.ajouter'),
+    path('modifier/<int:numMention>', MentionView.as_view(), name='mention.modifier'),
+    path('supprimer/<int:numMention>', MentionView.as_view(), name='mention.supprimer')
 ]

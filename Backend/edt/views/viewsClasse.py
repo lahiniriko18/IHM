@@ -1,53 +1,34 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from  django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerClasse import ClasseSerializer
 from ..models import Classe
-
-@require_http_methods(["GET"])
-def listClasse(request):
-    classes=Classe.objects.all().values()
-    return JsonResponse(list(classes), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutClasse(request):
-    data=json.loads(request.body)
-    classe=Classe.objects.create(
-        niveau=data['niveau'],
-        groupe=data['groupe']
-    )
-    return JsonResponse({
-        'numClasse':classe.numClasse,
-        'niveau':classe.niveau,
-        'groupe':classe.groupe
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifClasse(request, numClasse):
-    try:
-        classe=Classe.objects.get(pk=numClasse)
-        data=json.loads(request.body)
-
-        classe.niveau=data['niveau']
-        classe.groupe=data['groupe']
-        classe.save()
-
-        return JsonResponse({
-            'numClasse':classe.numClasse,
-            'niveau':classe.niveau,
-            'groupe':classe.groupe
-        })
-    except classe.DoesNotExist:
-        return JsonResponse({'erreur':'Classe introuvable'}, status=404)
+class ClasseView(APIView):
+    def get(self, request):
+        classes=Classe.objects.all()
+        serializer=ClasseSerializer(classes, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeClasse(request, numClasse):
-    try:
-        classe=Classe.objects.get(pk=numClasse)
-        classe.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except classe.DoesNotExist:
-        return JsonResponse({'erreur':'Classe introuvable'}, status=404)
+    def post(self, request):
+        serializer=ClasseSerializer(data=request.data)
+        if serializer.is_valid():
+            classe=serializer.save()
+            return Response(ClasseSerializer(classe).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, numClasse):
+        try:
+            classe=Classe.objects.get(pk=numClasse)
+        except Classe.DoesNotExist:
+            return Response({"erreur":"Classe introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=ClasseSerializer(classe, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, numClasse):
+        try:
+            classe=Classe.objects.get(pk=numClasse)
+            classe.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except Classe.DoesNotExist:
+            return Response({'erreur':'Classe introuvable'}, status=status.HTTP_404_NOT_FOUND)

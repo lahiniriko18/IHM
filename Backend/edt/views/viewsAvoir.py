@@ -1,53 +1,36 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from  django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerAvoir import AvoirSerializer
 from ..models import Avoir
-
-@require_http_methods(["GET"])
-def listAvoir(request):
-    avoirs=Avoir.objects.all().values()
-    return JsonResponse(list(avoirs), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutAvoir(request):
-    data=json.loads(request.body)
-    avoir=Avoir.objects.create(
-        numEdt=data['numEdt'],
-        numEtablissement=data['numEtablissement']
-    )
-    return JsonResponse({
-        'numAvoir':avoir.numAvoir,
-        'numEdt':avoir.numEdt,
-        'numEtablissement':avoir.numEtablissement
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifAvoir(request, numAvoir):
-    try:
-        avoir=Avoir.objects.get(pk=numAvoir)
-        data=json.loads(request.body)
-
-        avoir.numEdt=data['numEdt']
-        avoir.numEtablissement=data['numEtablissement']
-        avoir.save()
-
-        return JsonResponse({
-            'numAvoir':avoir.numAvoir,
-            'numEdt':avoir.numEdt,
-            'numEtablissement':avoir.numEtablissement
-        })
-    except avoir.DoesNotExist:
-        return JsonResponse({'erreur':'Avoir edt introuvable'}, status=404)
+class AvoirView(APIView):
+    def get(self, request):
+        avoirs=Avoir.objects.all()
+        serializer=AvoirSerializer(avoirs, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeAvoir(request, numAvoir):
-    try:
-        avoir=Avoir.objects.get(pk=numAvoir)
-        avoir.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except avoir.DoesNotExist:
-        return JsonResponse({'erreur':'Avoir edt introuvable'}, status=404)
+    def post(self, request):
+        serializer=AvoirSerializer(data=request.data)
+        if serializer.is_valid():
+            avoir=serializer.save()
+            return Response(AvoirSerializer(avoir).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request, numAvoir):
+        try:
+            avoir=Avoir.objects.get(pk=numAvoir)
+        except Avoir.DoesNotExist:
+            return Response({"erreur":"Avoir introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=AvoirSerializer(avoir, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, numAvoir):
+        try:
+            avoir=Avoir.objects.get(pk=numAvoir)
+            avoir.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except Avoir.DoesNotExist:
+            return Response({'erreur':'Avoir introuvable'}, status=status.HTTP_404_NOT_FOUND)

@@ -1,9 +1,9 @@
 from django.urls import path
-from ..views import viewsAvoir
+from ..views.viewsAvoir import AvoirView
 
 urlpatterns = [
-    path('',viewsAvoir.listAvoir, name="avoir"),
-    path('ajouter/',viewsAvoir.ajoutAvoir, name="avoir.ajouter"),
-    path('modifier/<int:numAvoir>',viewsAvoir.modifAvoir, name="avoir.modifier"),
-    path('supprimer/<int:numAvoir>',viewsAvoir.supprimeAvoir, name="avoir.supprimer")
+    path('', AvoirView.as_view(), name="avoir"),
+    path('ajouter/', AvoirView.as_view(), name="avoir.ajouter"),
+    path('modifier/<int:numAvoir>', AvoirView.as_view(), name="avoir.modifier"),
+    path('supprimer/<int:numAvoir>', AvoirView.as_view(), name="avoir.supprimer")
 ]

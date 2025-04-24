@@ -1,53 +1,34 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from  django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerConstituer import ConstituerSerializer
 from ..models import Constituer
-
-@require_http_methods(["GET"])
-def listConstituer(request):
-    constituers=Constituer.objects.all().values()
-    return JsonResponse(list(constituers), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutConstituer(request):
-    data=json.loads(request.body)
-    constituer=Constituer.objects.create(
-        numParcours=data['numParcours'],
-        numClasse=data['numClasse']
-    )
-    return JsonResponse({
-        'numConstituer':constituer.numConstituer,
-        'numParcours':constituer.numParcours,
-        'numClasse':constituer.numClasse
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifConstituer(request, numConstituer):
-    try:
-        constituer=Constituer.objects.get(pk=numConstituer)
-        data=json.loads(request.body)
-
-        constituer.numParcours=data['numParcours']
-        constituer.numClasse=data['numClasse']
-        constituer.save()
-
-        return JsonResponse({
-            'numConstituer':constituer.numConstituer,
-            'numParcours':constituer.numParcours,
-            'numClasse':constituer.numClasse
-        })
-    except Constituer.DoesNotExist:
-        return JsonResponse({'erreur':'Constituer introuvable'}, status=404)
+class ConstituerView(APIView):
+    def get(self, request):
+        constituers=Constituer.objects.all()
+        serializer=ConstituerSerializer(constituers, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeConstituer(request, numConstituer):
-    try:
-        constituer=Constituer.objects.get(pk=numConstituer)
-        constituer.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except constituer.DoesNotExist:
-        return JsonResponse({'erreur':'Constituer introuvable'}, status=404)
+    def post(self, request):
+        serializer=ConstituerSerializer(data=request.data)
+        if serializer.is_valid():
+            constituer=serializer.save()
+            return Response(ConstituerSerializer(constituer).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, numConstituer):
+        try:
+            constituer=Constituer.objects.get(pk=numConstituer)
+        except Constituer.DoesNotExist:
+            return Response({"erreur":"Constituer introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=ConstituerSerializer(constituer, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, numConstituer):
+        try:
+            constituer=Constituer.objects.get(pk=numConstituer)
+            constituer.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except Constituer.DoesNotExist:
+            return Response({'erreur':'Constituer introuvable'}, status=status.HTTP_404_NOT_FOUND)

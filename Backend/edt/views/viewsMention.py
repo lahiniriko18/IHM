@@ -1,52 +1,34 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerMention import MentionSerializer
 from ..models import Mention
-
-@require_http_methods(["GET"])
-def listMention(request):
-    mentions=Mention.objects.all().values()
-    return JsonResponse(list(mentions), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutMention(request):
-    data=json.loads(request.body)
-    mention=Mention.objects.create(
-        numEtablissement=data['numEtablissement'],
-        nomMention=data['nomMention']
-    )
-    return JsonResponse({
-        'numMention':mention.numMention,
-        'numEtablissement':mention.numEtablissement,
-        'nomMention':mention.nomMention
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifMention(request, numMention):
-    try:
-        mention=Mention.objects.get(pk=numMention)
-        data=json.loads(request.body)
-
-        mention.numEtablissement=data['numEtablissement']
-        mention.nomMention=data['nomMention']
-
-        return JsonResponse({
-            'numMention':mention.numMention,
-            'numEtablissement':mention.numEtablissement,
-            'nomMention':mention.nomMention,
-        })
-    except mention.DoesNotExist:
-        return JsonResponse({'erreur':'Mention introuvable'}, status=404)
+class MentionView(APIView):
+    def get(self, request):
+        mentions=Mention.objects.all()
+        serializer=MentionSerializer(mentions, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeMention(request, numMention):
-    try:
-        mention=Mention.objects.get(pk=numMention)
-        mention.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except mention.DoesNotExist:
-        return JsonResponse({'erreur':'Mention introuvable'}, status=404)
+    def post(self, request):
+        serializer=MentionSerializer(data=request.data)
+        if serializer.is_valid():
+            mention=serializer.save()
+            return Response(MentionSerializer(mention).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, numMention):
+        try:
+            mention=Mention.objects.get(pk=numMention)
+        except Mention.DoesNotExist:
+            return Response({"erreur":"Mention introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=MentionSerializer(mention, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, numMention):
+        try:
+            mention=Mention.objects.get(pk=numMention)
+            mention.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except Mention.DoesNotExist:
+            return Response({'erreur':'Mention introuvable'}, status=status.HTTP_404_NOT_FOUND)

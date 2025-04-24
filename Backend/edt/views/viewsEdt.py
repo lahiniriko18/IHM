@@ -1,73 +1,34 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerEdt import EdtSerializer
 from ..models import Edt
-
-@require_http_methods(["GET"])
-def listEdt(request):
-    edts=Edt.objects.all().values()
-    return JsonResponse(list(edts), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutEdt(request):
-    data=json.loads(request.body)
-    edt=Edt.objects.create(
-        numMatiere=data['numMatiere'],
-        numParcours=data['numParcours'],
-        numSalle=data['numSalle'],
-        numClasse=data['numClasse'],
-        date=data['date'],
-        heureDebut=data['heureDebut'],
-        heureFin=data['heureFin']
-    )
-    return JsonResponse({
-        'numEdt':edt.numEdt,
-        'numMatiere':edt.numMatiere,
-        'numParcours':edt.numParcours,
-        'numSalle':edt.numSalle,
-        'numClasse':edt.numClasse,
-        'date':edt.date,
-        'heureDebut':edt.heureDebut,
-        'heureFin':edt.heureFin
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifEdt(request, numEdt):
-    try:
-        edt=Edt.objects.get(pk=numEdt)
-        data=json.loads(request.body)
-
-        edt.numMatiere=data['numMatiere']
-        edt.numParcours=data['numParcours']
-        edt.numSalle=data['numSalle']
-        edt.numClasse=data['numClasse']
-        edt.date=data['date']
-        edt.heureDebut=data['heureDebut']
-        edt.heureFin=data['heureFin']
-        edt.save()
-
-        return JsonResponse({
-            'numEdt':edt.numEdt,
-            'numMatiere':edt.numMatiere,
-            'numParcours':edt.numParcours,
-            'numSalle':edt.numSalle,
-            'numClasse':edt.numClasse,
-            'date':edt.date,
-            'heureDebut':edt.heureDebut,
-            'heureFin':edt.heureFin
-        })
-    except edt.DoesNotExist:
-         return JsonResponse({'erreur':'Emploi du temps introuvable'}, status=404)
+class EdtView(APIView):
+    def get(self, request):
+        edts=Edt.objects.all()
+        serializer=EdtSerializer(edts, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeEdt(request, numEdt):
-    try:
-        edt=Edt.objects.get(pk=numEdt)
-        edt.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except edt.DoesNotExist:
-        return JsonResponse({'erreur':'Emploi du temps introuvable'}, status=404)
+    def post(self, request):
+        serializer=EdtSerializer(data=request.data)
+        if serializer.is_valid():
+            edt=serializer.save()
+            return Response(EdtSerializer(edt).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, numEdt):
+        try:
+            edt=Edt.objects.get(pk=numEdt)
+        except Edt.DoesNotExist:
+            return Response({"erreur":"Emploi du temps introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=EdtSerializer(edt, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, numEdt):
+        try:
+            edt=Edt.objects.get(pk=numEdt)
+            edt.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except Edt.DoesNotExist:
+            return Response({'erreur':'Emploi du temps introuvable'}, status=status.HTTP_404_NOT_FOUND)

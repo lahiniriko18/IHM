@@ -1,49 +1,34 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from  django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerMatiere import MatiereSerializer
 from ..models import Matiere
-
-@require_http_methods(["GET"])
-def listMatiere(request):
-    matieres=Matiere.objects.all().values()
-    return JsonResponse(list(matieres), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutMatiere(request):
-    data=json.loads(request.body)
-    matiere=Matiere.objects.create(
-        nomMatiere=data['nomMatiere']
-    )
-    return JsonResponse({
-        'numMatiere':matiere.numMatiere,
-        'nomMatiere':matiere.nomMatiere
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifMatiere(request, numMatiere):
-    try:
-        matiere=Matiere.objects.get(pk=numMatiere)
-        data=json.loads(request.body)
-
-        matiere.nomMatiere=data['nomMatiere']
-        matiere.save()
-
-        return JsonResponse({
-            'numMatiere':Matiere.numMatiere,
-            'nomMatiere':Matiere.nomMatiere
-        })
-    except Matiere.DoesNotExist:
-        return JsonResponse({'erreur':'Matiere introuvable'}, status=404)
+class MatiereView(APIView):
+    def get(self, request):
+        matieres=Matiere.objects.all()
+        serializer=MatiereSerializer(matieres, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeMatiere(request, numMatiere):
-    try:
-        matiere=Matiere.objects.get(pk=numMatiere)
-        matiere.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except matiere.DoesNotExist:
-        return JsonResponse({'erreur':'Matiere introuvable'}, status=404)
+    def post(self, request):
+        serializer=MatiereSerializer(data=request.data)
+        if serializer.is_valid():
+            matiere=serializer.save()
+            return Response(MatiereSerializer(matiere).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, numMatiere):
+        try:
+            matiere=Matiere.objects.get(pk=numMatiere)
+        except Matiere.DoesNotExist:
+            return Response({"erreur":"Matière introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=MatiereSerializer(matiere, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, numMatiere):
+        try:
+            matiere=Matiere.objects.get(pk=numMatiere)
+            matiere.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except Matiere.DoesNotExist:
+            return Response({'erreur':'Matière introuvable'}, status=status.HTTP_404_NOT_FOUND)

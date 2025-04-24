@@ -1,9 +1,9 @@
 from django.urls import path
-from ..views import viewsEnseigner
+from ..views.viewsEnseigner import EnseignerView
 
 urlpatterns = [
-    path('',viewsEnseigner.listEnseigner, name="enseigner"),
-    path('ajouter/',viewsEnseigner.ajoutEnseigner, name="enseigner.ajouter"),
-    path('modifier/<int:numEnseigner>',viewsEnseigner.modifEnseigner, name="enseigner.modifier"),
-    path('supprimer/<int:numEnseigner>',viewsEnseigner.supprimeEnseigner, name="enseigner.supprimer")
+    path('', EnseignerView.as_view(), name="enseigner"),
+    path('ajouter/', EnseignerView.as_view(), name="enseigner.ajouter"),
+    path('modifier/<int:numEnseigner>', EnseignerView.as_view(), name="enseigner.modifier"),
+    path('supprimer/<int:numEnseigner>', EnseignerView.as_view(), name="enseigner.supprimer")
 ]

@@ -1,49 +1,34 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from  django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerSalle import SalleSerializer
 from ..models import Salle
-
-@require_http_methods(["GET"])
-def listSalle(request):
-    salles=Salle.objects.all().values()
-    return JsonResponse(list(salles), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutSalle(request):
-    data=json.loads(request.body)
-    salle=Salle.objects.create(
-        nomSalle=data['nomSalle']
-    )
-    return JsonResponse({
-        'numSalle':salle.numSalle,
-        'nomSalle':salle.nomSalle
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifSalle(request, numSalle):
-    try:
-        salle=Salle.objects.get(pk=numSalle)
-        data=json.loads(request.body)
-
-        salle.nomSalle=data['nomSalle']
-        salle.save()
-
-        return JsonResponse({
-            'numSalle':salle.numSalle,
-            'nomSalle':salle.nomSalle
-        })
-    except Salle.DoesNotExist:
-        return JsonResponse({'erreur':'Salle introuvable'}, status=404)
+class SalleView(APIView):
+    def get(self, request):
+        salles=Salle.objects.all()
+        serializer=SalleSerializer(salles, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeSalle(request, numSalle):
-    try:
-        salle=Salle.objects.get(pk=numSalle)
-        salle.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except salle.DoesNotExist:
-        return JsonResponse({'erreur':'Salle introuvable'}, status=404)
+    def post(self, request):
+        serializer=SalleSerializer(data=request.data)
+        if serializer.is_valid():
+            salle=serializer.save()
+            return Response(SalleSerializer(salle).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, numSalle):
+        try:
+            salle=Salle.objects.get(pk=numSalle)
+        except Salle.DoesNotExist:
+            return Response({"erreur":"Salle introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=SalleSerializer(salle, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, numSalle):
+        try:
+            salle=Salle.objects.get(pk=numSalle)
+            salle.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except Salle.DoesNotExist:
+            return Response({'erreur':'Salle introuvable'}, status=status.HTTP_404_NOT_FOUND)

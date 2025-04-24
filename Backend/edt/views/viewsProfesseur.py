@@ -1,76 +1,34 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerProfesseur import ProfesseurSerializer
 from ..models import Professeur
-
-@require_http_methods(["GET"])
-def listProfesseur(request):
-    professeurs=Professeur.objects.all().values()
-    return JsonResponse(list(professeurs), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutProfesseur(request):
-    data=json.loads(request.body)
-    professeur=Professeur.objects.create(
-        numEtablissement=data['numEtablissement'],
-        nomProfesseur=data['nomProfesseur'],
-        prenomProfesseur=data['prenomProfesseur'],
-        grade=data['grade'],
-        sexe=data['sexe'],
-        adresse=data['adresse'],
-        contact=data['contact'],
-        description=data['description']
-    )
-    return JsonResponse({
-        'numProfesseur':professeur.numProfesseur,
-        'numEtablissement':professeur.numEtablissement,
-        'nomProfesseur':professeur.nomProfesseur,
-        'prenomProfesseur':professeur.prenomProfesseur,
-        'grade':professeur.grade,
-        'sexe':professeur.sexe,
-        'sexe':professeur.adresse,
-        'contact':professeur.contact,
-        'description':professeur.description,
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifProfesseur(request, numProfesseur):
-    try:
-        professeur=Professeur.objects.get(pk=numProfesseur)
-        data=json.loads(request.body)
-
-        professeur.numEtablissement=data['numEtablissement']
-        professeur.nomProfesseur=data['nomProfesseur']
-        professeur.prenomProfesseur=data['prenomProfesseur']
-        professeur.grade=data['grade']
-        professeur.sexe=data['sexe']
-        professeur.contact=data['contact']
-        professeur.description=data['description']
-        professeur.save()
-
-        return JsonResponse({
-            'numProfesseur':professeur.numProfesseur,
-            'numEtablissement':professeur.numEtablissement,
-            'nomProfesseur':professeur.nomProfesseur,
-            'prenomProfesseur':professeur.prenomProfesseur,
-            'grade':professeur.grade,
-            'sexe':professeur.sexe,
-            'sexe':professeur.adresse,
-            'contact':professeur.contact,
-            'description':professeur.description,
-        })
-    except professeur.DoesNotExist:
-        return JsonResponse({'erreur':'Professeur introuvable'}, status=404)
+class ProfesseurView(APIView):
+    def get(self, request):
+        professeurs=Professeur.objects.all()
+        serializer=ProfesseurSerializer(professeurs, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeProfesseur(request, numProfesseur):
-    try:
-        professeur=Professeur.objects.get(pk=numProfesseur)
-        professeur.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except professeur.DoesNotExist:
-        return JsonResponse({'erreur':'Professeur introuvable'}, status=404)
+    def post(self, request):
+        serializer=ProfesseurSerializer(data=request.data)
+        if serializer.is_valid():
+            professeur=serializer.save()
+            return Response(ProfesseurSerializer(professeur).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, numProfesseur):
+        try:
+            professeur=Professeur.objects.get(pk=numProfesseur)
+        except Professeur.DoesNotExist:
+            return Response({"erreur":"Professeur introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=ProfesseurSerializer(professeur, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, numProfesseur):
+        try:
+            professeur=Professeur.objects.get(pk=numProfesseur)
+            professeur.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except professeur.DoesNotExist:
+            return Response({'erreur':'Professeur introuvable'}, status=status.HTTP_404_NOT_FOUND)

@@ -1,53 +1,34 @@
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-import json
-from  django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from ..serializer.serializerParcours import ParcoursSerializer
 from ..models import Parcours
-
-@require_http_methods(["GET"])
-def listParcours(request):
-    parcours=Parcours.objects.all().values()
-    return JsonResponse(list(parcours), safe=False)
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def ajoutParcours(request):
-    data=json.loads(request.body)
-    parcours=Parcours.objects.create(
-        numMention=data['numMention'],
-        nomParcours=data['nomParcours']
-    )
-    return JsonResponse({
-        'numParcours':parcours.numParcours,
-        'numMention':parcours.numMention,
-        'nomParcours':parcours.nomParcours
-    })
-
-@csrf_exempt
-@require_http_methods(["PUT"])
-def modifParcours(request, numParcours):
-    try:
-        parcours=Parcours.objects.get(pk=numParcours)
-        data=json.loads(request.body)
-
-        parcours.numMention=data['numMention']
-        parcours.nomParcours=data['nomParcours']
-        parcours.save()
-
-        return JsonResponse({
-            'numParcours':parcours.numParcours,
-            'numMention':parcours.numMention,
-            'nomParcours':parcours.nomParcours
-        })
-    except parcours.DoesNotExist:
-        return JsonResponse({'erreur':'Parcours introuvable'}, status=404)
+class ParcoursView(APIView):
+    def get(self, request):
+        parcours=Parcours.objects.all()
+        serializer=ParcoursSerializer(parcours, many=True)
+        return Response(serializer.data)
     
-@csrf_exempt
-@require_http_methods(["DELETE"])
-def supprimeParcours(request, numParcours):
-    try:
-        parcours=Parcours.objects.get(pk=numParcours)
-        parcours.delete()
-        return JsonResponse({'message':'Suppression avec succès'})
-    except parcours.DoesNotExist:
-        return JsonResponse({'erreur':'Parcours introuvable'}, status=404)
+    def post(self, request):
+        serializer=ParcoursSerializer(data=request.data)
+        if serializer.is_valid():
+            parcours=serializer.save()
+            return Response(ParcoursSerializer(parcours).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, numParcours):
+        try:
+            parcours=Parcours.objects.get(pk=numParcours)
+        except Parcours.DoesNotExist:
+            return Response({"erreur":"Parcours introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=ParcoursSerializer(parcours, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def delete(self, request, numParcours):
+        try:
+            parcours=Parcours.objects.get(pk=numParcours)
+            parcours.delete()
+            return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
+        except Parcours.DoesNotExist:
+            return Response({'erreur':'Parcours introuvable'}, status=status.HTTP_404_NOT_FOUND)

@@ -1,9 +1,9 @@
 from django.urls import path
-from ..views import viewsSalle
+from ..views.viewsSalle import SalleView
 
 urlpatterns = [
-    path('',viewsSalle.listSalle, name="salle"),
-    path('ajouter/',viewsSalle.ajoutSalle, name="salle.ajouter"),
-    path('modifier/<int:numSalle>',viewsSalle.modifSalle, name="salle.modifier"),
-    path('supprimer/<int:numSalle>',viewsSalle.supprimeSalle, name="salle.supprimer")
+    path('', SalleView.as_view(), name="salle"),
+    path('ajouter/', SalleView.as_view(), name="salle.ajouter"),
+    path('modifier/<int:numSalle>', SalleView.as_view(), name="salle.modifier"),
+    path('supprimer/<int:numSalle>', SalleView.as_view(), name="salle.supprimer")
 ]

@@ -1,0 +1,12 @@
+from rest_framework import serializers
+from ..models import Matiere
+from django.core.exceptions import ValidationError
+
+class MatiereSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Matiere
+        fields=["numMatiere","nomMatiere"]
+    def validate(self, data):
+        return data
+    def create(self, validated_data):
+        return Matiere.objects.create(**validated_data)

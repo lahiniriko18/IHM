@@ -37,7 +37,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 AUTH_USER_MODEL = 'edt.Utilisateur'
-
+AUTHENTICATION_BACKENDS = [
+    'edt.auth_backends.EmailOrUsernameBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 # Application definition
 

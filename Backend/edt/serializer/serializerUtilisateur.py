@@ -62,3 +62,10 @@ class InscriptionSerializer(serializers.ModelSerializer):
         user.save()
         return user
         
+class ConnexionSerializer(serializers.ModelSerializer):
+    username=serializers.CharField()
+    password=serializers.CharField(write_only=True)
+
+    class Meta:
+        model=Utilisateur
+        fields=['username', 'password']
