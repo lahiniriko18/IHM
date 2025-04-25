@@ -93,3 +93,5 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'tonemail@gmail.com'  # Ton adresse Gmail
 EMAIL_HOST_PASSWORD = 'motdepasse_app'  # Le mot de passe d'application 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
