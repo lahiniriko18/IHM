@@ -16,6 +16,7 @@ class EtablissementView(APIView):
         if serializer.is_valid():
             etablissement=serializer.save()
             return Response(EtablissementSerializer(etablissement).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def put(self, request, numEtablissement):
         try:
             etablissement= Etablissement.objects.get(pk=numEtablissement)

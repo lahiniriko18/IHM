@@ -22,16 +22,32 @@ class InscriptionSerializer(serializers.ModelSerializer):
                  'first_name', 'last_name',  'contact', 'datenaiss', 'description', 'image']
 
     def validate_username(self, value):
+        UtilisateurInstance=self.instance
         if len(value) < 3:
             raise serializers.ValidationError({"username":"Le nom d'utilisateur doit contenir au moins 3 caractères."})
+       
+        if UtilisateurInstance:
+            if UtilisateurInstance.username != value:
+                if Utilisateur.objects.filter(username=value).exists():
+                    raise serializers.ValidationError({"username":"Cet nom d'utilisateur existe déjà"})
+        else:
+            if Utilisateur.objects.filter(username=value).exists():
+                raise serializers.ValidationError({"username":"Cet nom d'utilisateur existe déjà !"})
         return value
     def validate_email(self, value):
+        UtilisateurInstance=self.instance
+
         try:
             validate_email(value)
         except ValidationError:
             raise serializers.ValidationError({"email":"Email invalide"})
-        if Utilisateur.objects.filter(email=value).exists():
-            raise serializers.ValidationError({"email":"Cette email existe déjà"})
+        if UtilisateurInstance:
+            if UtilisateurInstance.email != value:
+                if Utilisateur.objects.filter(email=value).exists():
+                    raise serializers.ValidationError({"email":"Cette email existe déjà"})
+        else:
+            if Utilisateur.objects.filter(email=value).exists():
+                raise serializers.ValidationError({"email":"Cette email existe déjà !"})
         return value
     def validate_datenaiss(self, value):
         if value >= date.today():

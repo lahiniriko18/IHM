@@ -13,7 +13,7 @@ class Etablissement(models.Model):
     class Meta:
         db_table='etablissement'
     def __str__(self):
-        return self.nom
+        return self.nomEtablissement
 
 
 class Professeur(models.Model):
@@ -22,7 +22,7 @@ class Professeur(models.Model):
     nomProfesseur=models.CharField(max_length=50)
     prenomProfesseur=models.CharField(max_length=50, null=True)
     grade=models.CharField(max_length=50, null=True)
-    sexe=models.CharField(max_length=1)
+    sexe=models.CharField(max_length=8)
     adresse=models.CharField(max_length=50, null=True)
     contact=models.CharField(max_length=17, null=True)
     email=models.EmailField(max_length=50, null=True)

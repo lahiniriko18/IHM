@@ -41,6 +41,11 @@ AUTHENTICATION_BACKENDS = [
     'edt.auth_backends.EmailOrUsernameBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
 
 # Application definition
 
@@ -52,6 +57,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'edt',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 import pymysql
 pymysql.install_as_MySQLdb()

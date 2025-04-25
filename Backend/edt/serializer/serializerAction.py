@@ -5,14 +5,11 @@ from django.core.exceptions import ValidationError
 import re
 
 class ActionSerializer(serializers.ModelSerializer):
+    user_id = serializers.PrimaryKeyRelatedField(queryset=Utilisateur.objects.all())
     class Meta:
         model=Action
         fields=["numAction","user_id","type","text","table","statut"] 
 
-    def validate_user_id(self, value):
-        if value and not Utilisateur.objects.filter(pk=value).exists():
-            raise serializers.ValidationError({"utilisateur":"Cette utilisateur n'existe pas !"})
-        return value
     def validate_type(self, value):
         if value.lower() not in ["insertion","modification","suppression","email","téléchargement","téléversement"]:
             raise serializers.ValidationError({"type":"Type d'action invalide !"})

@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 from rest_framework import status
 from django.contrib.auth import authenticate, login, logout
 from ..serializer.serializerUtilisateur import InscriptionSerializer,ConnexionSerializer
@@ -22,7 +23,11 @@ class ConnexionView(APIView):
 
             if utilisateur:
                 login(request, utilisateur)
-                return Response({'message':'Connexion réussie !'}, status=  status.HTTP_200_OK)
+                token, created = Token.objects.get_or_create(user=utilisateur)
+                return Response({
+                    'message':'Connexion réussie !',
+                    'token':token.key
+                    }, status=  status.HTTP_200_OK)
             return Response({'erreur':'Identifiants invalid !'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class DeconnexionView(APIView):
