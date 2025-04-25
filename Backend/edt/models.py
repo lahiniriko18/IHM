@@ -68,13 +68,21 @@ class Matiere(models.Model):
 class Classe(models.Model):
     numClasse=models.AutoField(primary_key=True)
     niveau=models.CharField(max_length=5)
-    groupe=models.CharField(max_length=10, null=True)
 
     class Meta:
         db_table='classe'
     def __str__(self):
         return self.niveau
-      
+    
+class Groupe(models.Model):
+    numGroupe=models.AutoField(primary_key=True)
+    nomGroupe=models.CharField(max_length=20)
+
+    class Meta:
+        db_table='groupe'
+    def __str__(self):
+        return self.nomGroupe
+
 
 class Salle(models.Model):
     numSalle=models.AutoField(primary_key=True)
@@ -111,6 +119,15 @@ class Constituer(models.Model):
         db_table='constituer'
     def __str__(self):
         return f"{self.numConstituer} dans une classe {self.numClasse}"
+class Posseder(models.Model):
+    numPosseder=models.AutoField(primary_key=True)
+    numClasse=models.ForeignKey(Classe, on_delete=models.CASCADE, db_column='numClasse')
+    numGroupe=models.ForeignKey(Groupe, on_delete=models.CASCADE, db_column='numGroupe')
+
+    class Meta:
+        db_table='posseder'
+    def __str__(self):
+        return f"{self.numPosseder} dans une classe {self.numClasse}"
 
 
 class Avoir(models.Model):
