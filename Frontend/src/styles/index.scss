@@ -1,10 +1,12 @@
+
 :root {
-  --primary-color: #2563eb; // bleu principal
+  --primary-color: #2F7CD7; // bleu principal
   --primary-hover: #1d4ed8; // bleu foncé pour hover
   --background-color: #f3f4f6; // fond gris clair
   --card-background: #ffffff; // fond des cartes (blanc)
   --text-color: #555555; // couleur du texte
   --input-border: #cccccc; // bordure input
+  --login-bg :linear-gradient(190deg, #2F7CD7 0%, #9DC7D9 78%);
 }
 .button {
   padding: 0.75rem;
@@ -18,4 +20,7 @@
 }
 .button:hover {
   background-color: var(--primary-hover);
+}
+.bg-login{
+  background: var(--login-bg);
 }
