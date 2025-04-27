@@ -7,13 +7,13 @@ function Login() {
 
   const postData = async () => {
     try {
-      const api = await axios.post("", { Usermail: email, Userpassword: pswd })
+      const api = await axios.post("http://127.0.0.1:8000/api/utilisateur/connexion/", { username: email, password: pswd })
       if (api.status != 200) {
         throw new Error("Erreur lors de l'envoi  de données", api.status)
       }
       console.log("Ca marche bien")
     } catch (e) {
-      console.log("Error :", e.message)
+      console.log("Error be leka:", e.message)
     }
   }
   return (
@@ -24,7 +24,7 @@ function Login() {
         <input type="text" className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:border-blue-500" placeholder="Entrez votre email ici" value={email} onChange={(e) => setEmail(e.target.value)} />
 
         <label htmlFor="">Password</label>
-        <input type="password" className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:border-blue-500" placeholder="Entrez votre mot de passe  ici" value={pswd} onChange={(e) => setPasswd(e.target.value)} />
+        <input type="text" className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:border-blue-500" placeholder="Entrez votre mot de passe  ici" value={pswd} onChange={(e) => setPasswd(e.target.value)} />
         <button className="button font-bold mt-8" onClick={() => {
           if (email.trim() != "" && pswd.trim() != "") {
             postData()
