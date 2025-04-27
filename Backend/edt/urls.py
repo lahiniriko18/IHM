@@ -1,5 +1,5 @@
 from django.urls import path,include
-from .url import urlPosseder,urlGroupe,urlAction,urlEnseigner,urlAvoir,urlConstituer,urlProfesseur,urlEtablissement,urlMention,urlParcours,urlMatiere,urlClasse,urlSalle,urlEdt,urlFonctionnalite,urlUtilisateur
+from .url import urlStatistique,urlPosseder,urlGroupe,urlAction,urlEnseigner,urlAvoir,urlConstituer,urlProfesseur,urlEtablissement,urlMention,urlParcours,urlMatiere,urlClasse,urlSalle,urlEdt,urlFonctionnalite,urlUtilisateur
 
 urlpatterns = [
     path('professeur/', include(urlProfesseur)),
@@ -14,6 +14,7 @@ urlpatterns = [
     path('avoir/', include(urlAvoir)),
     path('enseigner/', include(urlEnseigner)),
     path('fonctionnalite/', include(urlFonctionnalite)),
+    path('statistique/', include(urlStatistique)),
     path('utilisateur/', include(urlUtilisateur)),
     path('action/', include(urlAction)),
     path('groupe/', include(urlGroupe)),

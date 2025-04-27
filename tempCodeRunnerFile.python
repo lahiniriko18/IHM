@@ -1,0 +1,2 @@
+a="    Lahi ni ri ko   "
+print(a.replace(" ",""))
