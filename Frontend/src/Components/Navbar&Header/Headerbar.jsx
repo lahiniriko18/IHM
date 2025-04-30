@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-function Headerbar({ lien }) {
+function Headerbar({ lien, status }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -18,7 +18,7 @@ function Headerbar({ lien }) {
   }, []);
 
   return (
-    <div className="fixed top-0 right-0 left-52 h-14 flex justify-between items-center ps-5 pe-4 z-50">
+    <div className={`${status ? "fixed top-0 right-0 left-16 h-14 flex justify-between items-center ps-5 pe-4 z-50  transition-all duration-700" : "fixed top-0 right-0 left-52 h-14 flex justify-between items-center ps-5 pe-4 z-50  transition-all duration-700"}`}>
       <h1 className="text-blue-600 font-extrabold text-2xl">{lien}</h1>
 
       <div className="relative" ref={dropdownRef}>
