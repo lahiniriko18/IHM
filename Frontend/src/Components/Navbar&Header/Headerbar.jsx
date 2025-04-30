@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 function Headerbar({ lien, status }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);//pour afficher le dropdown menu 
+  const dropdownRef = useRef(null);// pour pointer vers le menu 
 
   useEffect(() => {
     function handleClickOutside(event) {

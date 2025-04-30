@@ -3,12 +3,12 @@ import { Link, useLocation } from 'react-router-dom';
 import Headerbar from './Headerbar';
 
 function Navbar() {
-  const [lienActif, setLienActif] = useState("Dashboard")
-  const [isReduire, setIsReduire] = useState(false)
-  const location = useLocation();
-  const pathname = location.pathname;
+  const [lienActif, setLienActif] = useState("Dashboard") //pour envoyer le nom du lien vers le header
+  const [isReduire, setIsReduire] = useState(false) //Si le bouton reduire le fenetre est cliquer,il devient true
+  const location = useLocation();//reeact-dom
+  const pathname = location.pathname; // retourne le chemin actuel du react-router-dom
 
-  const isActive = (path) => pathname === path;
+  const isActive = (path) => pathname === path; // comparaison de lien actuel et le path si egal
 
   const baseClasses = "flex flex-row justify-start items-center h-10 p-2 rounded-sm transition-all duration-200 hover:scale-105 hover:bg-gray-200 cursor-pointer";
   const activeClasses = "bg-gray-200 text-bleu font-semibold";
