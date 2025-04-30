@@ -1,5 +1,5 @@
 import "./App.css";
-import { createBrowserRouter, Route, RouterProvider, createRoutesFromElements } from 'react-router-dom'
+import { createBrowserRouter, Route, RouterProvider, createRoutesFromElements, redirect } from 'react-router-dom'
 import Dashboard from "./Components/ChildComponents/Dashboard";
 import Professeur from "./Components/ChildComponents/Professeur";
 import Salle from "./Components/ChildComponents/Salle";
@@ -19,52 +19,57 @@ function App() {
       element: <Applayout />,
       children: [
         {
-          path: "/dashboard",
+          path: "",
+          loader: () => redirect("/dashboard")
+        },
+        {
+          path: "dashboard",
           element: <Dashboard />,
         },
         {
-          path: "/professeur",
+          path: "professeur",
           element: <Professeur />
         },
         {
-          path: "/salle",
+          path: "salle",
           element: <Salle />,
         },
         {
-          path: "/matiere",
+          path: "matiere",
           element: <Matiere />,
         },
         {
-          path: "/classe",
+          path: "classe",
           element: <Classe />,
         },
         {
-          path: "/mention",
+          path: "mention",
           element: <Mention />,
         },
         {
-          path: "/parcours",
+          path: "parcours",
           element: <Parcours />,
         },
         {
-          path: "/edt",
+          path: "edt",
           element: <Edt />,
         },
         {
-          path: "/parametre",
+          path: "parametre",
           element: <Parametre />,
         },
         {
-          path: "/rapport",
+          path: "rapport",
           element: <Rapport />,
         },
         {
-          path: "/utilisateur",
+          path: "utilisateur",
           element: <Utilisateur />,
         },
       ]
     }
   ])
+
   return <RouterProvider router={router} />
 }
 export default App;
