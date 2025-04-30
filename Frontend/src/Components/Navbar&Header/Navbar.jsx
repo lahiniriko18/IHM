@@ -1,71 +1,108 @@
-import React from 'react'
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import Headerbar from './Headerbar';
 
 function Navbar() {
+  const [lienActif, setLienActif] = useState("Dashboard")
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  const isActive = (path) => pathname === path;
+
+  const baseClasses = "flex flex-row justify-start items-center h-10 p-2 rounded-sm transition-all duration-200 hover:scale-105 hover:bg-gray-200 cursor-pointer";
+  const activeClasses = "bg-gray-200 text-bleu font-semibold";
+
   return (
-    <nav className='container bg-white w-52 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3'>
-      <div className="flex flex-row justify-between">
-        <h1 className='text-bleu font-bold'>LOGO</h1>
-        <a href="">I</a>
-      </div>
+    <>
+      <nav className='container bg-white w-52 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3'>
 
-      <div className="flex flex-row justify-start items-center bg-gray-50 h-10 p-2 rounded-sm cursor-pointer text-bleu font-semibold">
-        <img src='/Icons/icons8-tableau-de-bord-24.png' alt='dashboard icon' className='me-1' />
-        <p>Dashboard</p>
-      </div>
-
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/icons8-prof-60.png' alt='Prof icon' className='me-1 w-6' />
-        <p>Professeur</p>
-      </div>
-
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/icons8-chambre-50.png' alt='Salle icon' className='me-1 w-6' />
-        <p>Salle</p>
-      </div>
-
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/cahier.png' alt='Matière icon' className='me-1 w-6' />
-        <p>Matières</p>
-      </div>
-
-      <div className=" rounded-sm cursor-pointer flex justify-between items-center">
-        <div className='flex flex-row justify-start items-center  h-10 p-2'>
-          <img src='/Icons/icons8-école-48.png' alt='Classe icon' className='me-1 w-6' />
-          <p>Classe</p>
+        {/* Logo */}
+        <div className="flex flex-row justify-between items-center my-2">
+          <h1 className='text-bleu font-bold text-xl'>ENI</h1>
+          <img src='/Icons/reduire.png' alt='Reduire icon' className='me-1 w-4 cursor-pointer' />
         </div>
-      </div>
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/mention.png' alt='Mention icon' className='me-1 w-6' />
-        <p>Mention</p>
-      </div>
 
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/icons8-partage-de-connaissances-50.png' alt='Parcours icon' className='me-1 w-6' />
-        <p>Parcours</p>
-      </div>
+        {/* Menu links */}
+        <Link to="/dashboard">
+          <div className={`${baseClasses} ${isActive("/dashboard") ? activeClasses : ""}`} onClick={() => setLienActif("Dashboard")}>
+            <img src='/Icons/icons8-tableau-de-bord-24.png' alt='dashboard icon' className='me-1' />
+            <p>Dashboard</p>
+          </div>
+        </Link>
 
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/icons8-objet-avec-durée-50.png' alt='EDT icon' className='me-1 w-6' />
-        <p>Emploi du temps</p>
-      </div>
+        <Link to="/professeur">
+          <div className={`${baseClasses} ${isActive("/professeur") ? activeClasses : ""}`} onClick={() => setLienActif("Professeur")}>
+            <img src='/Icons/icons8-prof-60.png' alt='Prof icon' className='me-1 w-6' />
+            <p>Professeur</p>
+          </div>
+        </Link>
 
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/evaluation.png' alt='Setting icon' className='me-1 w-6' />
-        <p>Rapport</p>
-      </div>
+        <Link to="/salle">
+          <div className={`${baseClasses} ${isActive("/salle") ? activeClasses : ""}`} onClick={() => setLienActif("Salle")}>
+            <img src='/Icons/icons8-chambre-50.png' alt='Salle icon' className='me-1 w-6' />
+            <p>Salle</p>
+          </div>
+        </Link>
 
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/icons8-paramètres-60.png' alt='Setting icon' className='me-1 w-6' />
-        <p>Paramètre</p>
-      </div>
+        <Link to="/matiere">
+          <div className={`${baseClasses} ${isActive("/matiere") ? activeClasses : ""}`} onClick={() => setLienActif("Matières")}>
+            <img src='/Icons/cahier.png' alt='Matière icon' className='me-1 w-6' />
+            <p>Matières</p>
+          </div>
+        </Link>
 
-      <div className="flex flex-row justify-start items-center  h-10 p-2 rounded-sm cursor-pointer">
-        <img src='/Icons/utilisateur.png' alt='User icon' className='me-1 w-6' />
-        <p>Utilisateurs</p>
-      </div>
+        <Link to="/classe">
+          <div className={`${baseClasses} ${isActive("/classe") ? activeClasses : ""}`} onClick={() => setLienActif("Classe")}>
+            <img src='/Icons/icons8-école-48.png' alt='Classe icon' className='me-1 w-6' />
+            <p>Classe</p>
+          </div>
+        </Link>
 
-    </nav>
-  )
+        <Link to="/mention">
+          <div className={`${baseClasses} ${isActive("/mention") ? activeClasses : ""}`} onClick={() => setLienActif("Mention")}>
+            <img src='/Icons/mention.png' alt='Mention icon' className='me-1 w-6' />
+            <p>Mention</p>
+          </div>
+        </Link>
+
+        <Link to="/parcours">
+          <div className={`${baseClasses} ${isActive("/parcours") ? activeClasses : ""}`} onClick={() => setLienActif("Parcours")}>
+            <img src='/Icons/icons8-partage-de-connaissances-50.png' alt='Parcours icon' className='me-1 w-6' />
+            <p>Parcours</p>
+          </div>
+        </Link>
+
+        <Link to="/edt">
+          <div className={`${baseClasses} ${isActive("/edt") ? activeClasses : ""}`} onClick={() => setLienActif("Emploi du temps")}>
+            <img src='/Icons/icons8-objet-avec-durée-50.png' alt='EDT icon' className='me-1 w-6' />
+            <p>Emploi du temps</p>
+          </div>
+        </Link>
+
+        <Link to="/rapport">
+          <div className={`${baseClasses} ${isActive("/rapport") ? activeClasses : ""}`} onClick={() => setLienActif("Rapport")}>
+            <img src='/Icons/evaluation.png' alt='Rapport icon' className='me-1 w-6' />
+            <p>Rapport</p>
+          </div>
+        </Link>
+
+        <Link to="/parametre">
+          <div className={`${baseClasses} ${isActive("/parametre") ? activeClasses : ""}`} onClick={() => setLienActif("Paramètre")}>
+            <img src='/Icons/icons8-paramètres-60.png' alt='Paramètre icon' className='me-1 w-6' />
+            <p>Paramètre</p>
+          </div>
+        </Link>
+
+        <Link to="/utilisateur">
+          <div className={`${baseClasses} ${isActive("/utilisateur") ? activeClasses : ""}`} onClick={() => setLienActif("Utilisateurs")}>
+            <img src='/Icons/utilisateur.png' alt='Utilisateur icon' className='me-1 w-6' />
+            <p>Utilisateurs</p>
+          </div>
+        </Link>
+      </nav>
+      <Headerbar lien={lienActif} />
+    </>
+  );
 }
 
-export default Navbar
+export default Navbar;

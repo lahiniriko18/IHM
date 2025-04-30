@@ -1,6 +1,16 @@
 import "./App.css";
 import { createBrowserRouter, Route, RouterProvider, createRoutesFromElements } from 'react-router-dom'
 import Dashboard from "./Components/ChildComponents/Dashboard";
+import Professeur from "./Components/ChildComponents/Professeur";
+import Salle from "./Components/ChildComponents/Salle";
+import Classe from "./Components/ChildComponents/Classe";
+import Matiere from "./Components/ChildComponents/Matiere";
+import Parcours from "./Components/ChildComponents/Parcours";
+import Utilisateur from "./Components/ChildComponents/Utilisateur";
+import Parametre from "./Components/ChildComponents/Parametre";
+import Edt from "./Components/ChildComponents/Edt";
+import Mention from "./Components/ChildComponents/Mention";
+import Rapport from "./Components/ChildComponents/Rapport";
 import Applayout from "./Components/Layout/Applayout";
 function App() {
   const router = createBrowserRouter([
@@ -11,7 +21,47 @@ function App() {
         {
           path: "/dashboard",
           element: <Dashboard />,
-        }
+        },
+        {
+          path: "/professeur",
+          element: <Professeur />
+        },
+        {
+          path: "/salle",
+          element: <Salle />,
+        },
+        {
+          path: "/matiere",
+          element: <Matiere />,
+        },
+        {
+          path: "/classe",
+          element: <Classe />,
+        },
+        {
+          path: "/mention",
+          element: <Mention />,
+        },
+        {
+          path: "/parcours",
+          element: <Parcours />,
+        },
+        {
+          path: "/edt",
+          element: <Edt />,
+        },
+        {
+          path: "/parametre",
+          element: <Parametre />,
+        },
+        {
+          path: "/rapport",
+          element: <Rapport />,
+        },
+        {
+          path: "/utilisateur",
+          element: <Utilisateur />,
+        },
       ]
     }
   ])
