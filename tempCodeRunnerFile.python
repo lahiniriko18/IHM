@@ -1,2 +1,5 @@
-a="    Lahi ni ri ko   "
-print(a.replace(" ",""))
+d={
+    "a":"a",
+    "b":"b"
+}
+print(d.get("c"))

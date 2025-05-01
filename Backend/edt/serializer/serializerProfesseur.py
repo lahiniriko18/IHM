@@ -5,7 +5,13 @@ from django.core.exceptions import ValidationError
 import re
 
 class ProfesseurSerializer(serializers.ModelSerializer):
-    numEtablissement = serializers.PrimaryKeyRelatedField(queryset=Etablissement.objects.all())
+    numEtablissement = serializers.PrimaryKeyRelatedField(
+        queryset=Etablissement.objects.all(),
+        error_messages={
+            'does_not_exist': "L'établissement spécifié n'existe pas !",
+            'incorrect_type': "Le format de l'ID de l'établissement est invalide !",
+        }
+    )
     class Meta:
         model=Professeur
         fields=["numProfesseur","numEtablissement","nomProfesseur","prenomProfesseur","grade",
