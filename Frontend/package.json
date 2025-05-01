@@ -28,6 +28,7 @@
     "pdf-lib": "^1.17.1",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
+    "react-calendar": "^5.1.0",
     "react-chartjs-2": "^5.3.0",
     "react-data-table-component": "^7.7.0",
     "react-dom": "^19.0.0",

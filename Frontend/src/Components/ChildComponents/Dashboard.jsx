@@ -1,5 +1,6 @@
 import React from 'react'
 import { useSidebar } from '../Context/SidebarContext';
+import Calendar from 'react-calendar'
 
 function Dashboard({ status }) {
   const { isReduire } = useSidebar();
@@ -52,7 +53,7 @@ function Dashboard({ status }) {
       {/* end Card stats */}
 
       <div className="flex justify-between w-full pe-2 flex-wrap">
-        <div className="w-[68%] p-4 h-60 bg-white h-100 rounded flex flex-col gap-2">
+        <div className="w-[68%] p-4  bg-white  rounded flex flex-col gap-2">
           <p className="font-bold text-bleu">
             Horaires
           </p>
@@ -71,12 +72,14 @@ function Dashboard({ status }) {
           <p className="font-bold text-bleu">
             Calendrier
           </p>
-          <div id="calendar"></div>
+          <div className=''>
+            <Calendar />
+          </div>
         </div>
       </div>
 
-      <div className="h-60 bg-white  border w-full p-4 flex gap-4 flex-col">
-        <p className="text-bleu font-bold">Liste des deux derniers emploi du temps creé</p>
+      <div className="h-40 bg-white  border w-full p-4 flex gap-4 flex-col">
+        <p className="text-bleu font-bold">Liste de derniere emploi du temps creé</p>
         <div className='overflow-hidden rounded-t-lg  bg-white shadow border w-full'>
           <table className="table-auto w-full rounded-xl border-collapse ">
             <thead>
@@ -90,7 +93,7 @@ function Dashboard({ status }) {
               </tr>
             </thead>
             <tbody className="text-sm">
-              {[...Array(2)].map((_, index) => (
+              {[...Array(1)].map((_, index) => (
                 <tr key={index} className="hover:bg-gray-100 -t">
                   <td className="px-4 py-2  text-center">{index + 1}</td>
                   <td className="px-4 py-2  text-center">L3</td>

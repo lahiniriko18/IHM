@@ -20,7 +20,7 @@ function Navbar() {
       <nav className={`${isReduire ? "z-50 container bg-white w-16 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3 transition-all duration-700" : "container bg-white z-50 w-52 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3  transition-all duration-700"}`}>
 
         {/* Logo */}
-        <div className="flex flex-row justify-between items-center my-2">
+        <div className="flex flex-row justify-between items-center ">
           <h1 className='text-bleu font-bold text-xl'>ENI</h1>
           <img src='/Icons/vers-le-bas.png' alt='Reduire icon' className={`${isReduire ? "w-3 cursor-pointer rotate-[270deg] transition-all duration-700" : "me-1 w-4 cursor-pointer rotate-90 transition-all duration-700"}`} onClick={() => setIsReduire(!isReduire)} />
         </div>
@@ -104,7 +104,6 @@ function Navbar() {
         </Link>
       </nav>
       <Headerbar lien={lienActif} status={isReduire} />
-      <Dashboard status={isReduire} />
     </>
   );
 }
