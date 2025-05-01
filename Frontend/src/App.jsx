@@ -1,10 +1,77 @@
 import "./App.css";
-import Login from "./Components/Login_Sign_Up/Login";
+// import 'react-calendar/dist/Calendar.css';
+import { createBrowserRouter, Route, RouterProvider, createRoutesFromElements, redirect } from 'react-router-dom'
+import Dashboard from "./Components/ChildComponents/Dashboard";
+import Professeur from "./Components/ChildComponents/Professeur";
+import Salle from "./Components/ChildComponents/Salle";
+import Classe from "./Components/ChildComponents/Classe";
+import Matiere from "./Components/ChildComponents/Matiere";
+import Parcours from "./Components/ChildComponents/Parcours";
+import Utilisateur from "./Components/ChildComponents/Utilisateur";
+import Parametre from "./Components/ChildComponents/Parametre";
+import Edt from "./Components/ChildComponents/Edt";
+import Mention from "./Components/ChildComponents/Mention";
+import Rapport from "./Components/ChildComponents/Rapport";
+import Applayout from "./Components/Layout/Applayout";
+
 function App() {
-  return (
-    <div>
-      <Login />
-    </div>
-  );
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <Applayout />,
+      children: [
+        {
+          path: "",
+          loader: () => redirect("/dashboard")
+        },
+        {
+          path: "dashboard",
+          element: <Dashboard />,
+        },
+        {
+          path: "professeur",
+          element: <Professeur />
+        },
+        {
+          path: "salle",
+          element: <Salle />,
+        },
+        {
+          path: "matiere",
+          element: <Matiere />,
+        },
+        {
+          path: "classe",
+          element: <Classe />,
+        },
+        {
+          path: "mention",
+          element: <Mention />,
+        },
+        {
+          path: "parcours",
+          element: <Parcours />,
+        },
+        {
+          path: "edt",
+          element: <Edt />,
+        },
+        {
+          path: "parametre",
+          element: <Parametre />,
+        },
+        {
+          path: "rapport",
+          element: <Rapport />,
+        },
+        {
+          path: "utilisateur",
+          element: <Utilisateur />,
+        },
+      ]
+    }
+  ])
+
+  return <RouterProvider router={router} />
 }
 export default App;
