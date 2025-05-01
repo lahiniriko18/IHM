@@ -12,6 +12,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
     "@popperjs/core": "^2.11.8",
+    "@syncfusion/ej2-react-calendars": "^29.1.40",
     "@tanstack/react-table": "^8.21.2",
     "axios": "^1.8.4",
     "bootstrap": "^5.3.5",

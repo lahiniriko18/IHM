@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Headerbar from './Headerbar';
+import Dashboard from '../ChildComponents/Dashboard';
+import { useSidebar } from '../Context/SidebarContext';
 
 function Navbar() {
   const [lienActif, setLienActif] = useState("Dashboard") //pour envoyer le nom du lien vers le header
-  const [isReduire, setIsReduire] = useState(false) //Si le bouton reduire le fenetre est cliquer,il devient true
+  const { isReduire, setIsReduire } = useSidebar(); //Si le bouton reduire le fenetre est cliquer,il devient true
   const location = useLocation();//reeact-dom
   const pathname = location.pathname; // retourne le chemin actuel du react-router-dom
 
@@ -102,6 +104,7 @@ function Navbar() {
         </Link>
       </nav>
       <Headerbar lien={lienActif} status={isReduire} />
+      <Dashboard status={isReduire} />
     </>
   );
 }
