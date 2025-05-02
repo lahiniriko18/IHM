@@ -93,7 +93,7 @@ function Dashboard({ status }) {
               </tr>
             </thead>
             <tbody className="text-sm">
-              {[...Array(1)].map((_, index) => (
+              {[...Array(2)].map((_, index) => (
                 <tr key={index} className="hover:bg-gray-100 -t">
                   <td className="px-4 py-2  text-center">{index + 1}</td>
                   <td className="px-4 py-2  text-center">L3</td>

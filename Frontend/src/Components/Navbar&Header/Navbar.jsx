@@ -17,7 +17,7 @@ function Navbar() {
 
   return (
     <>
-      <nav className={`${isReduire ? "z-50 container bg-white w-16 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3 transition-all duration-700" : "container bg-white z-50 w-52 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3  transition-all duration-700"}`}>
+      <nav className={`${isReduire ? "z-[52] container bg-white w-16 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3 transition-all duration-700" : "container bg-white z-[52] w-52 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3  transition-all duration-700"}`}>
 
         {/* Logo */}
         <div className="flex flex-row justify-between items-center ">

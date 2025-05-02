@@ -18,10 +18,10 @@ function Headerbar({ lien, status }) {
   }, []);
 
   return (
-    <div className={`${status ? "fixed top-0 right-0 left-16 h-14 flex justify-between items-center ps-5 pe-4 z-50  transition-all duration-700" : "fixed top-0 right-0 left-52 h-14 flex justify-between items-center ps-5 pe-4 z-50  transition-all duration-700"}`}>
+    <div className={`${status ? "fixed top-0 right-0 left-16 h-14 flex justify-between items-center ps-5 pe-4   transition-all duration-700" : "fixed top-0 right-0 left-52 h-14 flex justify-between items-center ps-5 pe-4   transition-all duration-700"}`}>
       <h1 className="text-blue-600 font-extrabold text-2xl">{lien}</h1>
 
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative z-[52]" ref={dropdownRef}>
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => setIsOpen(!isOpen)}
