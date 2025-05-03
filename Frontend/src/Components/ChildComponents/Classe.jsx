@@ -71,14 +71,18 @@ function Classe() {
             </div>
 
             <div className="flex flex-col w-full">
-              <label className="font-semibold text-sm mb-1">Nom de la Classe</label>
-              <input
-                type="text"
-                value={nomClasse}
-                onChange={(e) => setNomClasse(e.target.value)}
-                className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              <label className="font-semibold text-sm mb-1">Niveau</label>
+              <Creatable
+                isClearable
+                placeholder="Choisissez ou créez un niveau"
+                onChange={(newValue) => setNomClasse(newValue)}
+                options={[
+                  { value: ' l1', label: 'L1' },
+                ]}
+                className="text-sm"
               />
             </div>
+
 
             <div className="flex flex-col w-full">
               <label className="font-semibold text-sm mb-1">Parcours</label>
