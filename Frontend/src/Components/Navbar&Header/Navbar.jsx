@@ -17,7 +17,7 @@ function Navbar() {
 
   return (
     <>
-      <nav className={`${isReduire ? "z-50 container bg-white w-16 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3 transition-all duration-700" : "container bg-white z-50 w-52 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3  transition-all duration-700"}`}>
+      <nav className={`${isReduire ? "z-[51] container bg-white w-16 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3 transition-all duration-700" : "container bg-white z-[51] w-52 h-screen fixed top-0 left-0 p-2 flex flex-col gap-3  transition-all duration-700"}`}>
 
         {/* Logo */}
         <div className="flex flex-row justify-between items-center ">
@@ -27,77 +27,77 @@ function Navbar() {
 
         {/* Menu links */}
         <Link to="/dashboard">
-          <div className={`${baseClasses} ${isActive("/dashboard") ? activeClasses : ""}`} onClick={() => setLienActif("Dashboard")}>
+          <div className={`${baseClasses} ${isActive("/dashboard") ? activeClasses : ""}`} >
             <img src='/Icons/icons8-tableau-de-bord-24.png' alt='dashboard icon' className='me-1' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Dashboard</p>
           </div>
         </Link>
 
         <Link to="/professeur">
-          <div className={`${baseClasses} ${isActive("/professeur") ? activeClasses : ""}`} onClick={() => setLienActif("Professeur")}>
+          <div className={`${baseClasses} ${isActive("/professeur") ? activeClasses : ""}`} >
             <img src='/Icons/icons8-prof-60.png' alt='Prof icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Professeur</p>
           </div>
         </Link>
 
         <Link to="/salle">
-          <div className={`${baseClasses} ${isActive("/salle") ? activeClasses : ""}`} onClick={() => setLienActif("Salle")}>
+          <div className={`${baseClasses} ${isActive("/salle") ? activeClasses : ""}`}>
             <img src='/Icons/icons8-chambre-50.png' alt='Salle icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Salle</p>
           </div>
         </Link>
 
         <Link to="/matiere">
-          <div className={`${baseClasses} ${isActive("/matiere") ? activeClasses : ""}`} onClick={() => setLienActif("Matières")}>
+          <div className={`${baseClasses} ${isActive("/matiere") ? activeClasses : ""}`}>
             <img src='/Icons/cahier.png' alt='Matière icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Matières</p>
           </div>
         </Link>
 
         <Link to="/classe">
-          <div className={`${baseClasses} ${isActive("/classe") ? activeClasses : ""}`} onClick={() => setLienActif("Classe")}>
+          <div className={`${baseClasses} ${isActive("/classe") ? activeClasses : ""}`}>
             <img src='/Icons/icons8-école-48.png' alt='Classe icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Classe</p>
           </div>
         </Link>
 
         <Link to="/mention">
-          <div className={`${baseClasses} ${isActive("/mention") ? activeClasses : ""}`} onClick={() => setLienActif("Mention")}>
+          <div className={`${baseClasses} ${isActive("/mention") ? activeClasses : ""}`}>
             <img src='/Icons/mention.png' alt='Mention icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Mention</p>
           </div>
         </Link>
 
         <Link to="/parcours">
-          <div className={`${baseClasses} ${isActive("/parcours") ? activeClasses : ""}`} onClick={() => setLienActif("Parcours")}>
+          <div className={`${baseClasses} ${isActive("/parcours") ? activeClasses : ""}`}>
             <img src='/Icons/icons8-partage-de-connaissances-50.png' alt='Parcours icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Parcours</p>
           </div>
         </Link>
 
         <Link to="/edt">
-          <div className={`${baseClasses} ${isActive("/edt") ? activeClasses : ""}`} onClick={() => setLienActif("Emploi du temps")}>
+          <div className={`${baseClasses} ${isActive("/edt") ? activeClasses : ""}`}>
             <img src='/Icons/icons8-objet-avec-durée-50.png' alt='EDT icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Emploi du temps</p>
           </div>
         </Link>
 
         <Link to="/rapport">
-          <div className={`${baseClasses} ${isActive("/rapport") ? activeClasses : ""}`} onClick={() => setLienActif("Rapport")}>
+          <div className={`${baseClasses} ${isActive("/rapport") ? activeClasses : ""}`}>
             <img src='/Icons/evaluation.png' alt='Rapport icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Rapport</p>
           </div>
         </Link>
 
         <Link to="/parametre">
-          <div className={`${baseClasses} ${isActive("/parametre") ? activeClasses : ""}`} onClick={() => setLienActif("Paramètre")}>
+          <div className={`${baseClasses} ${isActive("/parametre") ? activeClasses : ""}`}>
             <img src='/Icons/icons8-paramètres-60.png' alt='Paramètre icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Paramètre</p>
           </div>
         </Link>
 
         <Link to="/utilisateur">
-          <div className={`${baseClasses} ${isActive("/utilisateur") ? activeClasses : ""}`} onClick={() => setLienActif("Utilisateurs")}>
+          <div className={`${baseClasses} ${isActive("/utilisateur") ? activeClasses : ""}`}>
             <img src='/Icons/utilisateur.png' alt='Utilisateur icon' className='me-1 w-6' />
             <p className={`${isReduire ? "opacity-0 pointer-events-none transition-all duration-700" : "opacity-1  transition-all duration-700"}`}>Utilisateurs</p>
           </div>
