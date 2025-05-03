@@ -5,6 +5,7 @@ function Salle() {
   const { isReduire } = useSidebar();
   const [idSalle, setIdSalle] = useState("")
   const [nomSalle, setNomSalle] = useState("")
+  const [lieuSalle, setLieuSalle] = useState("")
   const [isclicked, setIsclicked] = useState(false)
   const [isadd, setisadd] = useState(true)
 
@@ -33,9 +34,10 @@ function Salle() {
 
   return (
     <>
+      {/* modal */}
       {(isclicked) ? (
         <div
-          className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[51] flex justify-center items-center"
+          className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center"
           tabIndex="-1"
         >
           <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
@@ -69,11 +71,21 @@ function Salle() {
               />
             </div>
 
+            <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Lieu de la salle</label>
+              <input
+                type="text"
+                value={lieuSalle}
+                onChange={(e) => setLieuSalle(e.target.value)}
+                className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              />
+            </div>
+
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  console.log(isadd ? "Salle ajoutée" : "Salle modifiée", { idSalle, nomSalle });
+                  console.log(isadd ? "Salle ajoutée" : "Salle modifiée", { idSalle, nomSalle, lieuSalle });
                   setIsclicked(false);
                 }}
               >
@@ -84,17 +96,19 @@ function Salle() {
         </div>
       ) : ""}
 
-      <div className="absolute top-0 w-full h-14 flex justify-center items-center z-[51]">
+      <div className="absolute top-0 left-[25%]  w-[60%]  h-14 flex justify-center items-center z-[51]">
 
         <input
           type="text"
           placeholder='Rechercher ici...'
           value={idSalle}
           onChange={(e) => setIdSalle(e.target.value)}
-          className="border p-2 ps-12 relative rounded w-[40%]  focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+          className="border p-2 ps-12 relative rounded w-[50%]  focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
-        <img src="/Icons/rechercher.png" alt="Search" className='w-6 absolute left-[31%]' />
+        <img src="/Icons/rechercher.png" alt="Search" className='w-6 absolute left-[26%]' />
       </div>
+
+
       <div className={`${isReduire ? "fixed h-screen right-0 top-14 left-20 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700" : "fixed h-screen right-0 top-14 left-56 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700"}`}>
         <div className="flex justify-between w-full">
           <h1 className="font-bold">Liste des salles enregistrées</h1>
@@ -109,6 +123,7 @@ function Salle() {
               <tr className="bg-blue-500 text-white text-sm">
                 <th className="px-4 py-4">#</th>
                 <th className="px-4 py-4">Nom de la salle</th>
+                <th className="px-4 py-4">Lieu de la salle</th>
                 <th className="px-4 py-4">Actions</th>
               </tr>
             </thead>
@@ -117,6 +132,7 @@ function Salle() {
                 <tr key={index} className="hover:bg-gray-100 border-b">
                   <td className="px-4 py-2 text-center">{(pageActuel - 1) * nombreElemParParge + index + 1}</td>
                   <td className="px-4 py-2 text-center">{salle}</td>
+                  <td className="px-4 py-2 text-center">Atanambao</td>
                   <td className="px-4 py-2 flex justify-center items-center gap-2">
                     <button className="p-1 rounded hover:bg-gray-200">
                       <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); }} />
