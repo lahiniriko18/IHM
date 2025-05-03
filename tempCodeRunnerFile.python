@@ -1,5 +1,5 @@
-d={
-    "a":"a",
-    "b":"b"
+dSexe = {
+    "mr":"Masculin",
+    "mme":"Féminin"
 }
-print(d.get("c"))
+print(list(dSexe.keys()))

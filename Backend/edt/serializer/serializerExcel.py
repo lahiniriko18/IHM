@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from datetime import datetime, timedelta,time
-from ..models import Classe,Parcours
+from ..models import Classe,Parcours,Groupe,Posseder,Matiere,Professeur,Enseigner,Salle
 from django.db.models import Q
 class ExcelSerializer(serializers.Serializer):
     fichier=serializers.FileField()
@@ -102,6 +102,10 @@ class ContenuSerializer(serializers.Serializer):
         donnee = {
             "Horaire":data["Horaire"]
         }
+        dSexe = {
+            "mr":"Masculin",
+            "mme":"Féminin"
+        }
         for jour in semaine:
             valeurs = data.get(jour, [])
             valideValeur=[]
@@ -119,7 +123,8 @@ class ContenuSerializer(serializers.Serializer):
                 if valeur == "vide":
                     valideValeur.append([])
                     continue
-                valeur = valeur.split("\n")
+                valeur = [j.lower().strip() for j in valeur.split("\n")]
+                caseContenu = {}
                 if len(valeur) != 4:
                     erreur.append(
                         self.messageErreurSemaine({
@@ -127,7 +132,141 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
+
+                ##### Traitement du matière #####
+                if len(valeur[0].split()) != 2:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Le premier ligne doit contenir le parcours et groupe separé par espace !"
+                        },jour,i+1)
+                    )
+                    continue
+                parcours, groupeStr=valeur[0].split()
+                codeGroupe = None
+                for code in ["g","grp","groupe"]:
+                    if code in groupeStr:codeGroupe=code
+
+                if codeGroupe is None:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du groupe invalide !",
+                            "aide":"Format: grp1 ou g1 ou groupe1"
+                        },jour,i+1)
+                    )
+                    continue
+                groupeNum=groupeStr.replace(codeGroupe,'')
+                if not groupeNum.isdigit():
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du groupe invalide !",
+                            "aide":"Format: grp1 ou g1 ou groupe1"
+                        },jour,i+1)
+                    )
+                    continue
+                groupe = Groupe.objects.filter(nomGroupe=f"Groupe {groupeNum}").first()
+                if not groupe:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Groupe introuvable !",
+                        },jour,i+1)
+                    )
+                    continue
+                posseder = Posseder.objects.filter(numGroupe=groupe.numGroupe).first()
+                if not posseder:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Ce classe ne possède pas ce groupe !",
+                        },jour,i+1)
+                    )
+                    continue
+                caseContenu["groupe"]=groupe.numGroupe
+
+                ##### Traitement du matière #####
+                matiereStr = valeur[1]
+                matiere = Matiere.objects.filter(Q(nomMatiere=matiereStr) | Q(codeMatiere=matiereStr)).first()
+                if not matiere:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Cette matière n'existe pas !",
+                        },jour,i+1)
+                    )
+                    continue
+                caseContenu["matiere"]=matiere.numMatiere
+
+                ##### Traitement du professeur #####
+                professeurStr = [v.strip() for v in valeur[2].split()]
+                if len(professeurStr) != 2:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du nom de professeur invalide !",
+                            "aide":"Format: Mr ou Mme avec son nom séparé par espace."
+                        },jour,i+1)
+                    )
+                    continue
+                sexeStr,nomProf=professeurStr
+                if sexeStr not in list(dSexe.keys()):
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du nom de professeur invalide !",
+                            "aide":"Format: Mr ou Mme avec son nom séparé par espace."
+                        },jour,i+1)
+                    )
+                    continue
+                professeurs= Professeur.objects.filter(nomCourant = nomProf, sexe=dSexe.get(sexeStr)).values()
+                if len(list(professeurs)) == 0:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Professeur introuvable !",
+                            "aide":"Veuillez insérez ce professeur avant de l'ajouter dans le fichier Excel"
+                        },jour,i+1)
+                    )
+                    continue
+                professeur = None
+                for prof in list(professeurs):
+                    enseigner= Enseigner.objects.filter(numProfesseur=prof.numProfesseur, numMatiere=matiere.numMatiere).first()
+                    if enseigner:professeur=prof
+                if professeur is None:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Professeur ne correspond pas au matière",
+                            "aide":"Le professeur doit enseigner le matière dans le même cellule."
+                        },jour,i+1)
+                    )
+                    continue
+                caseContenu["professeur"]=professeur.numProfesseur
                 
+                #### Traitement salle #####
+                salleStr = [v.strip() for v in valeur[3].split()]
+                if len(salleStr) != 2:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du salle invalide !",
+                            "aide":"Format: S ou Salle et numéro du salle séparé par espace."
+                        },jour,i+1)
+                    )
+                    continue
+                codeSalle, numeroSalle = salleStr
+                if codeSalle not in ["s","salle"]:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du salle invalide !",
+                            "aide":"Format: S ou Salle et numéro du salle séparé par espace."
+                        },jour,i+1)
+                    )
+                    continue
+                salle = Salle.objects.filter(nomSalle=f"Salle {numeroSalle}").first()
+                if not salle:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Ce salle n'existe pas !",
+                            "aide":"Veuillez ajouter ce salle avant de le saisir dans le fichier."
+                        },jour,i+1)
+                    )
+                    continue
+                caseContenu["salle"]=salle.numSalle
+
+                if not erreur:
+                    valideValeur.append(caseContenu)
             if not erreur:
                 donnee[jour]=valideValeur
             else:

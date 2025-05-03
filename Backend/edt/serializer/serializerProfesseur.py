@@ -15,7 +15,7 @@ class ProfesseurSerializer(serializers.ModelSerializer):
     class Meta:
         model=Professeur
         fields=["numProfesseur","numEtablissement","nomProfesseur","prenomProfesseur","grade",
-                    "sexe","adresse","contact","email","description"] 
+                    "sexe","adresse","contact","email","description"]
     
     def validate_sexe(self, value):
         if value.lower() not in ["masculin","féminin"]:
