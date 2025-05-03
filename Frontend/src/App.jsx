@@ -13,6 +13,7 @@ import Edt from "./Components/ChildComponents/Edt";
 import Mention from "./Components/ChildComponents/Mention";
 import Rapport from "./Components/ChildComponents/Rapport";
 import Applayout from "./Components/Layout/Applayout";
+import ProfesseurDetails from "./Components/ChildComponents/ProfesseurDetails";
 
 function App() {
   const router = createBrowserRouter([
@@ -31,6 +32,10 @@ function App() {
         {
           path: "professeur",
           element: <Professeur />
+        },
+        {
+          path: "professeur/detail/:id",
+          element: <ProfesseurDetails />
         },
         {
           path: "salle",
