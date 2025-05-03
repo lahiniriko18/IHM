@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 class MatiereSerializer(serializers.ModelSerializer):
     class Meta:
         model=Matiere
-        fields=["numMatiere","nomMatiere"]
+        fields=["numMatiere","nomMatiere","codeMatiere"]
     def validate(self, data):
         return data
     def create(self, validated_data):

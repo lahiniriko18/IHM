@@ -49,6 +49,7 @@ class Parcours(models.Model):
     numParcours=models.AutoField(primary_key=True)
     numMention=models.ForeignKey(Mention, on_delete=models.CASCADE, db_column='numMention')
     nomParcours=models.CharField(max_length=50)
+    codeParcours=models.CharField(max_length=6, null=True)
 
     class Meta:
         db_table='parcours'
@@ -59,6 +60,7 @@ class Parcours(models.Model):
 class Matiere(models.Model):
     numMatiere=models.AutoField(primary_key=True)
     nomMatiere=models.CharField(max_length=50)
+    codeMatiere=models.CharField(max_length=20, null=True)
 
     class Meta:
         db_table='matiere'

@@ -1,8 +1,17 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 from ..models import Classe
 from django.core.exceptions import ValidationError
 
 class ClasseSerializer(serializers.ModelSerializer):
+    niveau = serializers.CharField( 
+        validators=[
+            UniqueValidator(
+                queryset=Classe.objects.all(),
+                message="Ce niveau existe déjà. Le niveau est unique !"
+            )
+        ]
+    )
     class Meta:
         model=Classe
         fields=["numClasse","niveau"]

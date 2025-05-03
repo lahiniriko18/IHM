@@ -5,7 +5,13 @@ from django.core.exceptions import ValidationError
 import re
 
 class ActionSerializer(serializers.ModelSerializer):
-    user_id = serializers.PrimaryKeyRelatedField(queryset=Utilisateur.objects.all())
+    user_id = serializers.PrimaryKeyRelatedField(
+        queryset=Utilisateur.objects.all(),
+        error_messages={
+            'does_not_exist': "L'utilisateur spécifié n'existe pas !",
+            'incorrect_type': "Le format de l'ID de l'utilisateur est invalide !",
+        }
+    )
     class Meta:
         model=Action
         fields=["numAction","user_id","type","text","table","statut"] 
