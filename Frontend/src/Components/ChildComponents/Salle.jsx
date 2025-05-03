@@ -1,13 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { useSidebar } from '../Context/SidebarContext';
 
 function Salle() {
   const { isReduire } = useSidebar();
-  const [idSalle, setIdSalle] = useState("")
-  const [nomSalle, setNomSalle] = useState("")
-  const [lieuSalle, setLieuSalle] = useState("")
-  const [isclicked, setIsclicked] = useState(false)
-  const [isadd, setisadd] = useState(true)
+  const [idSalle, setIdSalle] = useState('');
+  const [nomSalle, setNomSalle] = useState('');
+  const [lieuSalle, setLieuSalle] = useState('');
+  const [isclicked, setIsclicked] = useState(false);
+  const [isadd, setisadd] = useState(true);
+  const [actionButtonsVisible, setActionButtonsVisible] = useState(false);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
 
   const listeSalle = Array.from({ length: 16 }, (_, i) => `S${String(i + 1).padStart(3, '0')}`);
   const nombreElemParParge = 8;
@@ -30,19 +32,46 @@ function Salle() {
       }
     }
     return pages;
-  }
+  };
+
+  const handleRowClick = (index) => {
+    setSelectedRowIndex(index);
+    setActionButtonsVisible(true);
+  };
+
+  const handleEditClick = (index) => {
+    const salleToEdit = currentData[index];
+    setIdSalle(salleToEdit); // Assuming displayed value is ID for now
+    setNomSalle(salleToEdit); // You'll likely need to fetch actual data
+    setLieuSalle('Atanambao'); // You'll likely need to fetch actual data
+    setisadd(false);
+    setIsclicked(true);
+    setActionButtonsVisible(false);
+    setSelectedRowIndex(null);
+  };
+
+  const handleDeleteClick = (index) => {
+    console.log('Supprimer la salle à l\'index:', index);
+    setActionButtonsVisible(false);
+    setSelectedRowIndex(null);
+    // Implement your delete logic here
+  };
 
   return (
     <>
       {/* modal */}
-      {(isclicked) ? (
+      {isclicked && (
         <div
           className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center"
           tabIndex="-1"
         >
           <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
             <div className="flex justify-between items-center w-full">
-              {isadd ? (<h1 className="text-blue-600 text-xl font-bold">Nouvelle salle</h1>) : (<h1 className="text-blue-600 text-xl font-bold">Modification d'une salle</h1>)}
+              {isadd ? (
+                <h1 className="text-blue-600 text-xl font-bold">Nouvelle salle</h1>
+              ) : (
+                <h1 className="text-blue-600 text-xl font-bold">Modification d'une salle</h1>
+              )}
               <img
                 src="/Icons/annuler.png"
                 alt="Quitter"
@@ -85,35 +114,45 @@ function Salle() {
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  console.log(isadd ? "Salle ajoutée" : "Salle modifiée", { idSalle, nomSalle, lieuSalle });
+                  console.log(isadd ? 'Salle ajoutée' : 'Salle modifiée', { idSalle, nomSalle, lieuSalle });
                   setIsclicked(false);
                 }}
               >
-                {isadd ? "AJOUTER" : "MODIFIER"}
+                {isadd ? 'AJOUTER' : 'MODIFIER'}
               </button>
             </div>
           </div>
         </div>
-      ) : ""}
+      )}
 
       <div className="absolute top-0 left-[25%]  w-[60%]  h-14 flex justify-center items-center z-[51]">
-
         <input
           type="text"
-          placeholder='Rechercher ici...'
+          placeholder="Rechercher ici..."
           value={idSalle}
           onChange={(e) => setIdSalle(e.target.value)}
           className="border p-2 ps-12 relative rounded w-[50%]  focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
-        <img src="/Icons/rechercher.png" alt="Search" className='w-6 absolute left-[26%]' />
+        <img src="/Icons/rechercher.png" alt="Search" className="w-6 absolute left-[26%]" />
       </div>
 
-
-      <div className={`${isReduire ? "fixed h-screen right-0 top-14 left-20 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700" : "fixed h-screen right-0 top-14 left-56 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700"}`}>
+      <div
+        className={`${
+          isReduire
+            ? 'fixed h-screen right-0 top-14 left-20 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700'
+            : 'fixed h-screen right-0 top-14 left-56 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700'
+        }`}
+      >
         <div className="flex justify-between w-full">
           <h1 className="font-bold">Liste des salles enregistrées</h1>
-          <button className="button flex gap-3 hover:scale-105 transition duration-200" onClick={() => { setIsclicked(true); setisadd(true); }}>
-            <img src="/Icons/plus-claire.png" alt="Plus" className='w-6 h-6' /> Nouveau
+          <button
+            className="button flex gap-3 hover:scale-105 transition duration-200"
+            onClick={() => {
+              setIsclicked(true);
+              setisadd(true);
+            }}
+          >
+            <img src="/Icons/plus-claire.png" alt="Plus" className="w-6 h-6" /> Nouveau
           </button>
         </div>
 
@@ -129,17 +168,41 @@ function Salle() {
             </thead>
             <tbody className="text-sm">
               {currentData.map((salle, index) => (
-                <tr key={index} className="hover:bg-gray-100 border-b">
+                <tr
+                  key={index}
+                  className={`border-b transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-gray-100 cursor-pointer ${
+                    selectedRowIndex === index ? 'bg-gray-200' : ''
+                  }`}
+                  onClick={() => handleRowClick(index)}
+                >
                   <td className="px-4 py-2 text-center">{(pageActuel - 1) * nombreElemParParge + index + 1}</td>
                   <td className="px-4 py-2 text-center">{salle}</td>
                   <td className="px-4 py-2 text-center">Atanambao</td>
-                  <td className="px-4 py-2 flex justify-center items-center gap-2">
-                    <button className="p-1 rounded hover:bg-gray-200">
-                      <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); }} />
-                    </button>
-                    <button className="p-1 rounded hover:bg-gray-200">
-                      <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
-                    </button>
+                  <td className="px-4 py-2 relative">
+                    <div className="flex justify-center items-center">
+                      {actionButtonsVisible && selectedRowIndex === index ? (
+                        <div className="flex justify-center items-center gap-2 transition-all duration-300">
+                          <button
+                            className="flex items-center gap-1 p-1 rounded border border-blue-500 hover:bg-blue-500 hover:text-white transition duration-200"
+                            onClick={() => handleEditClick(index)}
+                          >
+                            <img src="/Icons/modifier.png" alt="Modifier" className="w-5" />
+                            <span className="hidden sm:inline">Modifier</span>
+                          </button>
+                          <button
+                            className="flex items-center gap-1 p-1 rounded border border-red-500 hover:bg-red-500 hover:text-white transition duration-200"
+                            onClick={() => handleDeleteClick(index)}
+                          >
+                            <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
+                            <span className="hidden sm:inline">Supprimer</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-center items-center gap-2 opacity-50 transition-all duration-300">
+                          <img src="/Icons/icons8-menu-2-50.png" alt="Menu" className="w-5" />
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -162,8 +225,9 @@ function Salle() {
             <button
               key={idx}
               onClick={() => typeof page === 'number' && setPageActuel(page)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition duration-200 ${page === pageActuel ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:scale-105'
-                }`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition duration-200 ${
+                page === pageActuel ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:scale-105'
+              }`}
             >
               {page}
             </button>
@@ -178,10 +242,9 @@ function Salle() {
             <img src="/Icons/vers-le-bas.png" alt="Suivant" className="w-5 rotate-[270deg]" />
           </button>
         </footer>
-
       </div>
     </>
-  )
+  );
 }
 
 export default Salle;

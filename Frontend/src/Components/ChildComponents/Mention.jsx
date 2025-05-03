@@ -119,7 +119,7 @@ function Mention() {
             </thead>
             <tbody className="text-sm">
               {currentData.map((Mention, index) => (
-                <tr key={index} className="hover:bg-gray-100 border-b">
+                <tr key={index} className="border-b transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-gray-100">
                   <td className="px-4 py-2 text-center">{(pageActuel - 1) * nombreElemParParge + index + 1}</td>
                   <td className="px-4 py-2 text-center">{Mention}</td>
 
