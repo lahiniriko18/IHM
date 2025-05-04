@@ -14,6 +14,9 @@ import Mention from "./Components/ChildComponents/Mention";
 import Rapport from "./Components/ChildComponents/Rapport";
 import Applayout from "./Components/Layout/Applayout";
 import ProfesseurDetails from "./Components/ChildComponents/ProfesseurDetails";
+import ParametreInfo from "./Components/ChildComponents/ParametreInfo";
+import ParametreSecurite from "./Components/ChildComponents/ParametreSecurite";
+import ParametreProfile from "./Components/ChildComponents/ParametreProfile";
 
 function App() {
   const router = createBrowserRouter([
@@ -64,6 +67,18 @@ function App() {
         {
           path: "parametre",
           element: <Parametre />,
+        },
+        {
+          path: "parametre/info-etablisement",
+          element: <ParametreInfo />,
+        },
+        {
+          path: "parametre/securite",
+          element: <ParametreSecurite />,
+        },
+        {
+          path: "parametre/profile",
+          element: <ParametreProfile />,
         },
         {
           path: "rapport",
