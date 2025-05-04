@@ -29,10 +29,16 @@ function ParametreSecurite() {
           <button className=' hover:scale-105 text-gray-500' onClick={versProfile}>Profile</button>
         </div>
         <div className="flex flex-row items-start gap-3">
+          {/* div a gauche */}
           <div className="flex flex-col items-start gap-3 w-[50%]">
-
+            <div className="flex flex-col gap-2">
+              <label htmlFor="">Nombre maximum des utilisateurs: </label>
+              <input type="text" className='border p-1 rounded w-96' />
+            </div>
+           
           </div>
 
+          {/* div a droite */}
           <div className="flex flex-col gap-3 ">
           </div>
         </div>
