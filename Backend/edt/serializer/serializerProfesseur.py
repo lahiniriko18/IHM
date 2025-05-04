@@ -14,7 +14,7 @@ class ProfesseurSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model=Professeur
-        fields=["numProfesseur","numEtablissement","nomProfesseur","prenomProfesseur","grade",
+        fields=["numProfesseur","numEtablissement","nomProfesseur","prenomProfesseur","nomCourant","grade",
                     "sexe","adresse","contact","email","description"]
     
     def validate_sexe(self, value):

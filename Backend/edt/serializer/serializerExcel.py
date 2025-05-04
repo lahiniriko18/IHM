@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from datetime import datetime, timedelta,time
-from ..models import Classe,Parcours,Groupe,Posseder,Matiere,Professeur,Enseigner,Salle
+from ..models import Classe,Parcours,Groupe,Posseder,Matiere,Professeur,Enseigner,Salle,Constituer
 from django.db.models import Q
 class ExcelSerializer(serializers.Serializer):
     fichier=serializers.FileField()
@@ -30,7 +30,7 @@ class ContenuSerializer(serializers.Serializer):
         index = self.context.get("index")
         if index is not None:
             return {
-                "texte":f"Colonne: {colonne},{ f' case: {case},' if case is not None else ''} ligne: {index+1}. {erreur.get("texte")}",
+                "texte":f"Colonne: {colonne}, ligne: {index+1} { f', case: {case}' if case is not None else ''}. {erreur.get("texte")}",
                 "aide":erreur.get("aide","Rien")
             }
         return {
@@ -104,14 +104,15 @@ class ContenuSerializer(serializers.Serializer):
         }
         dSexe = {
             "mr":"Masculin",
-            "mme":"Féminin"
+            "monsieur":"Masculin",
+            "mme":"Féminin",
+            "madame":"Féminin"
         }
         for jour in semaine:
             valeurs = data.get(jour, [])
             valideValeur=[]
             erreur = []
             if len(valeurs) != 2:
-                print(len(valeurs))
                 erreurs[jour]=self.messageErreurSemaine(
                         {
                         "texte":"Le nombre de colonne ne doit pas différent de 2 !"
@@ -123,7 +124,7 @@ class ContenuSerializer(serializers.Serializer):
                 if valeur == "vide":
                     valideValeur.append([])
                     continue
-                valeur = [j.lower().strip() for j in valeur.split("\n")]
+                valeur = [j.strip() for j in valeur.split("\n")]
                 caseContenu = {}
                 if len(valeur) != 4:
                     erreur.append(
@@ -133,7 +134,7 @@ class ContenuSerializer(serializers.Serializer):
                     )
                     continue
 
-                ##### Traitement du matière #####
+                ##### Traitement du groupe et parcours #####
                 if len(valeur[0].split()) != 2:
                     erreur.append(
                         self.messageErreurSemaine({
@@ -141,17 +142,29 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
-                parcours, groupeStr=valeur[0].split()
+                parcoursStr, groupeStr=valeur[0].lower().split()
+                numParcoursInstance = self.context.get("parcours")
+                codeParcours=None
+                parcours = Parcours.objects.filter(numParcours=numParcoursInstance).first()
+                if parcours:
+                    codeParcours=parcours.codeParcours
+                if  codeParcours.lower() != parcoursStr:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Parcours ne corresond pas au parcours dans le titre !"
+                        },jour,i+1)
+                    )
+                    continue
                 codeGroupe = None
-                for code in ["g","grp","groupe"]:
-                    if code in groupeStr:codeGroupe=code
-
+                for code in ["groupe","grp","gr","g"]:
+                    if code in groupeStr and codeGroupe is None:codeGroupe=code
                 if codeGroupe is None:
                     erreur.append(
                         self.messageErreurSemaine({
                             "texte":"Format du groupe invalide !",
-                            "aide":"Format: grp1 ou g1 ou groupe1"
+                            "aide":"Format: grp1 ou g1 ou gr1 ou groupe1"
                         },jour,i+1)
+                        
                     )
                     continue
                 groupeNum=groupeStr.replace(codeGroupe,'')
@@ -171,15 +184,10 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
-                posseder = Posseder.objects.filter(numGroupe=groupe.numGroupe).first()
-                if not posseder:
-                    erreur.append(
-                        self.messageErreurSemaine({
-                            "texte":"Ce classe ne possède pas ce groupe !",
-                        },jour,i+1)
-                    )
-                    continue
+                numClasseInstance=self.context.get("classe")
+                classeGroupe = Posseder.objects.filter(numClasse=numClasseInstance, numGroupe=groupe.numGroupe).exists()
                 caseContenu["groupe"]=groupe.numGroupe
+                caseContenu["classeGroupe"]=classeGroupe
 
                 ##### Traitement du matière #####
                 matiereStr = valeur[1]
@@ -194,7 +202,7 @@ class ContenuSerializer(serializers.Serializer):
                 caseContenu["matiere"]=matiere.numMatiere
 
                 ##### Traitement du professeur #####
-                professeurStr = [v.strip() for v in valeur[2].split()]
+                professeurStr = [v.lower().strip() for v in valeur[2].split()]
                 if len(professeurStr) != 2:
                     erreur.append(
                         self.messageErreurSemaine({
@@ -223,7 +231,7 @@ class ContenuSerializer(serializers.Serializer):
                     continue
                 professeur = None
                 for prof in list(professeurs):
-                    enseigner= Enseigner.objects.filter(numProfesseur=prof.numProfesseur, numMatiere=matiere.numMatiere).first()
+                    enseigner= Enseigner.objects.filter(numProfesseur=prof["numProfesseur"], numMatiere=matiere.numMatiere).first()
                     if enseigner:professeur=prof
                 if professeur is None:
                     erreur.append(
@@ -233,10 +241,10 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
-                caseContenu["professeur"]=professeur.numProfesseur
+                caseContenu["professeur"]=professeur["numProfesseur"]
                 
                 #### Traitement salle #####
-                salleStr = [v.strip() for v in valeur[3].split()]
+                salleStr = [v.lower().strip() for v in valeur[3].split()]
                 if len(salleStr) != 2:
                     erreur.append(
                         self.messageErreurSemaine({
@@ -258,7 +266,7 @@ class ContenuSerializer(serializers.Serializer):
                 if not salle:
                     erreur.append(
                         self.messageErreurSemaine({
-                            "texte":"Ce salle n'existe pas !",
+                            "texte":"Cette salle n'existe pas !",
                             "aide":"Veuillez ajouter ce salle avant de le saisir dans le fichier."
                         },jour,i+1)
                     )
@@ -372,28 +380,38 @@ class DataSerializer(serializers.Serializer):
             messageErreur("Niveau introuvable !")
         if not parcours:
             messageErreur("Parcours introuvable !")
-        
-        niveauParcours = {
-            "niveau":classe.numClasse,
-            "parcours":parcours.numParcours
+        constitue=Constituer.objects.filter(numParcours=parcours.numParcours, numClasse=classe.numClasse).exists()
+        classeParcours = {
+            "classe":classe.numClasse,
+            "parcours":parcours.numParcours,
+            "constitue":constitue
         }
-        titre.append(niveauParcours)
+        titre.append(classeParcours)
         
         return titre
 
-    def validate_contenu(self, value):
+    def validate(self, data):
         erreurs = []
         contenuValide = []
-
-        for i, ligne in enumerate(value):
-            serializer= ContenuSerializer(data=ligne, context={'index': i})
+        titre=data["titre"]
+        classe=titre[1].get("classe")
+        parcours=titre[1].get("parcours")
+        for i, ligne in enumerate(data["contenu"]):
+            serializer= ContenuSerializer(data=ligne, context={
+                'index': i,
+                'classe':classe,
+                'parcours':parcours
+                })
             if serializer.is_valid():
                 contenuValide.append(serializer.validated_data)
             else:
                 erreurs.append(serializer.errors)
-                raise serializers.ValidationError(erreurs)
+                raise serializers.ValidationError({"contenu":erreurs})
         
         if erreurs:
-            raise serializers.ValidationError(erreurs)
+            raise serializers.ValidationError({"contenu":erreurs})
         
-        return contenuValide
+        return {
+            "titre":titre,
+            "contenu":contenuValide
+        }
