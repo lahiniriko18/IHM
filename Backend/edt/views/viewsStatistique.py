@@ -16,3 +16,6 @@ class EffectifView(APIView):
             "action":Action.objects.count()
         }
         return Response({"effectifs":effectifs})
+
+# class ClasseCourantView(APIView):
+#     def 

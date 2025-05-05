@@ -42,6 +42,7 @@ class EdtExcelView(APIView):
 
         if serializer.is_valid():
             fichier=serializer.validated_data['fichier']
+            typeFichier=serializer.validated_data["typeFichier"]
             try:
 
                 wb = load_workbook(fichier)
@@ -53,7 +54,6 @@ class EdtExcelView(APIView):
                 jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
                 
                 premierLignes.columns=['Titre']
-
                 colUtile=[]
                 for i,col in enumerate(ligneWb[3]):
                     if i<13:
@@ -63,6 +63,7 @@ class EdtExcelView(APIView):
                             colUtile.append(f"Unnamed: {i}")
                         else:
                             colUtile.append(col.strip())
+                print(colUtile)
                 dataUtile = []
                 for lignes in ligneWb[4:]:
                     ligne = []

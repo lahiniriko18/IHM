@@ -19,7 +19,7 @@ class ProfesseurView(APIView):
         try:
             professeur=Professeur.objects.get(pk=numProfesseur)
         except Professeur.DoesNotExist:
-            return Response({"erreur":"Professeur introuvable"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"erreur":"Professeur introuvable !"}, status=status.HTTP_404_NOT_FOUND)
         serializer=ProfesseurSerializer(professeur, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -31,4 +31,4 @@ class ProfesseurView(APIView):
             professeur.delete()
             return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
         except professeur.DoesNotExist:
-            return Response({'erreur':'Professeur introuvable'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'erreur':'Professeur introuvable !'}, status=status.HTTP_404_NOT_FOUND)
