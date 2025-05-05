@@ -1,8 +1,29 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSidebar } from '../Context/SidebarContext';
 import Calendar from 'react-calendar'
-
+import axios from "axios"
 function Dashboard({ status }) {
+
+  const [stats, setStats] = useState(null);
+
+  const getStats = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/statistique/effectif");
+      setStats(response.data);
+    } catch (error) {
+      console.error("Erreur de l'API :", error.message);
+    }
+  }
+
+
+  useEffect(() => {
+    if (stats !== null) {
+      console.log("Stats mises à jour :", stats);
+    }
+  }, [stats]);
+
+
+
   const { isReduire } = useSidebar();
   return (
     <div className={`${isReduire ? "fixed h-screen  right-0 top-12 left-16 ps-5  pt-3 z-40 flex flex-wrap flex-col gap-5 justify-start items-start overflow-auto duration-700 transition-all" : "fixed h-screen  right-0 top-12 left-52 ps-5  pt-3 z-40 flex flex-wrap flex-col gap-5 justify-start items-start overflow-auto duration-700 transition-all"}`}>

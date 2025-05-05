@@ -101,6 +101,7 @@ class EdtExcelView(APIView):
                     "titre":dataTitre,
                     "contenu":dataContenu
                 }
+                # test git hub
                 serializer=DataSerializer(data=data)
                 if serializer.is_valid():
                     donnee = serializer.validated_data
