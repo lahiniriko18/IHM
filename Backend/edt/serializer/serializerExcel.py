@@ -4,6 +4,7 @@ from ..models import Classe,Parcours,Groupe,Posseder,Matiere,Professeur,Enseigne
 from django.db.models import Q
 class ExcelSerializer(serializers.Serializer):
     fichier=serializers.FileField()
+    typeFichier=serializers.CharField()
 
 
 class TitreSerializer(serializers.Serializer):
