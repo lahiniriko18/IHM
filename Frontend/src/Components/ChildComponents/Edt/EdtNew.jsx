@@ -6,6 +6,7 @@ import Creatable, { useCreatable } from 'react-select/creatable';
 function EdtNew() {
   const [isNewValue, setIsNewValue] = useState(false)
   const [isEditHours, setIsEditHours] = useState(false)
+  const [intervalHoraire, setIntervalHoraire] = useState(2)
   const navigate = useNavigate();
   const versGeneral = () => {
     navigate('/edt')
@@ -19,12 +20,8 @@ function EdtNew() {
   const [modeCreation, setModeCreation] = useState(null);
   const { isReduire } = useSidebar();
   const [ligne, setLigne] = useState(1)
-  const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-  const [horaires, setHoraires] = useState([{
-    id: 1,
-    heure_debut: 8,
-    heure_fin: 10
-  },])
+  const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  const [horaires, setHoraires] = useState([{ id: 1, heure_debut: 8, heure_fin: 10 }]);
   const [selectedCell, setSelectedCell] = useState(null);
 
   const handleClick = (jour, horaire) => {
@@ -225,7 +222,7 @@ function EdtNew() {
               </thead>
               <tbody>
                 {horaires.map((horaire, i) => (
-                  <tr key={i}>
+                  <tr key={i} className=''>
                     <td className="border border-black p-2 font-semibold relative ">
                       <span className="flex flex-row items-center justify-center">
                         <p>{horaire.heure_debut}h</p>
@@ -238,31 +235,42 @@ function EdtNew() {
                       }} />
                     </td>
                     {jours.map((jour) => (
-                      <td
-                        key={jour}
-                        className="border border-black h-16 cursor-pointer"
-                      >
-                        <div className="flex h-full">
-                          <div className="w-1/2  hover:bg-blue-100 transition flex justify-center items-center border-r  border-gray-300" onClick={() => {
-                            setIsEditHours(false);
-                            setIsNewValue(true)
-                          }} >
+                      <td key={jour} className="border border-black  cursor-pointer h-full">
+                        <div className="flex h-full relative">
+                          <div className="w-1/2 hover:bg-blue-100 transition flex flex-col justify-start items-start gap-1 border-gray-300 px-1">
+                            <input type="text" className=' w-[98%]  pointer-events-none' name='Matiere' id='' />
+                            <input type="text" className=' w-[98%]  pointer-events-none' name='Salle' id='' />
+                            <input type="text" className=' w-[98%]  pointer-events-none' name='Prof' id='' />
+
+                          </div>
+                          <div className="w-1/2 hover:bg-blue-100 transition flex justify-center items-center">
                             <img src="/Icons/plus.png" alt="" className="w-6 h-6" />
                           </div>
-                          <div className="w-1/2  hover:bg-blue-100 transition flex justify-center items-center" onClick={() => {
-                            setIsEditHours(false);
-                            setIsNewValue(true)
-                          }} >
-                            <img src="/Icons/plus.png" alt="" className="w-6 h-6 " />
-                          </div>
                         </div>
-
                       </td>
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="flex justify-end">
+            <img
+              src="/Icons/plus.png"
+              alt="Ajouter une ligne"
+              className='w-8 cursor-pointer'
+              onClick={() => {
+                const last = horaires[horaires.length - 1];
+                const newStart = last.heure_fin;
+                const newEnd = parseFloat((newStart + intervalHoraire).toFixed(2)); // gestion des décimales
+                const nouvelleLigne = {
+                  id: horaires.length + 1,
+                  heure_debut: newStart,
+                  heure_fin: newEnd
+                };
+                setHoraires([...horaires, nouvelleLigne]);
+              }}
+            />
           </div>
         </div>
       </div >
