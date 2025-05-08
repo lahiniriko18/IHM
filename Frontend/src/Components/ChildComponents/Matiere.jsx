@@ -1,20 +1,87 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSidebar } from '../Context/SidebarContext';
-
+import axios from 'axios'
 function Matiere() {
   const { isReduire } = useSidebar();
-  const [idMatiere, setIdMatiere] = useState("")
-  const [nomMatiere, setNomMatiere] = useState("")
+  const [listeMatiere, setListeMatiere] = useState([]);  // ✅ tableau vide au lieu de {}
+  const [id, setId] = useState()
+  const [dataMatiere, setDataMatiere] = useState({ nomMatiere: "", codeMatiere: "" })
   const [isclicked, setIsclicked] = useState(false)
   const [isadd, setisadd] = useState(true)
+  const sendData = async () => {
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/matiere/ajouter/", dataMatiere)
+      if (response.status !== 201) {
+        throw new Error('Erreur code : ' + response.status)
+      }
+      console.log("ajouter")
+      getData()
+    } catch (error) {
+      console.error(error.message)
+    } finally {
+      console.log("Le tache est terminé")
+    }
+  }
+  const removeMatiere = async (id) => {
+    try {
+      const response = await axios.delete(`http://127.0.0.1:8000/api/matiere/supprimer/${parseInt(id)}`)
+      if (response.status !== 200 && response.status !== 204) {
+        throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
+      }
+      console.log(`Utilisateur ${id} supprimé avec succès`);
+      getData()
+    } catch (error) {
+      console.log("Erreur:", error.message)
+    }
+  }
+  const putData = async () => {
+    try {
+      const response = await axios.put(`http://127.0.0.1:8000/api/matiere/modifier/${id}`, dataMatiere)
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status)
+      }
+      console.log("ajouter")
+      getData()
+    } catch (error) {
+      console.error(error.message)
+    } finally {
+      console.log("Le tache est terminé")
+    }
+  }
 
-  const listeMatiere = Array.from({ length: 16 }, (_, i) => `S${String(i + 1).padStart(3, '0')}`);
+  const getData = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/matiere/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeMatiere(response.data);  // ✅ Mise à jour ici
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      console.log("Le tache est terminé");
+    }
+  };
+  const editMatiere = (numMatiere) => {
+    const selectedMatiere = listeMatiere.find((item) => item.numMatiere === numMatiere)
+    if (selectedMatiere) {
+      setDataMatiere({ ...dataMatiere, nomMatiere: selectedMatiere.nomMatiere, codeMatiere: selectedMatiere.codeMatiere })
+      setId(selectedMatiere.numMatiere)
+    }
+  }
+
+  useEffect(() => {
+    getData()
+  }, [])
+
+
   const nombreElemParParge = 8;
   const [pageActuel, setPageActuel] = useState(1);
-
   const totalPages = Math.ceil(listeMatiere.length / nombreElemParParge);
-  const currentData = listeMatiere.slice((pageActuel - 1) * nombreElemParParge, pageActuel * nombreElemParParge);
-
+  const currentData = listeMatiere.slice(
+    (pageActuel - 1) * nombreElemParParge,
+    pageActuel * nombreElemParParge
+  );
   const getPageNumbers = () => {
     const pages = [];
     if (totalPages <= 5) {
@@ -46,45 +113,58 @@ function Matiere() {
                 src="/Icons/annuler.png"
                 alt="Quitter"
                 className="w-6 h-6 cursor-pointer"
-                onClick={() => setIsclicked(false)}
+                onClick={() => {
+                  setIsclicked(false);
+                  setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+                }}
               />
             </div>
-
-            <div className="flex flex-col w-full">
-              <label className="font-semibold text-sm mb-1">Identifiant de la Matiere</label>
-              <input
-                type="text"
-                value={idMatiere}
-                onChange={(e) => setIdMatiere(e.target.value)}
-                className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-              />
-            </div>
-
             <div className="flex flex-col w-full">
               <label className="font-semibold text-sm mb-1">Nom de la Matiere</label>
               <input
                 type="text"
-                value={nomMatiere}
-                onChange={(e) => setNomMatiere(e.target.value)}
+                value={dataMatiere.nomMatiere}
+                onChange={(e) => setDataMatiere({ ...dataMatiere, nomMatiere: e.target.value })}
                 className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               />
             </div>
 
-
+            <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Code matiere</label>
+              <input
+                type="text"
+                value={dataMatiere.codeMatiere}
+                onChange={(e) => setDataMatiere({ ...dataMatiere, codeMatiere: e.target.value })}
+                className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              />
+            </div>
+            <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  console.log(isadd ? "Matiere ajoutée" : "Matiere modifiée", { idMatiere, nomMatiere, lieuMatiere });
+                  if (dataMatiere.nomMatiere.trim() !== "" && dataMatiere.codeMatiere.trim() !== "") {
+                    if (isadd) {
+                      sendData()
+                      setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+                    }
+                    else {
+                      putData()
+                      setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+
+                    }
+                  }
                   setIsclicked(false);
                 }}
+
               >
                 {isadd ? "AJOUTER" : "MODIFIER"}
               </button>
             </div>
           </div>
-        </div>
-      ) : ""}
+        </div >
+      ) : ""
+      }
 
       {/*Search */}
       <div className="absolute top-0 left-[25%]  w-[60%]  h-14 flex justify-center items-center z-[51]">
@@ -92,8 +172,7 @@ function Matiere() {
         <input
           type="text"
           placeholder='Rechercher ici...'
-          value={idMatiere}
-          onChange={(e) => setIdMatiere(e.target.value)}
+
           className="border p-2 ps-12 relative rounded w-[50%]  focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
         <img src="/Icons/rechercher.png" alt="Search" className='w-6 absolute left-[26%]' />
@@ -114,20 +193,23 @@ function Matiere() {
               <tr className="bg-blue-500 text-white text-sm">
                 <th className="px-4 py-4">#</th>
                 <th className="px-4 py-4">Nom de la Matiere</th>
+                <th className="px-4 py-4">Code de la Matiere</th>
                 <th className="px-4 py-4">Actions</th>
               </tr>
             </thead>
             <tbody className="text-sm">
               {currentData.map((Matiere, index) => (
-                <tr key={index} className="border-b transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-gray-100">
-                  <td className="px-4 py-2 text-center">{(pageActuel - 1) * nombreElemParParge + index + 1}</td>
-                  <td className="px-4 py-2 text-center">{Matiere}</td>
-
+                <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
+                  <td className="px-4 py-2 text-center">{Matiere.numMatiere}</td>
+                  <td className="px-4 py-2 text-center">{Matiere.nomMatiere}</td>
+                  <td className="px-4 py-2 text-center">{Matiere.codeMatiere}</td>
                   <td className="px-4 py-2 flex justify-center items-center gap-2">
                     <button className="p-1 rounded hover:bg-gray-200">
-                      <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); }} />
+                      <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editMatiere(Matiere.numMatiere) }} />
                     </button>
-                    <button className="p-1 rounded hover:bg-gray-200">
+                    <button className="p-1 rounded hover:bg-gray-200" onClick={() => {
+                      removeMatiere(Matiere.numMatiere)
+                    }}>
                       <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
                     </button>
                   </td>
