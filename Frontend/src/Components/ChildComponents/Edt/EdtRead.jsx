@@ -88,14 +88,14 @@ function EdtRead() {
                   ))}
                 </tbody>
               </table>
-              {/* <div className="flex justify-end mt-2">
-                <img
-                  src="/Icons/plus.png"
-                  alt="Ajouter une ligne"
-                  className='w-8 cursor-pointer'
-                  onClick={ajouterColonne}
-                />
-              </div> */}
+                {/* <div className="flex justify-end mt-2">
+                  <img
+                    src="/Icons/plus.png"
+                    alt="Ajouter une ligne"
+                    className='w-8 cursor-pointer'
+                    onClick={ajouterColonne}
+                  />
+                </div> */}
             </div>
           ) : (
             <div className="overflow-auto  h-full">
