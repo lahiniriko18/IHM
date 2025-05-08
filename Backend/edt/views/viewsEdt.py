@@ -38,7 +38,21 @@ class EdtView(APIView):
             return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
         except Edt.DoesNotExist:
             return Response({'erreur':'Emploi du temps introuvable'}, status=status.HTTP_404_NOT_FOUND)
-        
+
+class EdtTableauView(APIView):
+    def post(self, request):
+        donnees=request.data
+        donneeAjout = []
+        if isinstance(donnees, list):
+            return Response({"erreur":"Format de données invalide"})
+        for donnee in donnees:
+            serializer=EdtSerializer(data=donnee)
+            if serializer.is_valid():
+                edt=serializer.save()
+                donneeAjout.append(EdtSerializer(edt).data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(donneeAjout,status=status.HTTP_201_CREATED)
+
 class EdtExcelView(APIView):
     def post(self, request):
         serializer=ExcelSerializer(data=request.data)
@@ -60,22 +74,28 @@ class EdtExcelView(APIView):
                 premierLignes.columns=['Titre']
                 
                 colUtile=[]
-                for i,col in enumerate(ligneWb[3]):
-                    if i<maxCol and i!= (maxCol/typeFichier):
-                        if i== 0 and col is None:
-                            colUtile.append("Horaire")
-                        elif col is None:
-                            colUtile.append(f"Unnamed: {i}")
-                        else:
-                            colUtile.append(col.strip())
                 dataUtile = []
-                for i,lignes in enumerate(ligneWb[4:]):
-                    ligne = []
-                    for j,v in enumerate(lignes):
-                        if j<maxCol and j != maxCol/typeFichier:
-                            ligne.append(v.strip() if v else "vide")
-                    dataUtile.append(ligne)
-                if typeFichier == 2:
+                if typeFichier==1:
+                    verif=0
+                    for i,col in enumerate(ligneWb[3]):
+                        if i<maxCol and i!= (maxCol/typeFichier):
+                            if i== 0 and col is None:
+                                colUtile.append("Horaire")
+                            elif col is None:
+                                colUtile.append(f"Unnamed: {i}")
+                            else:
+                                colUtile.append(col.strip())
+                                verif+=1
+                    if verif!=6:
+                        return Response({"texte":"Format invalide !",
+                                         "aide":"Colonne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"}, status=status.HTTP_400_BAD_REQUEST)
+                    for i,lignes in enumerate(ligneWb[4:]):
+                        ligne = []
+                        for j,v in enumerate(lignes):
+                            if j<maxCol and j != maxCol/typeFichier:
+                                ligne.append(v.strip() if v else "vide")
+                        dataUtile.append(ligne)
+                else:
                     teteNormale=[]
                     for col in colUtile:
                         if col !="Horaire" and "Unnamed" not in col:
@@ -86,18 +106,9 @@ class EdtExcelView(APIView):
                         joursLigne.append(ligne[0])
 
                     print(joursLigne)
-                # print(dataUtile)
                 df=pd.DataFrame(dataUtile, columns=colUtile)
-                # if typeFichier == 2:
-                #     nouveauColonne=[]
-                #     for col in list(df.columns):
-                #         if col !="Horaire" and "Unnamed" not in col:
-                #             nouveauColonne.append(col)
-                #     joursLigne=[]
-                #     for i,ligne in df.iterrows():
-                #         joursLigne.append(ligne["Horaire"])
                     
-                return Response(df.to_dict(orient='records'))
+                return Response(ligneWb)
                 if not all(col in df.columns for col in colonnes_requis):
                     return Response({"erreur":"Format invalide. Colonne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"}, status=status.HTTP_400_BAD_REQUEST)
                 colonneVerif=[col for col in df.columns if col in colonnes_requis]

@@ -15,4 +15,4 @@ class EffectifView(APIView):
             "groupe":Groupe.objects.count(),
             "action":Action.objects.count()
         }
-        return Response({"effectifs":effectifs})
+        return Response(effectifs)
