@@ -11,7 +11,7 @@ function EdtNew() {
 
   const navigate = useNavigate();
   const { isReduire } = useSidebar();
-  const [modele, setModele] = useState(2); // 1 = horaire en ligne ; 2 = horaire en colonne
+  const [modele, setModele] = useState(1); // 1 = horaire en ligne ; 2 = horaire en colonne
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
   const [horaires, setHoraires] = useState([{ id: 1, heure_debut: 8, heure_fin: 10 }]);
 
@@ -134,7 +134,18 @@ function EdtNew() {
           </div>
 
           <div className="flex justify-between items-center ">
-            <h1 className="text-blue-600 font-bold">Création EDT pour <span>L1 IG</span></h1>
+            <span className="text-blue-600 font-bold flex flex-row items-center z-50">Création EDT pour :
+              <Creatable
+                isClearable
+                isValidNewOption={() => false}
+                placeholder="L1IG"
+                options={
+                  [{ value: '1', label: 'L1IG' },
+                  { value: '1', label: 'L2IG' },
+                  { value: '1', label: 'L3SR' },]
+                }
+                className="text-sm"
+              /></span>
             <div className="flex gap-2 items-center w-[70%] pe-8">
               <div className='flex items-center'>
                 <p className='w-40'>Date début : </p>
