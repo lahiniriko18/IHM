@@ -6,13 +6,7 @@ import pandas as pd
 from openpyxl import load_workbook
 class ExcelSerializer(serializers.Serializer):
     fichier=serializers.FileField()
-<<<<<<< HEAD
-    typeFichier= serializers.CharField()
-
-
-=======
     typeFichier=serializers.CharField()
->>>>>>> tache-excel
 class TitreSerializer(serializers.Serializer):
     Titre=serializers.CharField()
 
