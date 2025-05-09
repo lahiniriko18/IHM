@@ -1,5 +1,3 @@
-d={
-    "a":"a",
-    "b":"b"
-}
-print(d.get("c"))
+d=["a","b","c"]
+d.append(["d","e"])
+print(d)

@@ -21,6 +21,7 @@ class Professeur(models.Model):
     numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE, db_column='numEtablissement')
     nomProfesseur=models.CharField(max_length=50)
     prenomProfesseur=models.CharField(max_length=50, null=True)
+    nomCourant=models.CharField(max_length=50, null=True)
     grade=models.CharField(max_length=50, null=True)
     sexe=models.CharField(max_length=8)
     adresse=models.CharField(max_length=50, null=True)
