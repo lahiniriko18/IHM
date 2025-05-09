@@ -23,7 +23,7 @@ class EtablissementView(APIView):
 
     def post(self, request):
         donnees=request.data
-        logo=request.FILES.get('logo')
+        logo=request.data.get('logo')
         if logo:
             dossier=os.path.join(settings.MEDIA_ROOT, 'images')
             os.makedirs(dossier, exist_ok=True)
@@ -39,11 +39,12 @@ class EtablissementView(APIView):
         if serializer.is_valid():
             etablissement=serializer.save()
             donnee=EtablissementSerializer(etablissement).data
-            verifChemin=os.path.join(settings.MEDIA_ROOT, donnee['logo'])
-            if os.path.exists(verifChemin):
-                donnee['logo']=request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
-            else:
-                donnee['logo']=''
+            if donnee['logo']:
+                verifChemin=os.path.join(settings.MEDIA_ROOT, donnee['logo'])
+                if os.path.exists(verifChemin):
+                    donnee['logo']=request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
+                else:
+                    donnee['logo']=''
             return Response(donnee, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -55,8 +56,7 @@ class EtablissementView(APIView):
         except Etablissement.DoesNotExist:
             return Response({"erreur":"Etablissement introuvable"}, status=status.HTTP_404_NOT_FOUND)
         donnees=request.data
-        logo=request.FILES.get('logo')
-
+        logo=request.data.get('logo')
         if logo:
             dossier=os.path.join(settings.MEDIA_ROOT, 'images')
             os.makedirs(dossier, exist_ok=True)
@@ -72,11 +72,12 @@ class EtablissementView(APIView):
         if serializer.is_valid():
             serializer.save()
             donnee=serializer.data
-            verifChemin=os.path.join(settings.MEDIA_ROOT, donnee['logo'])
-            if os.path.exists(verifChemin):
-                donnee['logo']=request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
-            else:
-                donnee['logo']=''
+            if donnee['logo']:
+                verifChemin=os.path.join(settings.MEDIA_ROOT, donnee['logo'])
+                if os.path.exists(verifChemin):
+                    donnee['logo']=request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
+                else:
+                    donnee['logo']=''
             return Response(donnee, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
