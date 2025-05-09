@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { useSidebar } from '../Context/SidebarContext';
-import Creatable from 'react-select/creatable';
-import ColorPicker from 'react-pick-color';
 import { useNavigate } from 'react-router-dom';
-import { useEtablissement } from '../contexts/EtablissementContext';
+import { useEtablissement } from '../Context/EtablissementContext';
 import axios from 'axios';
+
 function ParametreInfo() {
   const { setNumEtablissement } = useEtablissement();
   const { isReduire } = useSidebar();
@@ -56,6 +55,7 @@ function ParametreInfo() {
       });
 
       if (response.status !== 201) throw new Error("Erreur " + response.status);
+      getData()
       console.log("Établissement enregistré !");
     } catch (error) {
       console.error("Erreur :", error.message);
@@ -98,7 +98,7 @@ function ParametreInfo() {
         throw new Error('Erreur code : ' + response.status);
       }
       setlisteEtablissement(response.data);
-      setOriginalList(response.data);  // ✅ Mise à jour ici
+      setOriginalList(response.data);
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -118,14 +118,67 @@ function ParametreInfo() {
     setIsConfirmModalOpen(true);
   }
 
-
   useEffect(() => {
     getData()
+    setNumEtablissement(listeEtablissement.numEtablissement)
   }, [])
 
+  const validateForm = () => {
+    let isValid = true;
 
+    // Expression régulière pour valider le contact (avec ou sans espaces)
+    const contactRegex = /^(\+261\s?(32|33|34|37|38)\s?\d{2}\s?\d{3}\s?\d{2}|(032|033|034|037|038)\s?\d{2}\s?\d{3}\s?\d{2})$/;
+    // Expression régulière pour valider l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+    // Vérification du nom de l'établissement
+    if (dataEtablissement.nomEtablissement.trim() === "") {
+      setError({ composant: "nomEtablissement", status: true, message: "Le nom de l'établissement ne peut pas être vide !" });
+      isValid = false;
+    }
+    // Vérification de l'adresse
+    else if (dataEtablissement.adresse.trim() === "") {
+      setError({ composant: "adresse", status: true, message: "L'adresse ne peut pas être vide !" });
+      isValid = false;
+    }
+    // Vérification du contact (doit correspondre au format spécifié)
+    else if (!contactRegex.test(dataEtablissement.contact.trim())) {
+      setError({ composant: "contact", status: true, message: "Le contact doit respecter le format requis !" });
+      isValid = false;
+    }
+    // Vérification de l'email (doit être un email valide)
+    else if (!emailRegex.test(dataEtablissement.email.trim())) {
+      setError({ composant: "email", status: true, message: "L'email doit être valide !" });
+      isValid = false;
+    }
+    // Réinitialisation des erreurs si tout est valide
+    else {
+      setError({ status: false, composant: "", message: "" });
+    }
 
+    return isValid;
+  };
+  const nombreElemParParge = 8;
+  const [pageActuel, setPageActuel] = useState(1);
+
+  const totalPages = Math.ceil(listeEtablissement.length / nombreElemParParge);
+  const currentData = listeEtablissement.slice((pageActuel - 1) * nombreElemParParge, pageActuel * nombreElemParParge);
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (pageActuel <= 3) {
+        pages.push(1, 2, 3, '...', totalPages);
+      } else if (pageActuel >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', pageActuel, '...', totalPages);
+      }
+    }
+    return pages;
+  }
   const versGeneral = () => {
     navigate('/parametre')
   }
@@ -156,7 +209,8 @@ function ParametreInfo() {
                 onClick={() => {
                   setIsclicked(false);
                   setError({ ...error, status: false })
-                  setdataEtablissement({ nomEtablissement: "", adresse: "" })
+                  setdataEtablissement({ nomEtablissement: "", adresse: "", contact: "", email: "", slogant: "" })
+                  setSelectedFile(null)
                 }}
               />
             </div>
@@ -216,8 +270,8 @@ function ParametreInfo() {
                   <label className="font-semibold text-sm mb-1">Slogan :</label>
                   <textarea
                     type="text"
-                    value={dataEtablissement.slogan}
-                    onChange={(e) => setdataEtablissement({ ...dataEtablissement, slogan: e.target.value })}
+                    value={dataEtablissement.slogant}
+                    onChange={(e) => setdataEtablissement({ ...dataEtablissement, slogant: e.target.value })}
                     className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                   />
                   {
@@ -259,21 +313,15 @@ function ParametreInfo() {
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  if (dataEtablissement.nomEtablissement.trim() !== "" && dataEtablissement.adresse.trim() !== "") {
+                  if (validateForm()) {
                     if (isadd) {
-                      sendData()
-                      setdataEtablissement({ nomEtablissement: "", adresse: "" })
-                      setIsclicked(false);
-                      setError({ ...error, status: false })
+                      sendData();
+                    } else {
+                      putData();
                     }
-                    else {
-                      putData()
-                      setdataEtablissement({ nomEtablissement: "", adresse: "" })
-                      setIsclicked(false);
-                      setError({ ...error, status: false })
-                    }
-                  } else {
-                    (dataEtablissement.nomEtablissement.trim() === "") ? setError({ error, status: true, composant: "nomEtablissement", message: "Le nom du etablissement ne peut pas etre vide" }) : setError({ error, status: true, composant: "adresse", message: "Le code du etablissement ne peut pas etre vide" })
+                    setdataEtablissement({ nomEtablissement: "", adresse: "", contact: "", email: "", slogant: "" })
+                    setSelectedFile(null)
+                    setIsclicked(false);
                   }
                 }}
               >
@@ -327,17 +375,18 @@ function ParametreInfo() {
         )
       }
       <div className={`${isReduire ? "left-20" : "left-56"} fixed right-0 top-14 p-5 h-screen overflow-auto bg-white z-40 transition-all duration-700`}>
-        <div className='flex flex-row gap-3 mb-5'>
+        <div className='flex flex-row gap-3 mb-3'>
           <button className=' hover:scale-105 text-gray-500' onClick={versGeneral}>Géneral</button>
           <button className='font-bold hover:scale-105  text-bleu' onClick={versInfo}>Informations</button>
           <button className=' hover:scale-105 text-gray-500' onClick={versSecurite}>Securité</button>
           <button className=' hover:scale-105 text-gray-500' onClick={versProfile}>Profile</button>
         </div>
-        <div className="flex justify-between w-full">
+        <div className="flex justify-between w-full items-center mb-2">
           <h1 className="font-bold text-gray-400">information de l'etablisement</h1>
-          <button className="button flex gap-3 hover:scale-105 transition duration-200" onClick={() => { setIsclicked(true); setisadd(true); }}>
-            <img src="/Icons/plus-claire.png" alt="Plus" className='w-6 h-6' /> Nouveau
-          </button>
+          {listeEtablissement.length < 1 &&
+            <button className="button flex gap-3 hover:scale-105 transition duration-200" onClick={() => { setIsclicked(true); setisadd(true); }}>
+              <img src="/Icons/plus-claire.png" alt="Plus" className='w-6 h-6' /> Nouveau
+            </button>}
         </div>
         {
           isLoading ? (
@@ -357,7 +406,7 @@ function ParametreInfo() {
                   <tr className="bg-blue-500 text-white text-sm">
                     <th className="px-4 py-4">#</th>
                     <th className="px-4 py-4">Logo</th>
-                    <th className="px-4 py-4">Nom de la etablissement</th>
+                    <th className="px-4 py-4">Nom d'etablissement</th>
                     <th className="px-4 py-4">Contact</th>
                     <th className="px-4 py-4">Adresse</th>
                     <th className="px-4 py-4">Email</th>
@@ -367,17 +416,16 @@ function ParametreInfo() {
                 </thead>
                 <tbody className="text-sm">
                   {currentData.map((etablissement, index) => (
-                    <tr key={index} className="border-b transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-gray-100">
+                    <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
                       <td className="px-4 py-2 text-center">{etablissement.numEtablissement}</td>
                       <td className="px-4 py-2 text-center">{etablissement.logo}</td>
                       <td className="px-4 py-2 text-center">{etablissement.nomEtablissement}</td>
                       <td className="px-4 py-2 text-center">{etablissement.contact}</td>
                       <td className="px-4 py-2 text-center">{etablissement.adresse}</td>
                       <td className="px-4 py-2 text-center">{etablissement.email}</td>
-                      <td className="px-4 py-2 text-center">{etablissement.slogan}</td>
+                      <td className="px-4 py-2 text-center">{etablissement.slogant}</td>
 
                       <td className="px-4 py-2 flex justify-center items-center gap-2">
-                        {setNumEtablissement(etablissement.numEtablissement)}
                         <button className="p-1 rounded hover:bg-gray-200">
                           <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editetablissement(etablissement.numEtablissement) }} />
                         </button>
