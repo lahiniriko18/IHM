@@ -1,8 +1,10 @@
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..serializer.serializerEtablissement import EtablissementSerializer
 from ..models import Etablissement
+import os
 
 
 class EtablissementView(APIView):
@@ -12,7 +14,19 @@ class EtablissementView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        serializer=EtablissementSerializer(data=request.data)
+        donnees=request.data
+        logo=request.FILES.get('logo')
+        if logo:
+            dossier=os.path.join(settings.MEDIA_ROOT, 'images')
+            os.makedirs(dossier, exist_ok=True)
+            chemin_fichier = os.path.join(dossier, logo.name)
+
+            with open(chemin_fichier, 'wb+') as destination:
+                for c in logo.chunks():
+                    destination.write(c)
+            logoChemin=f"media/images/{logo.name}"
+            donnees['logo']=logoChemin
+        serializer=EtablissementSerializer(data=donnees)
         if serializer.is_valid():
             etablissement=serializer.save()
             return Response(EtablissementSerializer(etablissement).data, status=status.HTTP_201_CREATED)
@@ -22,6 +36,18 @@ class EtablissementView(APIView):
             etablissement= Etablissement.objects.get(pk=numEtablissement)
         except Etablissement.DoesNotExist:
             return Response({"erreur":"Etablissement introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        donnees=request.data
+        logo=request.FILES.get('logo')
+        if logo:
+            dossier=os.path.join(settings.MEDIA_ROOT, 'images')
+            os.makedirs(dossier, exist_ok=True)
+            chemin_fichier = os.path.join(dossier, logo.name)
+
+            with open(chemin_fichier, 'wb+') as destination:
+                for c in logo.chunks():
+                    destination.write(c)
+            logoChemin=f"media/images/{logo.name}"
+            donnees['logo']=logoChemin
         serializer=EtablissementSerializer(etablissement, data=request.data)
         if serializer.is_valid():
             serializer.save()

@@ -39,6 +39,7 @@ class Mention(models.Model):
     numMention=models.AutoField(primary_key=True)
     numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE, db_column='numEtablissement')
     nomMention=models.CharField(max_length=50)
+    codeMention=models.CharField(max_length=20, null=True)
 
     class Meta:
         db_table='mention'
