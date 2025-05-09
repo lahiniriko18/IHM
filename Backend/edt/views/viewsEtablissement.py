@@ -51,38 +51,49 @@ class EtablissementView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
+   
     def put(self, request, numEtablissement):
         try:
-            etablissement= Etablissement.objects.get(pk=numEtablissement)
+            etablissement = Etablissement.objects.get(pk=numEtablissement)
         except Etablissement.DoesNotExist:
-            return Response({"erreur":"Etablissement introuvable"}, status=status.HTTP_404_NOT_FOUND)
-        donnees=request.data
-        logo=request.data.get('logo')
+            return Response({"erreur": "Etablissement introuvable"}, status=status.HTTP_404_NOT_FOUND)
+
+        donnees = request.data.copy()  # on copie car request.data est immutable
+        logo = request.FILES.get('logo')  # très important : pour fichier, utiliser request.FILES
+
         if logo:
-            dossier=os.path.join(settings.MEDIA_ROOT, 'images')
+            dossier = os.path.join(settings.MEDIA_ROOT, 'images')
             os.makedirs(dossier, exist_ok=True)
             chemin_fichier = os.path.join(dossier, logo.name)
 
+            # Sauvegarde physique du fichier sur le serveur
             with open(chemin_fichier, 'wb+') as destination:
-                for c in logo.chunks():
-                    destination.write(c)
-            logoChemin=f"images/{logo.name}"
-            donnees['logo']=logoChemin
-        serializer=EtablissementSerializer(etablissement, data=request.data)
+                for chunk in logo.chunks():
+                    destination.write(chunk)
+
+            # Mise à jour du champ 'logo' avec le chemin relatif
+            logoChemin = f"images/{logo.name}"
+            donnees['logo'] = logoChemin
+
+        # Utiliser 'donnees' et non 'request.data' car 'logo' y a été modifié
+        serializer = EtablissementSerializer(etablissement, data=donnees)
 
         if serializer.is_valid():
-            serializer.save()
-            donnee=serializer.data
+            etablissement = serializer.save()
+            donnee = EtablissementSerializer(etablissement).data
+
+            # Construction de l'URL absolue pour le logo
             if donnee['logo']:
-                verifChemin=os.path.join(settings.MEDIA_ROOT, donnee['logo'])
+                verifChemin = os.path.join(settings.MEDIA_ROOT, donnee['logo'])
                 if os.path.exists(verifChemin):
-                    donnee['logo']=request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
+                    donnee['logo'] = request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
                 else:
-                    donnee['logo']=''
+                    donnee['logo'] = ''
             return Response(donnee, status=status.HTTP_200_OK)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+        
 
     def delete(self, request, numEtablissement):
         try:
