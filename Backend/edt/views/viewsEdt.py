@@ -61,7 +61,6 @@ class EdtExcelView(APIView):
             fichier=serializer.validated_data['fichier']
             typeFichier=int(serializer.validated_data["typeFichier"])
             try:
-
                 wb = load_workbook(fichier)
                 ws = wb.active
                 ligneWb=list(ws.iter_rows(values_only=True))
@@ -69,16 +68,22 @@ class EdtExcelView(APIView):
                 
                 colonnes_requis=['Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
                 jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
-                maxCols=[13,10]
-                maxCol=maxCols[typeFichier-1]
                 premierLignes.columns=['Titre']
                 
                 colUtile=[]
                 dataUtile = []
+                if len(ligneWb)<5:
+                    return Response(
+                        {
+                            "texte":"Format invalide !",
+                            "aide":"Colonne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 if typeFichier==1:
                     verif=0
                     for i,col in enumerate(ligneWb[3]):
-                        if i<maxCol and i!= (maxCol/typeFichier):
+                        if i<13:
                             if i== 0 and col is None:
                                 colUtile.append("Horaire")
                             elif col is None:
@@ -87,28 +92,52 @@ class EdtExcelView(APIView):
                                 colUtile.append(col.strip())
                                 verif+=1
                     if verif!=6:
-                        return Response({"texte":"Format invalide !",
-                                         "aide":"Colonne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"}, status=status.HTTP_400_BAD_REQUEST)
+                        return Response(
+                            {
+                                "texte":"Format invalide !",
+                                "aide":"Colonne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"
+                            },
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                     for i,lignes in enumerate(ligneWb[4:]):
                         ligne = []
                         for j,v in enumerate(lignes):
-                            if j<maxCol and j != maxCol/typeFichier:
+                            if j<13:
                                 ligne.append(v.strip() if v else "vide")
                         dataUtile.append(ligne)
+                
                 else:
-                    teteNormale=[]
-                    for col in colUtile:
-                        if col !="Horaire" and "Unnamed" not in col:
-                            teteNormale.append(col)
-                    print(teteNormale)
+                    horairesLigne=[]
+                    for i,col in enumerate(ligneWb[3]):
+                        if col and i<13:
+                            horairesLigne.append(col)
                     joursLigne=[]
-                    for ligne in dataUtile:
-                        joursLigne.append(ligne[0])
-
-                    print(joursLigne)
+                    for i,lignes in enumerate(ligneWb[4:]):
+                        joursLigne.append(lignes[0].strip())
+                    if len(joursLigne) != 6:
+                        return Response(
+                            {
+                                "texte":"Ligne jour manquant !",
+                                "aide":"Ligne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"
+                            },
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    colUtile=["Horaire"]
+                    for j,jour in enumerate(joursLigne):
+                        colUtile.append(jour)
+                        colUtile.append(f"Unnamed {j}")
+                    print(colUtile)
+                    for i,horaire in enumerate(ligneWb[3]):
+                        verif = (i<4 and i%2!=0) or (i>5 and i%2==0)
+                        if verif and i<9:
+                            ligneDonne=[horaire]
+                            for lignes in ligneWb[4:]:
+                                ligneDonne.append(lignes[i] if lignes[i] else "vide")
+                                ligneDonne.append(lignes[i+1] if lignes[i+1] else "vide")
+                            dataUtile.append(ligneDonne)   
+                        
                 df=pd.DataFrame(dataUtile, columns=colUtile)
-                    
-                return Response(ligneWb)
+
                 if not all(col in df.columns for col in colonnes_requis):
                     return Response({"erreur":"Format invalide. Colonne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"}, status=status.HTTP_400_BAD_REQUEST)
                 colonneVerif=[col for col in df.columns if col in colonnes_requis]
@@ -136,7 +165,8 @@ class EdtExcelView(APIView):
                         dataContenu.append(lignes)
                 data={
                     "titre":dataTitre,
-                    "contenu":dataContenu
+                    "contenu":dataContenu,
+                    "typeFichier":typeFichier
                 }
                 serializer=DataSerializer(data=data)
                 if serializer.is_valid():
@@ -190,7 +220,7 @@ class EdtExcelView(APIView):
                                         else:
                                             return Response(serializerEdt.errors, status=status.HTTP_400_BAD_REQUEST)
                     return Response({"message":"Fichier traité et ajout d'emploi du temps avec succès !"}, status=status.HTTP_200_OK)
-                return Response({"erreur":serializer.errors},status=status.HTTP_401_UNAUTHORIZED)
+                return Response(serializer.errors,status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:
-                return Response({"erreur":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

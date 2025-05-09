@@ -1,5 +1,3 @@
-dSexe = {
-    "mr":"Masculin",
-    "mme":"Féminin"
-}
-print(list(dSexe.keys()))
+d=["a","b","c"]
+d.append(["d","e"])
+print(d)

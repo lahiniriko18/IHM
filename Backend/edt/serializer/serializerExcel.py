@@ -2,11 +2,11 @@ from rest_framework import serializers
 from datetime import datetime, timedelta,time
 from ..models import Classe,Parcours,Groupe,Posseder,Matiere,Professeur,Enseigner,Salle,Constituer
 from django.db.models import Q
+import pandas as pd
+from openpyxl import load_workbook
 class ExcelSerializer(serializers.Serializer):
     fichier=serializers.FileField()
     typeFichier=serializers.CharField()
-
-
 class TitreSerializer(serializers.Serializer):
     Titre=serializers.CharField()
 
@@ -21,21 +21,31 @@ class ContenuSerializer(serializers.Serializer):
 
     def messageErreur(self,erreur):
         index = self.context.get("index")
+        typeFichier=self.context.get("typeFichier",1)-1
+        ligneCol=[
+            ["Colonne","ligne"],
+            ["Ligne","colonne"]
+        ]
         if index is not None:
             raise serializers.ValidationError({
-                "texte":f"Colonne: Horaire, ligne: {index+1}. {erreur.get("texte")}",
+                "texte":f"{ligneCol[typeFichier][0]}: Horaire, {ligneCol[typeFichier][1]}: {index+1}. {erreur.get("texte")}",
                 "aide":erreur.get("aide","Rien")
                 })
         raise serializers.ValidationError(erreur)
     def messageErreurSemaine(self,erreur,colonne,case=None):
         index = self.context.get("index")
+        typeFichier=self.context.get("typeFichier",1)-1
+        ligneCol=[
+            ["Colonne","ligne"],
+            ["Ligne","colonne"]
+        ]
         if index is not None:
             return {
-                "texte":f"Colonne: {colonne}, ligne: {index+1} { f', case: {case}' if case is not None else ''}. {erreur.get("texte")}",
+                "texte":f"{ligneCol[typeFichier][0]}: {colonne}, {ligneCol[typeFichier][1]}: {index+1} { f', case: {case}' if case is not None else ''}. {erreur.get("texte")}",
                 "aide":erreur.get("aide","Rien")
             }
         return {
-                "texte":f"Colonne: {colonne}. {erreur.get("texte")}",
+                "texte":f"{ligneCol[typeFichier][0]}: {colonne}. {erreur.get("texte")}",
                 "aide":erreur.get("aide","Rien")
             }
     
@@ -121,6 +131,9 @@ class ContenuSerializer(serializers.Serializer):
                         jour
                     )
                 continue
+            salleParCase=[]
+            groupeParCase=[]
+            profParCase=[]
             for i,valeur in enumerate(valeurs):
                 if valeur == "vide":
                     valideValeur.append([])
@@ -185,6 +198,15 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
+                if groupe.numGroupe in groupeParCase:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Impossible d'ajouter deux fois une groupe en même horaire !",
+                            "aide":"Veuillez ajouter une autre groupe."
+                        },jour,i+1)
+                    )
+                    continue
+                groupeParCase.append(groupe.numGroupe)
                 numClasseInstance=self.context.get("classe")
                 classeGroupe = Posseder.objects.filter(numClasse=numClasseInstance, numGroupe=groupe.numGroupe).exists()
                 caseContenu["groupe"]=groupe.numGroupe
@@ -237,11 +259,20 @@ class ContenuSerializer(serializers.Serializer):
                 if professeur is None:
                     erreur.append(
                         self.messageErreurSemaine({
-                            "texte":"Professeur ne correspond pas au matière",
+                            "texte":"Professeur ne correspond pas au matière !",
                             "aide":"Le professeur doit enseigner le matière dans le même cellule."
                         },jour,i+1)
                     )
                     continue
+                if professeur["numProfesseur"] in profParCase:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Ce professeur n'est plus disponible dans ce horaire !",
+                            "aide":"Sélectionner une autre professeur pour ce matière."
+                        },jour,i+1)
+                    )
+                    continue
+                profParCase.append(professeur["numProfesseur"])
                 caseContenu["professeur"]=professeur["numProfesseur"]
                 
                 #### Traitement salle #####
@@ -272,6 +303,15 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
+                if salle.numSalle in salleParCase:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Cette salle est n'est pas libre dans ce horaire !",
+                            "aide":"Veuillez sélectionner une autre salle !"
+                        },jour,i+1)
+                    )
+                    continue
+                salleParCase.append(salle.numSalle)
                 caseContenu["salle"]=salle.numSalle
 
                 if not erreur:
@@ -288,6 +328,7 @@ class ContenuSerializer(serializers.Serializer):
 class DataSerializer(serializers.Serializer):
     titre=serializers.ListField(child=TitreSerializer())
     contenu=serializers.ListField()
+    typeFichier=serializers.IntegerField()
     
     def validate_titre(self, value):
         titre=[]
@@ -397,11 +438,13 @@ class DataSerializer(serializers.Serializer):
         titre=data["titre"]
         classe=titre[1].get("classe")
         parcours=titre[1].get("parcours")
+        typeFichier=data["typeFichier"]
         for i, ligne in enumerate(data["contenu"]):
             serializer= ContenuSerializer(data=ligne, context={
                 'index': i,
                 'classe':classe,
-                'parcours':parcours
+                'parcours':parcours,
+                "typeFichier":typeFichier
                 })
             if serializer.is_valid():
                 contenuValide.append(serializer.validated_data)
