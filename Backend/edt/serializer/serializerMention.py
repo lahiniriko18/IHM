@@ -21,7 +21,7 @@ class MentionSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model=Mention
-        fields=["numMention","numEtablissement","nomMention"]
+        fields=["numMention","numEtablissement","nomMention","codeMention"]
     def validate(self, data):
         return data
     def create(self, validated_data):

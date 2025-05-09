@@ -30,7 +30,7 @@ class Professeur(models.Model):
     description=models.CharField(max_length=255, null=True)
 
     class Meta:
-        db_table='professeur'
+        db_table='professeur'   
     def __str__(self):
         return self.nomProfesseur
     
