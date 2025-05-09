@@ -7,6 +7,7 @@ import re
 from datetime  import date
 
 class UtilisateurSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
     class Meta:
         model=Utilisateur
         fields=['id', 'username', 'email', 'password', 'contact', 'datenaiss', 'description', 'image']
