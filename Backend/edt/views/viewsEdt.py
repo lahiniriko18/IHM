@@ -59,11 +59,7 @@ class EdtExcelView(APIView):
 
         if serializer.is_valid():
             fichier=serializer.validated_data['fichier']
-<<<<<<< HEAD
-            typeFichier=serializer.validated_data["typeFichier"]
-=======
             typeFichier=int(serializer.validated_data["typeFichier"])
->>>>>>> tache-excel
             try:
                 wb = load_workbook(fichier)
                 ws = wb.active
@@ -73,21 +69,8 @@ class EdtExcelView(APIView):
                 colonnes_requis=['Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
                 jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
                 premierLignes.columns=['Titre']
-<<<<<<< HEAD
-                colUtile=[]
-                for i,col in enumerate(ligneWb[3]):
-                    if i<13:
-                        if i== 0 and col is None:
-                            colUtile.append("Horaire")
-                        elif col is None:
-                            colUtile.append(f"Unnamed: {i}")
-                        else:
-                            colUtile.append(col.strip())
-                print(colUtile)
-=======
                 
                 colUtile=[]
->>>>>>> tache-excel
                 dataUtile = []
                 if len(ligneWb)<5:
                     return Response(
