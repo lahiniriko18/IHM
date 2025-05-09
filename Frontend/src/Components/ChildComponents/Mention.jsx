@@ -11,7 +11,11 @@ function Mention() {
   const [originalList, setOriginalList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [id, setId] = useState()
-  const [dataMention, setDataMention] = useState({ nomMention: "", codeMention: "", numEtablissement: numEtablissement })
+  const [dataMention, setDataMention] = useState({
+    nomMention: "",
+    codeMention: "",
+    numEtablissement: null,
+  });
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [search, setSearch] = useState('')
   const [error, setError] = useState({ status: false, composant: "", message: "" })
@@ -22,7 +26,11 @@ function Mention() {
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
-      setNumEtablissement(response.data[0].numEtablissement);
+      if (response.data.length > 0) {
+        setNumEtablissement(parseInt(response.data[0].numEtablissement));
+      } else {
+        setError({ status: true, composant: "Etablissement", message: "Aucun établissement trouvé !" });
+      }
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -39,7 +47,11 @@ function Mention() {
       console.log("ajouter")
       getData()
     } catch (error) {
-      console.error(error.message)
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
     } finally {
       console.log("Le tache est terminé")
     }
@@ -65,7 +77,11 @@ function Mention() {
       console.log("ajouter")
       getData()
     } catch (error) {
-      console.error(error.message)
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
     } finally {
       console.log("Le tache est terminé")
     }
@@ -114,10 +130,18 @@ function Mention() {
       setListeMention(originalList);
     }
   }
-
   useEffect(() => {
-    getData()
+    if (numEtablissement) {
+      setDataMention((prev) => ({
+        ...prev,
+        numEtablissement: parseInt(numEtablissement),
+      }));
+    }
+  }, [numEtablissement]);
+  useEffect(() => {
     getNumEtablissement()
+    getData()
+
   }, [])
   const nombreElemParParge = 8;
   const [pageActuel, setPageActuel] = useState(1);
@@ -197,7 +221,7 @@ function Mention() {
                 onClick={() => {
                   if (dataMention.nomMention.trim() !== "" && dataMention.codeMention.trim() !== "") {
                     if (isadd) {
-                      
+                      console.log(numEtablissement)
                       sendData()
 
                       setDataMention({ nomMention: "", codeMention: "" })
