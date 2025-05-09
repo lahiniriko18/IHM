@@ -13,11 +13,12 @@ class EtablissementView(APIView):
         serializer=EtablissementSerializer(etablissements, many=True)
         donnees=serializer.data
         for ligne in donnees:
-            verifChemin=os.path.join(settings.MEDIA_ROOT, ligne['logo'])
-            if os.path.exists(verifChemin):
-                ligne['logo']=request.build_absolute_uri(settings.MEDIA_URL + ligne['logo'])
-            else:
-                ligne['logo']=''
+            if ligne['logo']:
+                verifChemin=os.path.join(settings.MEDIA_ROOT, ligne['logo'])
+                if os.path.exists(verifChemin):
+                    ligne['logo']=request.build_absolute_uri(settings.MEDIA_URL + ligne['logo'])
+                else:
+                    ligne['logo']=''
         return Response(donnees)
 
 
