@@ -3,6 +3,7 @@ import { useSidebar } from '../Context/SidebarContext';
 import axios from 'axios';
 
 function Mention() {
+  const [numEtablissement, setNumEtablissement] = useState();
   const { isReduire } = useSidebar();
   const [isclicked, setIsclicked] = useState(false)
   const [isadd, setisadd] = useState(true)
@@ -10,10 +11,25 @@ function Mention() {
   const [originalList, setOriginalList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [id, setId] = useState()
-  const [dataMention, setDataMention] = useState({ nomMention: "", codeMention: "" })
+  const [dataMention, setDataMention] = useState({ nomMention: "", codeMention: "", numEtablissement: numEtablissement })
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [search, setSearch] = useState('')
   const [error, setError] = useState({ status: false, composant: "", message: "" })
+  const getNumEtablissement = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/etablissement/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setNumEtablissement(response.data[0].numEtablissement);
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setIsLoading(false);
+      console.log("Le tache est terminé");
+    }
+  };
   const sendData = async () => {
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/mention/ajouter/", dataMention)
@@ -101,6 +117,7 @@ function Mention() {
 
   useEffect(() => {
     getData()
+    getNumEtablissement()
   }, [])
   const nombreElemParParge = 8;
   const [pageActuel, setPageActuel] = useState(1);
@@ -180,7 +197,9 @@ function Mention() {
                 onClick={() => {
                   if (dataMention.nomMention.trim() !== "" && dataMention.codeMention.trim() !== "") {
                     if (isadd) {
+                      
                       sendData()
+
                       setDataMention({ nomMention: "", codeMention: "" })
                       setIsclicked(false);
                       setError({ ...error, status: false })

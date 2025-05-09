@@ -69,7 +69,7 @@ function ParametreInfo() {
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
       }
-      console.log(`Utilisateur ${id} supprimé avec succès`);
+      console.log(`etablissement ${id} supprimé avec succès`);
       getData()
     } catch (error) {
       console.log("Erreur:", error.message)
@@ -99,6 +99,7 @@ function ParametreInfo() {
       }
       setlisteEtablissement(response.data);
       setOriginalList(response.data);
+
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -120,7 +121,8 @@ function ParametreInfo() {
 
   useEffect(() => {
     getData()
-    setNumEtablissement(listeEtablissement.numEtablissement)
+    console.log(listeEtablissement);
+
   }, [])
 
   const validateForm = () => {
