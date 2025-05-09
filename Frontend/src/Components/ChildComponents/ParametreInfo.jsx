@@ -64,6 +64,7 @@ function ParametreInfo() {
     }
   }
   const removeEtablissement = async (id) => {
+
     try {
       const response = await axios.delete(`http://127.0.0.1:8000/api/etablissement/supprimer/${parseInt(id)}`)
       if (response.status !== 200 && response.status !== 204) {
@@ -76,15 +77,34 @@ function ParametreInfo() {
     }
   }
   const putData = async () => {
+    const formData = new FormData();
+
+    Object.entries(dataEtablissement).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+
+    if (selectedFile) {
+      const renamedFile = renameFile(selectedFile);
+      formData.append('logo', renamedFile); // clé = "logo"
+    }
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/etablissement/modifier/${id}`, dataEtablissement)
+      const response = await axios.put(`http://127.0.0.1:8000/api/etablissement/modifier/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      })
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status)
       }
       console.log("ajouter")
       getData()
     } catch (error) {
-      console.error(error.message)
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
     } finally {
       console.log("Le tache est terminé")
     }
@@ -101,19 +121,41 @@ function ParametreInfo() {
       setOriginalList(response.data);
 
     } catch (error) {
-      console.error(error.message);
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
     } finally {
       setIsLoading(false);
       console.log("Le tache est terminé");
     }
   };
   const editetablissement = (numEtablissement) => {
-    const selectedEtablissement = listeEtablissement.find((item) => item.numEtablissement === numEtablissement)
+    const selectedEtablissement = listeEtablissement.find((item) => item.numEtablissement === numEtablissement);
     if (selectedEtablissement) {
-      setdataEtablissement({ ...dataEtablissement, nomEtablissement: selectedEtablissement.nomEtablissement, adresse: selectedEtablissement.adresse, email: selectedEtablissement.email, contact: selectedEtablissement.contact, logo: selectedEtablissement.logo, slogant: selectedEtablissement.slogant, })
-      setId(selectedEtablissement.numEtablissement)
+      setdataEtablissement({
+        nomEtablissement: selectedEtablissement.nomEtablissement,
+        adresse: selectedEtablissement.adresse,
+        email: selectedEtablissement.email,
+        contact: selectedEtablissement.contact,
+        logo: selectedEtablissement.logo,
+        slogant: selectedEtablissement.slogant,
+      });
+      setId(selectedEtablissement.numEtablissement);
+
+      // Affiche l'image si elle existe
+      if (selectedEtablissement.logo) {
+        setPreview(`${selectedEtablissement.logo}`); // adapte le chemin si nécessaire
+      } else {
+        setPreview(null);
+      }
+
+      setisadd(false);
+      setIsclicked(true);
     }
-  }
+  };
+
   const confirmerSuppression = (id) => {
     setId(id);
     setIsConfirmModalOpen(true);
@@ -121,7 +163,7 @@ function ParametreInfo() {
 
   useEffect(() => {
     getData()
-    console.log(listeEtablissement);
+    console.log(listeEtablissement.logo);
 
   }, [])
 
@@ -420,7 +462,12 @@ function ParametreInfo() {
                   {currentData.map((etablissement, index) => (
                     <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
                       <td className="px-4 py-2 text-center">{etablissement.numEtablissement}</td>
-                      <td className="px-4 py-2 text-center">{etablissement.logo}</td>
+                      <td className="px-4 py-2 text-center">
+                        {etablissement.logo && etablissement.logo !== "" && (
+                          <img src={etablissement.logo} alt="Logo établissement" className="w-8 h-8 rounded-full object-cover" />
+                        )}
+
+                      </td>
                       <td className="px-4 py-2 text-center">{etablissement.nomEtablissement}</td>
                       <td className="px-4 py-2 text-center">{etablissement.contact}</td>
                       <td className="px-4 py-2 text-center">{etablissement.adresse}</td>
