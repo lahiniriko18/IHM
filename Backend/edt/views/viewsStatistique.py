@@ -15,7 +15,11 @@ class EffectifView(APIView):
             "groupe":Groupe.objects.count(),
             "action":Action.objects.count()
         }
+<<<<<<< HEAD
         return Response({"effectifs":effectifs})
 
 # class ClasseCourantView(APIView):
 #     def 
+=======
+        return Response(effectifs)
+>>>>>>> tache-excel

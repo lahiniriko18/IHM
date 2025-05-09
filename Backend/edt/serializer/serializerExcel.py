@@ -1,12 +1,18 @@
 from rest_framework import serializers
 from datetime import datetime, timedelta,time
-from ..models import Classe,Parcours
+from ..models import Classe,Parcours,Groupe,Posseder,Matiere,Professeur,Enseigner,Salle,Constituer
 from django.db.models import Q
+import pandas as pd
+from openpyxl import load_workbook
 class ExcelSerializer(serializers.Serializer):
     fichier=serializers.FileField()
+<<<<<<< HEAD
     typeFichier= serializers.CharField()
 
 
+=======
+    typeFichier=serializers.CharField()
+>>>>>>> tache-excel
 class TitreSerializer(serializers.Serializer):
     Titre=serializers.CharField()
 
@@ -21,21 +27,31 @@ class ContenuSerializer(serializers.Serializer):
 
     def messageErreur(self,erreur):
         index = self.context.get("index")
+        typeFichier=self.context.get("typeFichier",1)-1
+        ligneCol=[
+            ["Colonne","ligne"],
+            ["Ligne","colonne"]
+        ]
         if index is not None:
             raise serializers.ValidationError({
-                "texte":f"Colonne: Horaire, ligne: {index+1}. {erreur.get("texte")}",
+                "texte":f"{ligneCol[typeFichier][0]}: Horaire, {ligneCol[typeFichier][1]}: {index+1}. {erreur.get("texte")}",
                 "aide":erreur.get("aide","Rien")
                 })
         raise serializers.ValidationError(erreur)
     def messageErreurSemaine(self,erreur,colonne,case=None):
         index = self.context.get("index")
+        typeFichier=self.context.get("typeFichier",1)-1
+        ligneCol=[
+            ["Colonne","ligne"],
+            ["Ligne","colonne"]
+        ]
         if index is not None:
             return {
-                "texte":f"Colonne: {colonne},{ f' case: {case},' if case is not None else ''} ligne: {index+1}. {erreur.get("texte")}",
+                "texte":f"{ligneCol[typeFichier][0]}: {colonne}, {ligneCol[typeFichier][1]}: {index+1} { f', case: {case}' if case is not None else ''}. {erreur.get("texte")}",
                 "aide":erreur.get("aide","Rien")
             }
         return {
-                "texte":f"Colonne: {colonne}. {erreur.get("texte")}",
+                "texte":f"{ligneCol[typeFichier][0]}: {colonne}. {erreur.get("texte")}",
                 "aide":erreur.get("aide","Rien")
             }
     
@@ -103,12 +119,17 @@ class ContenuSerializer(serializers.Serializer):
         donnee = {
             "Horaire":data["Horaire"]
         }
+        dSexe = {
+            "mr":"Masculin",
+            "monsieur":"Masculin",
+            "mme":"Féminin",
+            "madame":"Féminin"
+        }
         for jour in semaine:
             valeurs = data.get(jour, [])
             valideValeur=[]
             erreur = []
             if len(valeurs) != 2:
-                print(len(valeurs))
                 erreurs[jour]=self.messageErreurSemaine(
                         {
                         "texte":"Le nombre de colonne ne doit pas différent de 2 !"
@@ -116,11 +137,15 @@ class ContenuSerializer(serializers.Serializer):
                         jour
                     )
                 continue
+            salleParCase=[]
+            groupeParCase=[]
+            profParCase=[]
             for i,valeur in enumerate(valeurs):
                 if valeur == "vide":
                     valideValeur.append([])
                     continue
-                valeur = valeur.split("\n")
+                valeur = [j.strip() for j in valeur.split("\n")]
+                caseContenu = {}
                 if len(valeur) != 4:
                     erreur.append(
                         self.messageErreurSemaine({
@@ -128,7 +153,175 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
+
+                ##### Traitement du groupe et parcours #####
+                if len(valeur[0].split()) != 2:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Le premier ligne doit contenir le parcours et groupe separé par espace !"
+                        },jour,i+1)
+                    )
+                    continue
+                parcoursStr, groupeStr=valeur[0].lower().split()
+                numParcoursInstance = self.context.get("parcours")
+                codeParcours=None
+                parcours = Parcours.objects.filter(numParcours=numParcoursInstance).first()
+                if parcours:
+                    codeParcours=parcours.codeParcours
+                if  codeParcours.lower() != parcoursStr:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Parcours ne corresond pas au parcours dans le titre !"
+                        },jour,i+1)
+                    )
+                    continue
+                codeGroupe = None
+                for code in ["groupe","grp","gr","g"]:
+                    if code in groupeStr and codeGroupe is None:codeGroupe=code
+                if codeGroupe is None:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du groupe invalide !",
+                            "aide":"Format: grp1 ou g1 ou gr1 ou groupe1"
+                        },jour,i+1)
+                        
+                    )
+                    continue
+                groupeNum=groupeStr.replace(codeGroupe,'')
+                if not groupeNum.isdigit():
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du groupe invalide !",
+                            "aide":"Format: grp1 ou g1 ou groupe1"
+                        },jour,i+1)
+                    )
+                    continue
+                groupe = Groupe.objects.filter(nomGroupe=f"Groupe {groupeNum}").first()
+                if not groupe:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Groupe introuvable !",
+                        },jour,i+1)
+                    )
+                    continue
+                if groupe.numGroupe in groupeParCase:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Impossible d'ajouter deux fois une groupe en même horaire !",
+                            "aide":"Veuillez ajouter une autre groupe."
+                        },jour,i+1)
+                    )
+                    continue
+                groupeParCase.append(groupe.numGroupe)
+                numClasseInstance=self.context.get("classe")
+                classeGroupe = Posseder.objects.filter(numClasse=numClasseInstance, numGroupe=groupe.numGroupe).exists()
+                caseContenu["groupe"]=groupe.numGroupe
+                caseContenu["classeGroupe"]=classeGroupe
+
+                ##### Traitement du matière #####
+                matiereStr = valeur[1]
+                matiere = Matiere.objects.filter(Q(nomMatiere=matiereStr) | Q(codeMatiere=matiereStr)).first()
+                if not matiere:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Cette matière n'existe pas !",
+                        },jour,i+1)
+                    )
+                    continue
+                caseContenu["matiere"]=matiere.numMatiere
+
+                ##### Traitement du professeur #####
+                professeurStr = [v.lower().strip() for v in valeur[2].split()]
+                if len(professeurStr) != 2:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du nom de professeur invalide !",
+                            "aide":"Format: Mr ou Mme avec son nom séparé par espace."
+                        },jour,i+1)
+                    )
+                    continue
+                sexeStr,nomProf=professeurStr
+                if sexeStr not in list(dSexe.keys()):
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du nom de professeur invalide !",
+                            "aide":"Format: Mr ou Mme avec son nom séparé par espace."
+                        },jour,i+1)
+                    )
+                    continue
+                professeurs= Professeur.objects.filter(nomCourant = nomProf, sexe=dSexe.get(sexeStr)).values()
+                if len(list(professeurs)) == 0:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Professeur introuvable !",
+                            "aide":"Veuillez insérez ce professeur avant de l'ajouter dans le fichier Excel"
+                        },jour,i+1)
+                    )
+                    continue
+                professeur = None
+                for prof in list(professeurs):
+                    enseigner= Enseigner.objects.filter(numProfesseur=prof["numProfesseur"], numMatiere=matiere.numMatiere).first()
+                    if enseigner:professeur=prof
+                if professeur is None:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Professeur ne correspond pas au matière !",
+                            "aide":"Le professeur doit enseigner le matière dans le même cellule."
+                        },jour,i+1)
+                    )
+                    continue
+                if professeur["numProfesseur"] in profParCase:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Ce professeur n'est plus disponible dans ce horaire !",
+                            "aide":"Sélectionner une autre professeur pour ce matière."
+                        },jour,i+1)
+                    )
+                    continue
+                profParCase.append(professeur["numProfesseur"])
+                caseContenu["professeur"]=professeur["numProfesseur"]
                 
+                #### Traitement salle #####
+                salleStr = [v.lower().strip() for v in valeur[3].split()]
+                if len(salleStr) != 2:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du salle invalide !",
+                            "aide":"Format: S ou Salle et numéro du salle séparé par espace."
+                        },jour,i+1)
+                    )
+                    continue
+                codeSalle, numeroSalle = salleStr
+                if codeSalle not in ["s","salle"]:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Format du salle invalide !",
+                            "aide":"Format: S ou Salle et numéro du salle séparé par espace."
+                        },jour,i+1)
+                    )
+                    continue
+                salle = Salle.objects.filter(nomSalle=f"Salle {numeroSalle}").first()
+                if not salle:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Cette salle n'existe pas !",
+                            "aide":"Veuillez ajouter ce salle avant de le saisir dans le fichier."
+                        },jour,i+1)
+                    )
+                    continue
+                if salle.numSalle in salleParCase:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Cette salle est n'est pas libre dans ce horaire !",
+                            "aide":"Veuillez sélectionner une autre salle !"
+                        },jour,i+1)
+                    )
+                    continue
+                salleParCase.append(salle.numSalle)
+                caseContenu["salle"]=salle.numSalle
+
+                if not erreur:
+                    valideValeur.append(caseContenu)
             if not erreur:
                 donnee[jour]=valideValeur
             else:
@@ -141,6 +334,7 @@ class ContenuSerializer(serializers.Serializer):
 class DataSerializer(serializers.Serializer):
     titre=serializers.ListField(child=TitreSerializer())
     contenu=serializers.ListField()
+    typeFichier=serializers.IntegerField()
     
     def validate_titre(self, value):
         titre=[]
@@ -234,28 +428,40 @@ class DataSerializer(serializers.Serializer):
             messageErreur("Niveau introuvable !")
         if not parcours:
             messageErreur("Parcours introuvable !")
-        
-        niveauParcours = {
-            "niveau":classe.numClasse,
-            "parcours":parcours.numParcours
+        constitue=Constituer.objects.filter(numParcours=parcours.numParcours, numClasse=classe.numClasse).exists()
+        classeParcours = {
+            "classe":classe.numClasse,
+            "parcours":parcours.numParcours,
+            "constitue":constitue
         }
-        titre.append(niveauParcours)
+        titre.append(classeParcours)
         
         return titre
 
-    def validate_contenu(self, value):
+    def validate(self, data):
         erreurs = []
         contenuValide = []
-
-        for i, ligne in enumerate(value):
-            serializer= ContenuSerializer(data=ligne, context={'index': i})
+        titre=data["titre"]
+        classe=titre[1].get("classe")
+        parcours=titre[1].get("parcours")
+        typeFichier=data["typeFichier"]
+        for i, ligne in enumerate(data["contenu"]):
+            serializer= ContenuSerializer(data=ligne, context={
+                'index': i,
+                'classe':classe,
+                'parcours':parcours,
+                "typeFichier":typeFichier
+                })
             if serializer.is_valid():
                 contenuValide.append(serializer.validated_data)
             else:
                 erreurs.append(serializer.errors)
-                raise serializers.ValidationError(erreurs)
+                raise serializers.ValidationError({"contenu":erreurs})
         
         if erreurs:
-            raise serializers.ValidationError(erreurs)
+            raise serializers.ValidationError({"contenu":erreurs})
         
-        return contenuValide
+        return {
+            "titre":titre,
+            "contenu":contenuValide
+        }
