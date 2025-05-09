@@ -35,6 +35,7 @@
     "react-hook-form": "^7.55.0",
     "react-icons": "^5.5.0",
     "react-image-file-resizer": "^0.4.8",
+    "react-modal": "^3.16.3",
     "react-pdf": "^9.2.1",
     "react-pick-color": "^2.0.0",
     "react-redux": "^9.2.0",
