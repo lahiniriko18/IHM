@@ -28,6 +28,7 @@ class Professeur(models.Model):
     contact=models.CharField(max_length=17, null=True)
     email=models.EmailField(max_length=50, null=True)
     description=models.CharField(max_length=255, null=True)
+    photos=models.CharField(max_length=255, null=True)
 
     class Meta:
         db_table='professeur'   

@@ -26,14 +26,14 @@ class EtablissementView(APIView):
         donnees=request.data
         logo=request.data.get('logo')
         if logo:
-            dossier=os.path.join(settings.MEDIA_ROOT, 'images')
+            dossier=os.path.join(settings.MEDIA_ROOT, 'etablissements')
             os.makedirs(dossier, exist_ok=True)
             chemin_fichier = os.path.join(dossier, logo.name)
 
             with open(chemin_fichier, 'wb+') as destination:
                 for c in logo.chunks():
                     destination.write(c)
-            logoChemin=f"images/{logo.name}"
+            logoChemin=f"etablissements/{logo.name}"
             donnees['logo']=logoChemin
         serializer=EtablissementSerializer(data=donnees)
 
@@ -63,7 +63,7 @@ class EtablissementView(APIView):
         nouveauLogo = request.FILES.get('logo')
 
         if nouveauLogo:
-            dossier = os.path.join(settings.MEDIA_ROOT, 'images')
+            dossier = os.path.join(settings.MEDIA_ROOT, 'etablissements')
             os.makedirs(dossier, exist_ok=True)
             chemin_fichier = os.path.join(dossier, nouveauLogo.name)
 
@@ -71,7 +71,7 @@ class EtablissementView(APIView):
                 for c in nouveauLogo.chunks():
                     destination.write(c)
 
-            logoChemin = f"images/{nouveauLogo.name}"
+            logoChemin = f"etablissements/{nouveauLogo.name}"
 
             if logoChemin!=ancienLogo:
                 cheminAncienLogo=os.path.join(settings.MEDIA_ROOT, ancienLogo)
