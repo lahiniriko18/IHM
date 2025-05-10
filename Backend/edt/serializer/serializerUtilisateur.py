@@ -19,7 +19,7 @@ class InscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model=Utilisateur
-        fields=['id', 'username', 'email', 'password', 'confirm_password',
+        fields=['id','numEtablissement', 'username', 'email', 'password', 'confirm_password',
                  'first_name', 'last_name',  'contact', 'datenaiss', 'description', 'image']
 
     def validate_username(self, value):
@@ -66,6 +66,9 @@ class InscriptionSerializer(serializers.ModelSerializer):
         if not re.search(r'[\W_]', password):
             raise serializers.ValidationError({"password":"Le mot de passe doit contenir un caractère spécial."})
     def validate(self, data):
+        etablissement=data['numEtablissement']
+        if etablissement.utilisateurs.count() >= etablissement.maxUtilisateur:
+            raise serializers.ValidationError({"erreur":f"Ce etablissement atteint la limite de nombre de l'utilisateur {etablissement.maxUtilisateur}"})
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError({"password":f"Les mots de passe ne correspondent pas."})
         self.validate_complexe_password(data['password'])

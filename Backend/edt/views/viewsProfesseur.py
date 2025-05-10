@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from ..serializer.serializerProfesseur import ProfesseurSerializer
+from ..serializer.serializerEtablissement import EtablissementSerializer
 from ..models import Professeur
 import os
 class ProfesseurView(APIView):
