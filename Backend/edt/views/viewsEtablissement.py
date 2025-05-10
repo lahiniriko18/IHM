@@ -58,31 +58,33 @@ class EtablissementView(APIView):
         except Etablissement.DoesNotExist:
             return Response({"erreur": "Etablissement introuvable"}, status=status.HTTP_404_NOT_FOUND)
 
-        donnees = request.data.copy()  # on copie car request.data est immutable
-        logo = request.FILES.get('logo')  # très important : pour fichier, utiliser request.FILES
+        donnees = request.data
+        ancienLogo=etablissement.logo
+        nouveauLogo = request.FILES.get('logo')
 
-        if logo:
+        if nouveauLogo:
             dossier = os.path.join(settings.MEDIA_ROOT, 'images')
             os.makedirs(dossier, exist_ok=True)
-            chemin_fichier = os.path.join(dossier, logo.name)
+            chemin_fichier = os.path.join(dossier, nouveauLogo.name)
 
-            # Sauvegarde physique du fichier sur le serveur
             with open(chemin_fichier, 'wb+') as destination:
-                for chunk in logo.chunks():
-                    destination.write(chunk)
+                for c in nouveauLogo.chunks():
+                    destination.write(c)
+            logoChemin = f"images/{nouveauLogo.name}"
 
-            # Mise à jour du champ 'logo' avec le chemin relatif
-            logoChemin = f"images/{logo.name}"
+            if logoChemin!=ancienLogo:
+                cheminAncienLogo=os.path.join(settings.MEDIA_ROOT, ancienLogo)
+                existeAutre = Etablissement.objects.filter(logo=ancienLogo).exclude(pk=etablissement.numEtablissement).exists()
+                if os.path.exists(cheminAncienLogo) and not existeAutre:
+                    os.remove(cheminAncienLogo)
+
             donnees['logo'] = logoChemin
 
-        # Utiliser 'donnees' et non 'request.data' car 'logo' y a été modifié
         serializer = EtablissementSerializer(etablissement, data=donnees)
-
         if serializer.is_valid():
             etablissement = serializer.save()
             donnee = EtablissementSerializer(etablissement).data
 
-            # Construction de l'URL absolue pour le logo
             if donnee['logo']:
                 verifChemin = os.path.join(settings.MEDIA_ROOT, donnee['logo'])
                 if os.path.exists(verifChemin):
@@ -98,7 +100,13 @@ class EtablissementView(APIView):
     def delete(self, request, numEtablissement):
         try:
             etablissement= Etablissement.objects.get(pk=numEtablissement)
+            logo=etablissement.logo
+            if logo:
+                cheminLogo=os.path.join(settings.MEDIA_ROOT, logo)
+                existeAutre = Etablissement.objects.filter(logo=logo).exclude(pk=etablissement.numEtablissement).exists()
+                if os.path.exists(cheminLogo) and not existeAutre:
+                    os.remove(cheminLogo)
             etablissement.delete()
-            return Response({"message":"Suppression avec succès"}, status=status.HTTP_200_OK)
+            return Response({"message":"Suppression avec succès !"}, status=status.HTTP_200_OK)
         except Etablissement.DoesNotExist:
-            return Response({'erreur':'Etablissement introuvable'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'erreur':'Etablissement introuvable !'}, status=status.HTTP_404_NOT_FOUND)

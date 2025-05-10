@@ -1,12 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
+from django.http  import FileResponse
 from datetime import datetime
 from ..serializer.serializerEdt import EdtSerializer
 from ..serializer.serializerPosseder import PossederSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerExcel import ExcelSerializer,DataSerializer
 import pandas as pd
+import os
 from openpyxl import load_workbook
 from ..models import Edt
 class EdtView(APIView):
@@ -53,6 +56,12 @@ class EdtTableauView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(donneeAjout,status=status.HTTP_201_CREATED)
 
+class ModeleExcelView(APIView):
+    def get(self, request, typeFichier):
+        chemin=os.path.join(settings.BASE_DIR, 'edt','static','modele_excel',f'modelEdt{typeFichier}.xlsx')
+        if not os.path.exists(chemin):
+            return Response({"erreur":"Fichier modèle introuvable !"})
+        return FileResponse(open(chemin,'rb'), as_attachment=True, filename=f"modelEdt{typeFichier}.xlsx")
 class EdtExcelView(APIView):
     def post(self, request):
         serializer=ExcelSerializer(data=request.data)
