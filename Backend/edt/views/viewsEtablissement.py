@@ -70,6 +70,7 @@ class EtablissementView(APIView):
             with open(chemin_fichier, 'wb+') as destination:
                 for c in nouveauLogo.chunks():
                     destination.write(c)
+
             logoChemin = f"images/{nouveauLogo.name}"
 
             if logoChemin!=ancienLogo:
@@ -77,17 +78,16 @@ class EtablissementView(APIView):
                 existeAutre = Etablissement.objects.filter(logo=ancienLogo).exclude(pk=etablissement.numEtablissement).exists()
                 if os.path.exists(cheminAncienLogo) and not existeAutre:
                     os.remove(cheminAncienLogo)
-
             donnees['logo'] = logoChemin
 
         serializer = EtablissementSerializer(etablissement, data=donnees)
         if serializer.is_valid():
-            etablissement = serializer.save()
-            donnee = EtablissementSerializer(etablissement).data
+            etablissements = serializer.save()
+            donnee = EtablissementSerializer(etablissements).data
 
             if donnee['logo']:
                 verifChemin = os.path.join(settings.MEDIA_ROOT, donnee['logo'])
-                if os.path.exists(verifChemin):
+                if os.path.exists(verifChemin) and not existeAutre:
                     donnee['logo'] = request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
                 else:
                     donnee['logo'] = ''
