@@ -38,52 +38,38 @@ function Mention() {
       console.log("Le tache est terminé");
     }
   };
-  const sendData = async () => {
+  const sendData = async (mentionData) => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/mention/ajouter/", dataMention)
-      if (response.status !== 201) {
-        throw new Error('Erreur code : ' + response.status)
-      }
-      console.log("ajouter")
-      getData()
+      const response = await axios.post("http://127.0.0.1:8000/api/mention/ajouter/", mentionData);
+      if (response.status !== 201) throw new Error('Erreur code : ' + response.status);
+      console.log("ajouter");
+      getData();
     } catch (error) {
-      if (error.response) {
-        console.error("Erreur du serveur :", error.response.data)
-      } else {
-        console.error("Erreur inconnue :", error.message)
-      }
-    } finally {
-      console.log("Le tache est terminé")
+      console.error("Erreur:", error.response?.data || error.message);
     }
-  }
+  };
+
+  const putData = async (mentionData) => {
+    try {
+      const response = await axios.put(`http://127.0.0.1:8000/api/mention/modifier/${id}`, mentionData);
+      if (response.status !== 200) throw new Error('Erreur code : ' + response.status);
+      console.log("modifié");
+      getData();
+    } catch (error) {
+      console.error("Erreur:", error.response?.data || error.message);
+    }
+  };
+
   const removeMention = async (id) => {
     try {
       const response = await axios.delete(`http://127.0.0.1:8000/api/mention/supprimer/${parseInt(id)}`)
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
       }
-      console.log(`Utilisateur ${id} supprimé avec succès`);
+      console.log(`mention ${id} supprimé avec succès`);
       getData()
     } catch (error) {
       console.log("Erreur:", error.message)
-    }
-  }
-  const putData = async () => {
-    try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/mention/modifier/${id}`, dataMention)
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status)
-      }
-      console.log("ajouter")
-      getData()
-    } catch (error) {
-      if (error.response) {
-        console.error("Erreur du serveur :", error.response.data)
-      } else {
-        console.error("Erreur inconnue :", error.message)
-      }
-    } finally {
-      console.log("Le tache est terminé")
     }
   }
 
@@ -221,22 +207,25 @@ function Mention() {
                 onClick={() => {
                   if (dataMention.nomMention.trim() !== "" && dataMention.codeMention.trim() !== "") {
                     if (isadd) {
-                      console.log(numEtablissement)
-                      sendData()
+                      setDataMention((prev) => {
+                        const updated = { ...prev, numEtablissement: numEtablissement };
+                        sendData(updated);
+                        return { nomMention: "", codeMention: "" };
 
-                      setDataMention({ nomMention: "", codeMention: "" })
-                      setIsclicked(false);
-                      setError({ ...error, status: false })
+                      });
+                    } else {
+                      setDataMention((prev) => {
+                        const updated = { ...prev, numEtablissement: numEtablissement };
+                        putData(updated);
+                        return { nomMention: "", codeMention: "" };
+
+                      });
                     }
-                    else {
-                      putData()
-                      setDataMention({ nomMention: "", codeMention: "" })
-                      setIsclicked(false);
-                      setError({ ...error, status: false })
-                    }
+
                   } else {
                     (dataMention.nomMention.trim() === "") ? setError({ error, status: true, composant: "nomMention", message: "Le nom du mention ne peut pas etre vide" }) : setError({ error, status: true, composant: "codeMention", message: "Le code du mention ne peut pas etre vide" })
-                  }
+
+                  } setIsclicked(false);
                 }}
               >
                 {isadd ? "AJOUTER" : "MODIFIER"}
@@ -335,7 +324,7 @@ function Mention() {
                 </thead>
                 <tbody className="text-sm">
                   {currentData.map((Mention, index) => (
-                    <tr key={index} className="border-b transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-gray-100">
+                    <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
                       <td className="px-4 py-2 text-center">{Mention.numMention}</td>
                       <td className="px-4 py-2 text-center">{Mention.nomMention}</td>
                       <td className="px-4 py-2 text-center">{Mention.codeMention}</td>
