@@ -60,16 +60,22 @@ class ProfileView(APIView):
         except Utilisateur.DoesNotExist:
             return Response({"erreur":"Utilisateur introuvable !"}, status=status.HTTP_404_NOT_FOUND)
         donnees=request.data
-        image=donnees.get('image')
-        if image:
+        ancienImage=utilisateur.image
+        nouveauImage=donnees.get('image')
+        if nouveauImage:
             dossier=os.path.join(settings.MEDIA_ROOT, 'utilisateurs')
             os.makedirs(dossier, exist_ok=True)
-            chemin_fichier = os.path.join(dossier, image.name)
+            chemin_fichier = os.path.join(dossier, nouveauImage.name)
 
             with open(chemin_fichier, 'wb+') as destination:
-                for c in image.chunks():
+                for c in nouveauImage.chunks():
                     destination.write(c)
-            imageChemin=f"utilisateurs/{image.name}"
+            imageChemin=f"utilisateurs/{nouveauImage.name}"
+            if imageChemin!=ancienImage:
+                cheminAncienImage=os.path.join(settings.MEDIA_ROOT, ancienImage)
+                existeAutre = Utilisateur.objects.filter(image=ancienImage).exclude(pk=utilisateur.id).exists()
+                if os.path.exists(cheminAncienImage) and not existeAutre:
+                    os.remove(cheminAncienImage)
             donnees['image']=imageChemin
         serializer=InscriptionSerializer(utilisateur, data=donnees)
 

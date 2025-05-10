@@ -9,6 +9,7 @@ class Etablissement(models.Model):
     slogant=models.CharField(max_length=255, null=True)
     logo=models.CharField(max_length=100, null=True)
     contact=models.CharField(max_length=17)
+    maxUtilisateur=models.IntegerField(default=3)
 
     class Meta:
         db_table='etablissement'
@@ -18,7 +19,7 @@ class Etablissement(models.Model):
 
 class Professeur(models.Model):
     numProfesseur=models.AutoField(primary_key=True)
-    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE, db_column='numEtablissement')
+    numEtablissement=models.ForeignKey(Etablissement, related_name='professeurs', on_delete=models.CASCADE, db_column='numEtablissement')
     nomProfesseur=models.CharField(max_length=50)
     prenomProfesseur=models.CharField(max_length=50, null=True)
     nomCourant=models.CharField(max_length=50, null=True)
@@ -27,7 +28,7 @@ class Professeur(models.Model):
     adresse=models.CharField(max_length=50, null=True)
     contact=models.CharField(max_length=17, null=True)
     email=models.EmailField(max_length=50, null=True)
-    description=models.CharField(max_length=255, null=True)
+    photos=models.CharField(max_length=255, null=True)
 
     class Meta:
         db_table='professeur'   
@@ -37,7 +38,7 @@ class Professeur(models.Model):
 
 class Mention(models.Model):
     numMention=models.AutoField(primary_key=True)
-    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE, db_column='numEtablissement')
+    numEtablissement=models.ForeignKey(Etablissement, related_name='mentions', on_delete=models.CASCADE, db_column='numEtablissement')
     nomMention=models.CharField(max_length=50)
     codeMention=models.CharField(max_length=20, null=True)
 
@@ -49,7 +50,7 @@ class Mention(models.Model):
 
 class Parcours(models.Model):
     numParcours=models.AutoField(primary_key=True)
-    numMention=models.ForeignKey(Mention, on_delete=models.CASCADE, db_column='numMention')
+    numMention=models.ForeignKey(Mention, related_name='parcours', on_delete=models.CASCADE, db_column='numMention')
     nomParcours=models.CharField(max_length=50)
     codeParcours=models.CharField(max_length=6, null=True)
 
@@ -100,10 +101,10 @@ class Salle(models.Model):
 
 class Edt(models.Model):
     numEdt=models.AutoField(primary_key=True)
-    numMatiere=models.ForeignKey(Matiere, on_delete=models.CASCADE, db_column='numMatiere')
-    numParcours=models.ForeignKey(Parcours, on_delete=models.SET_NULL, null=True, db_column='numParcours')
-    numSalle=models.ForeignKey(Salle, on_delete=models.SET_NULL, null=True, db_column='numSalle')
-    numClasse=models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True, db_column='numClasse')
+    numMatiere=models.ForeignKey(Matiere, related_name='edts', on_delete=models.CASCADE, db_column='numMatiere')
+    numParcours=models.ForeignKey(Parcours, related_name='edts', on_delete=models.SET_NULL, null=True, db_column='numParcours')
+    numSalle=models.ForeignKey(Salle, related_name='edts', on_delete=models.SET_NULL, null=True, db_column='numSalle')
+    numClasse=models.ForeignKey(Classe, related_name='edts', on_delete=models.SET_NULL, null=True, db_column='numClasse')
     date=models.DateField()
     heureDebut=models.TimeField()
     heureFin=models.TimeField()
@@ -116,8 +117,8 @@ class Edt(models.Model):
 
 class Constituer(models.Model):
     numConstituer=models.AutoField(primary_key=True)
-    numParcours=models.ForeignKey(Parcours, on_delete=models.CASCADE, db_column='numParcours')
-    numClasse=models.ForeignKey(Classe, on_delete=models.CASCADE, db_column='numClasse')
+    numParcours=models.ForeignKey(Parcours, related_name='constituers', on_delete=models.CASCADE, db_column='numParcours')
+    numClasse=models.ForeignKey(Classe, related_name='constituers', on_delete=models.CASCADE, db_column='numClasse')
 
     class Meta:
         db_table='constituer'
@@ -125,8 +126,8 @@ class Constituer(models.Model):
         return f"{self.numConstituer} dans une classe {self.numClasse}"
 class Posseder(models.Model):
     numPosseder=models.AutoField(primary_key=True)
-    numClasse=models.ForeignKey(Classe, on_delete=models.CASCADE, db_column='numClasse')
-    numGroupe=models.ForeignKey(Groupe, on_delete=models.CASCADE, db_column='numGroupe')
+    numClasse=models.ForeignKey(Classe, related_name='posseders', on_delete=models.CASCADE, db_column='numClasse')
+    numGroupe=models.ForeignKey(Groupe, related_name='possedes', on_delete=models.CASCADE, db_column='numGroupe')
 
     class Meta:
         db_table='posseder'
@@ -137,7 +138,7 @@ class Posseder(models.Model):
 class Avoir(models.Model):
     numAvoir=models.AutoField(primary_key=True)
     numEdt=models.ForeignKey(Edt, on_delete=models.CASCADE, db_column='numEdt')
-    numEtablissement=models.ForeignKey(Etablissement, on_delete=models.CASCADE, db_column='numEtablissement')
+    numEtablissement=models.ForeignKey(Etablissement, related_name='avoirs', on_delete=models.CASCADE, db_column='numEtablissement')
 
     class Meta:
         db_table='avoir'
@@ -147,8 +148,8 @@ class Avoir(models.Model):
 
 class Enseigner(models.Model):
     numEnseigner=models.AutoField(primary_key=True)
-    numProfesseur=models.ForeignKey(Professeur, on_delete=models.CASCADE, db_column='numProfesseur')
-    numMatiere=models.ForeignKey(Matiere, on_delete=models.CASCADE, db_column='numMatiere')
+    numProfesseur=models.ForeignKey(Professeur, related_name='enseigners', on_delete=models.CASCADE, db_column='numProfesseur')
+    numMatiere=models.ForeignKey(Matiere, related_name='enseigners', on_delete=models.CASCADE, db_column='numMatiere')
 
     class Meta:
         db_table='enseigner'
@@ -157,6 +158,7 @@ class Enseigner(models.Model):
     
 
 class Utilisateur(AbstractUser):
+    numEtablissement=models.ForeignKey(Etablissement, related_name='utilisateurs', on_delete=models.CASCADE, db_column='numEtablissement',default=1)
     contact=models.CharField(max_length=17)
     datenaiss=models.DateField(null=True)
     description=models.TextField(null=True)
@@ -165,6 +167,9 @@ class Utilisateur(AbstractUser):
     is_superuser=models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+
+    def clean(self):
+        return super().clean()
     class Meta:
         db_table='utilisateur'
     def __str__(self):
@@ -173,7 +178,7 @@ class Utilisateur(AbstractUser):
 
 class Action(models.Model):
     numAction=models.AutoField(primary_key=True)
-    user_id=models.ForeignKey(Utilisateur, null=True, on_delete=models.SET_NULL, db_column='user_id')
+    user_id=models.ForeignKey(Utilisateur, related_name='actions', null=True, on_delete=models.SET_NULL, db_column='user_id')
     type=models.CharField(max_length=20)
     text=models.CharField(max_length=100, null=True)
     table=models.CharField(max_length=20, null=True)

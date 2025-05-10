@@ -26,14 +26,14 @@ class EtablissementView(APIView):
         donnees=request.data
         logo=request.data.get('logo')
         if logo:
-            dossier=os.path.join(settings.MEDIA_ROOT, 'images')
+            dossier=os.path.join(settings.MEDIA_ROOT, 'etablissements')
             os.makedirs(dossier, exist_ok=True)
             chemin_fichier = os.path.join(dossier, logo.name)
 
             with open(chemin_fichier, 'wb+') as destination:
                 for c in logo.chunks():
                     destination.write(c)
-            logoChemin=f"images/{logo.name}"
+            logoChemin=f"etablissements/{logo.name}"
             donnees['logo']=logoChemin
         serializer=EtablissementSerializer(data=donnees)
 
@@ -58,34 +58,36 @@ class EtablissementView(APIView):
         except Etablissement.DoesNotExist:
             return Response({"erreur": "Etablissement introuvable"}, status=status.HTTP_404_NOT_FOUND)
 
-        donnees = request.data.copy()
-        logo = request.FILES.get('logo')
+        donnees = request.data
+        ancienLogo=etablissement.logo
+        nouveauLogo = request.FILES.get('logo')
 
-        if logo:
-            # Traitement du nouveau fichier image
-            dossier = os.path.join(settings.MEDIA_ROOT, 'images')
+        if nouveauLogo:
+            dossier = os.path.join(settings.MEDIA_ROOT, 'etablissements')
             os.makedirs(dossier, exist_ok=True)
-            chemin_fichier = os.path.join(dossier, logo.name)
+            chemin_fichier = os.path.join(dossier, nouveauLogo.name)
 
             with open(chemin_fichier, 'wb+') as destination:
-                for chunk in logo.chunks():
-                    destination.write(chunk)
+                for c in nouveauLogo.chunks():
+                    destination.write(c)
 
-            logoChemin = f"images/{logo.name}"
+            logoChemin = f"etablissements/{nouveauLogo.name}"
+
+            if logoChemin!=ancienLogo:
+                cheminAncienLogo=os.path.join(settings.MEDIA_ROOT, ancienLogo)
+                existeAutre = Etablissement.objects.filter(logo=ancienLogo).exclude(pk=etablissement.numEtablissement).exists()
+                if os.path.exists(cheminAncienLogo) and not existeAutre:
+                    os.remove(cheminAncienLogo)
             donnees['logo'] = logoChemin
-        else:
-            # Aucun nouveau logo → garder l'ancien
-            donnees['logo'] = etablissement.logo  # conserver l'ancien chemin
 
         serializer = EtablissementSerializer(etablissement, data=donnees)
-
         if serializer.is_valid():
-            etablissement = serializer.save()
-            donnee = EtablissementSerializer(etablissement).data
+            etablissements = serializer.save()
+            donnee = EtablissementSerializer(etablissements).data
 
             if donnee['logo']:
                 verifChemin = os.path.join(settings.MEDIA_ROOT, donnee['logo'])
-                if os.path.exists(verifChemin):
+                if os.path.exists(verifChemin) and not existeAutre:
                     donnee['logo'] = request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
                 else:
                     donnee['logo'] = ''
@@ -98,7 +100,13 @@ class EtablissementView(APIView):
     def delete(self, request, numEtablissement):
         try:
             etablissement= Etablissement.objects.get(pk=numEtablissement)
+            logo=etablissement.logo
+            if logo:
+                cheminLogo=os.path.join(settings.MEDIA_ROOT, logo)
+                existeAutre = Etablissement.objects.filter(logo=logo).exclude(pk=etablissement.numEtablissement).exists()
+                if os.path.exists(cheminLogo) and not existeAutre:
+                    os.remove(cheminLogo)
             etablissement.delete()
-            return Response({"message":"Suppression avec succès"}, status=status.HTTP_200_OK)
+            return Response({"message":"Suppression avec succès !"}, status=status.HTTP_200_OK)
         except Etablissement.DoesNotExist:
-            return Response({'erreur':'Etablissement introuvable'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'erreur':'Etablissement introuvable !'}, status=status.HTTP_404_NOT_FOUND)
