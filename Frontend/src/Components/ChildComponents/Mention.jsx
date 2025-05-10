@@ -35,7 +35,7 @@ function Mention() {
       console.error(error.message);
     } finally {
       setIsLoading(false);
-      console.log("Le tache est terminé");
+
     }
   };
   const sendData = async (mentionData) => {
@@ -81,12 +81,11 @@ function Mention() {
         throw new Error('Erreur code : ' + response.status);
       }
       setListeMention(response.data);
-      setOriginalList(response.data);  // ✅ Mise à jour ici
+      setOriginalList(response.data);
     } catch (error) {
       console.error(error.message);
     } finally {
       setIsLoading(false);
-      console.log("Le tache est terminé");
     }
   };
   const editMention = (numMention) => {
@@ -207,25 +206,25 @@ function Mention() {
                 onClick={() => {
                   if (dataMention.nomMention.trim() !== "" && dataMention.codeMention.trim() !== "") {
                     if (isadd) {
-                      setDataMention((prev) => {
-                        const updated = { ...prev, numEtablissement: numEtablissement };
-                        sendData(updated);
-                        return { nomMention: "", codeMention: "" };
-
-                      });
+                      const updatedMention = {
+                        ...dataMention,
+                        numEtablissement: numEtablissement
+                      };
+                      sendData(updatedMention);
+                      setDataMention({ nomMention: "", codeMention: "" });
                     } else {
-                      setDataMention((prev) => {
-                        const updated = { ...prev, numEtablissement: numEtablissement };
-                        putData(updated);
-                        return { nomMention: "", codeMention: "" };
-
-                      });
+                      const updatedMention = {
+                        ...dataMention,
+                        numEtablissement: numEtablissement
+                      };
+                      putData(updatedMention);
+                      setDataMention({ nomMention: "", codeMention: "" });
                     }
-
+                    setIsclicked(false);
                   } else {
                     (dataMention.nomMention.trim() === "") ? setError({ error, status: true, composant: "nomMention", message: "Le nom du mention ne peut pas etre vide" }) : setError({ error, status: true, composant: "codeMention", message: "Le code du mention ne peut pas etre vide" })
 
-                  } setIsclicked(false);
+                  }
                 }}
               >
                 {isadd ? "AJOUTER" : "MODIFIER"}

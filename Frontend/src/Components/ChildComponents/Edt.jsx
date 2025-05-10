@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useSidebar } from '../Context/SidebarContext';
 import { useNavigate } from 'react-router-dom';
-import Creatable, { useCreatable } from 'react-select/creatable';
+import Creatable from 'react-select/creatable';
 
 function Edt() {
   const [isclicked, setIsclicked] = useState(false)
