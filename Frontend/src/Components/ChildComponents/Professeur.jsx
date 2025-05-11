@@ -6,6 +6,7 @@ import { useSidebar } from '../Context/SidebarContext';
 import axios from 'axios';
 function Professeur() {
   const { isReduire } = useSidebar();
+  const [numEtablissement, setNumEtablissement] = useState();
   const [search, setSearch] = useState('')
   const [listeProfesseur, setlisteProfesseur] = useState([]);
   const [preview, setPreview] = useState(null);
@@ -14,6 +15,7 @@ function Professeur() {
   const [isLoading, setIsLoading] = useState(true);
   const [id, setId] = useState()
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isphotosDeleted, setIsphotosDeleted] = useState(false);
   const [error, setError] = useState({ status: false, composant: "", message: "" })
   const [dataProfesseur, setdataProfesseur] = useState({
     nomProfesseur: "",
@@ -27,7 +29,12 @@ function Professeur() {
     email: "",  // Il manquait `email`
     numEtablissement: null
   })
-
+  const handleDeletephotos = () => {
+    setSelectedFile(null);
+    setIsphotosDeleted(true);
+    setPreview(null);
+    document.getElementById('file-name').textContent = "Aucun fichier choisi";
+  };
   const handleFileChange = (e) => {
     const file = e.target.files[0];
 
@@ -42,7 +49,27 @@ function Professeur() {
     const newFileName = `image_${Date.now()}.${extension}`;
     return new File([file], newFileName, { type: file.type });
   };
-  const sendData = async () => {
+
+  const getNumEtablissement = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/etablissement/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      if (response.data.length > 0) {
+        setNumEtablissement(parseInt(response.data[0].numEtablissement));
+      } else {
+        setError({ status: true, composant: "Etablissement", message: "Aucun établissement trouvé !" });
+      }
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setIsLoading(false);
+
+    }
+  };
+  const sendData = async (dataProfesseur) => {
     const formData = new FormData();
 
     Object.entries(dataProfesseur).forEach(([key, value]) => {
@@ -66,9 +93,7 @@ function Professeur() {
       getData()
       console.log("Établissement enregistré !");
     } catch (error) {
-      console.error("Erreur :", error.message);
-    } finally {
-
+      console.error("Erreur:", error.response?.data || error.message);
     }
   }
   const removeProfesseur = async (id) => {
@@ -83,7 +108,7 @@ function Professeur() {
       console.log("Erreur:", error.message)
     }
   }
-  const putData = async () => {
+  const putData = async (dataProfesseur) => {
     const formData = new FormData();
 
     Object.entries(dataProfesseur).forEach(([key, value]) => {
@@ -92,8 +117,15 @@ function Professeur() {
 
 
     if (selectedFile) {
+      // Cas 3 : Nouveau photos sélectionné
       const renamedFile = renameFile(selectedFile);
-      formData.append('photos', renamedFile); // clé = "photos"
+      formData.append('photos', renamedFile);
+    } else if (isphotosDeleted) {
+      // Cas 2 : Utilisateur a supprimé le photos
+      formData.append('photos', '');
+    } else {
+      // Cas 1 : Aucun changement -> garder l'ancien chemin
+      formData.append('photos', `${dataProfesseur.photos}`);
     }
     try {
       const response = await axios.put(`http://127.0.0.1:8000/api/professeur/modifier/${id}`, formData, {
@@ -143,6 +175,7 @@ function Professeur() {
     if (selectedprofesseur) {
       setdataProfesseur({
         nomProfesseur: selectedprofesseur.nomProfesseur,
+        prenomProfesseur: selectedprofesseur.prenomProfesseur,
         adresse: selectedprofesseur.adresse,
         email: selectedprofesseur.email,
         contact: selectedprofesseur.contact,
@@ -168,9 +201,17 @@ function Professeur() {
     setId(id);
     setIsConfirmModalOpen(true);
   }
-
+  useEffect(() => {
+    if (numEtablissement) {
+      setdataProfesseur((prev) => ({
+        ...prev,
+        numEtablissement: parseInt(numEtablissement),
+      }));
+    }
+  }, [numEtablissement]);
   useEffect(() => {
     getData()
+    getNumEtablissement()
     console.log(listeProfesseur);
 
 
@@ -216,19 +257,25 @@ function Professeur() {
     setSearch(value);
 
     if (value.trim() !== "") {
-      const filtered = originalList.filter((Parcours) =>
-        Parcours.nomParcours.toLowerCase().includes(value.toLowerCase()) ||
-        Parcours.codeParcours.toLowerCase().includes(value.toLowerCase()) ||
-        Parcours.numParcours.toString().includes(value)
+      const filtered = originalList.filter((Professeur) =>
+        Professeur.nomProfesseur.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.prenomProfesseur.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.nomCourant.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.adresse.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.grade.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.contact.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.sexe.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.email.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.numProfesseur.toString().includes(value)
       );
-      setListeParcours(filtered);
+      setlisteProfesseur(filtered);
     } else {
-      setListeParcours(originalList);
+      setlisteProfesseur(originalList);
     }
   }
   const navigate = useNavigate();
-  const versDetails = () => {
-    navigate('/professeur/detail/1')
+  const versDetails = (id) => {
+    navigate(`/professeur/detail/${id}`)
   }
   const [isclicked, setIsclicked] = useState(false)
   const [isadd, setisadd] = useState(true)
@@ -356,7 +403,7 @@ function Professeur() {
                       placeholder="Sexe"
                       options={[
                         { value: 'Masculin', label: 'Masculin' },
-                        { value: 'Feminin', label: 'Feminin' },
+                        { value: 'Féminin', label: 'Féminin' },
                       ]}
                       value={dataProfesseur.sexe ? { label: dataProfesseur.sexe, value: dataProfesseur.sexe } : null}
                       onChange={(selectedOption) =>
@@ -400,7 +447,8 @@ function Professeur() {
               </div>
               {/*right section */}
               <div className='w-[50%] flex justify-center items-center flex-col gap-2'>
-                <div className="w-40 h-40 rounded-full bg-gray-200">
+                <div className="w-40 h-40 rounded-full bg-gray-200 relative">
+                  {preview && <img src="/Icons/supprimer.png" alt="preview" className="absolute top-0 left-36 w-7 cursor-pointer hover:scale-105 duration-200" onClick={handleDeletephotos} />}
                   {preview && <img src={preview} alt="preview" className="w-40 h-40 rounded-full object-cover" />}
                 </div>
                 <div className="flex flex-col justify-center w-full">
@@ -435,13 +483,23 @@ function Professeur() {
                 onClick={() => {
                   if (validateForm()) {
                     if (isadd) {
-                      sendData();
+                      const updateProfesseur = {
+                        ...dataProfesseur,
+                        numEtablissement: numEtablissement
+                      };
+                      sendData(updateProfesseur);
+                      console.log(dataProfesseur)
                     } else {
-                      putData();
+                      const updateProfesseur = {
+                        ...dataProfesseur,
+                        numEtablissement: numEtablissement
+                      };
+                      putData(updateProfesseur);
                     }
                     setdataProfesseur({ nomProfesseur: "", prenomProfesseur: "", adresse: "", contact: "", email: "", nomCourant: "", photos: "", grade: "", sexe: "" })
                     setSelectedFile(null)
                     setIsclicked(false);
+                    setPreview(null)
                   }
                 }}
               >
@@ -529,7 +587,12 @@ function Professeur() {
                 <thead>
                   <tr className="bg-blue-500 text-white text-sm">
                     <th className="px-4 py-4">#</th>
-                    <th className="px-4 py-4">Nom du Prof.</th>
+                    <th className="px-4 py-4">PDP</th>
+                    <th className="px-4 py-4">Nom</th>
+
+                    <th className="px-4 py-4">Prenom</th>
+                    <th className="px-4 py-4">Nom Courant</th>
+                    <th className="px-4 py-4">Email</th>
                     <th className="px-4 py-4">adresse</th>
                     <th className="px-4 py-4">Grade</th>
                     <th className="px-4 py-4">Sexe</th>
@@ -539,22 +602,31 @@ function Professeur() {
                 </thead>
                 <tbody className="text-sm">
                   {currentData.map((Professeur, index) => (
-                    <tr key={index} className="border-b transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-gray-100">
-                      <td className="px-4 py-2 text-center">{Professeur.numEtablissement}</td>
+                    <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
+                      <td className="px-4 py-2 text-center">{Professeur.numProfesseur}</td>
+                      <td className="px-4 py-2 text-center">
+                        {Professeur.photos && Professeur.photos !== "" && (
+                          <img src={Professeur.photos} alt="Logo établissement" className="w-8 h-8 rounded-full object-cover" />
+                        )}
+
+                      </td>
                       <td className="px-4 py-2 text-center">{Professeur.nomProfesseur}</td>
+                      <td className="px-4 py-2 text-center">{Professeur.prenomProfesseur}</td>
+                      <td className="px-4 py-2 text-center">{Professeur.nomCourant}</td>
+                      <td className="px-4 py-2 text-center">{Professeur.email}</td>
                       <td className="px-4 py-2 text-center">{Professeur.adresse}</td>
                       <td className="px-4 py-2 text-center">{Professeur.grade}</td>
                       <td className="px-4 py-2 text-center">{Professeur.sexe}</td>
                       <td className="px-4 py-2 text-center">{Professeur.contact}</td>
                       <td className="px-4 py-2 flex justify-center items-center gap-2">
                         <button className="p-1 rounded hover:bg-gray-200">
-                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editProfesseur(Professeur.numEtablissement) }} />
+                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editProfesseur(Professeur.numProfesseur) }} />
                         </button>
                         <button className="p-1 rounded hover:bg-gray-200" onClick={() => confirmerSuppression(Professeur.numProfesseur)}>
                           <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
                         </button>
                         <button className="p-1 rounded hover:bg-gray-200">
-                          <img src="/Icons/afficher.png" alt="Supprimer" className="w-5" onClick={versDetails} />
+                          <img src="/Icons/afficher.png" alt="Supprimer" className="w-5" onClick={() => versDetails(Professeur.numProfesseur)} />
                         </button>
                       </td>
                     </tr>
