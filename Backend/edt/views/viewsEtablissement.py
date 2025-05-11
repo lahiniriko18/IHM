@@ -63,7 +63,7 @@ class EtablissementView(APIView):
         nouveauLogo = request.FILES.get('logo')
         if not nouveauLogo:
             nouveauLogo=request.data.get('logo')
-        logoChemin=ancienLogo
+        logoChemin=''
         if nouveauLogo:
             v=True
             if ancienLogo:
@@ -78,6 +78,8 @@ class EtablissementView(APIView):
                     for c in nouveauLogo.chunks():
                         destination.write(c)
                 logoChemin = f"etablissements/{nouveauLogo.name}"
+            else:
+                logoChemin=ancienLogo
         if ancienLogo and logoChemin!=ancienLogo:
             cheminAncienLogo=os.path.join(settings.MEDIA_ROOT, ancienLogo)
             existeAutre = Etablissement.objects.filter(logo=ancienLogo).exclude(pk=etablissement.numEtablissement).exists()

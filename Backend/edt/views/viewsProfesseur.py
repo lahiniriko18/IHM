@@ -57,10 +57,12 @@ class ProfesseurView(APIView):
         donnees = request.data.copy()
         ancienPhotos=professeur.photos
         nouveauPhotos = request.FILES.get('photos')
-        photosChemin=ancienPhotos
+        photosChemin=''
         if not nouveauPhotos:
             nouveauPhotos=request.data.get('photos')
+        print(nouveauPhotos)
         if nouveauPhotos:
+            print("zah")
             v=True
             if ancienPhotos:
                 absAncienPhotos=request.build_absolute_uri(settings.MEDIA_URL + ancienPhotos)
@@ -74,7 +76,8 @@ class ProfesseurView(APIView):
                     for c in nouveauPhotos.chunks():
                         destination.write(c)
                 photosChemin = f"professeurs/{nouveauPhotos.name}"
-
+            else:
+                photosChemin = ancienPhotos
         if ancienPhotos and photosChemin!=ancienPhotos:
             cheminAncienPhotos=os.path.join(settings.MEDIA_ROOT, ancienPhotos)
             existeAutre = Professeur.objects.filter(photos=ancienPhotos).exclude(pk=professeur.numProfesseur).exists()
