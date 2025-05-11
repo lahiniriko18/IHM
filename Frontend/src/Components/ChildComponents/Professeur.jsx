@@ -499,6 +499,7 @@ function Professeur() {
                     setdataProfesseur({ nomProfesseur: "", prenomProfesseur: "", adresse: "", contact: "", email: "", nomCourant: "", photos: "", grade: "", sexe: "" })
                     setSelectedFile(null)
                     setIsclicked(false);
+                    setPreview(null)
                   }
                 }}
               >
