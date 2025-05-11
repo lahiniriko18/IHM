@@ -60,9 +60,7 @@ class ProfesseurView(APIView):
         photosChemin=''
         if not nouveauPhotos:
             nouveauPhotos=request.data.get('photos')
-        print(nouveauPhotos)
         if nouveauPhotos:
-            print("zah")
             v=True
             if ancienPhotos:
                 absAncienPhotos=request.build_absolute_uri(settings.MEDIA_URL + ancienPhotos)
