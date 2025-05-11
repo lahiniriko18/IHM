@@ -257,19 +257,25 @@ function Professeur() {
     setSearch(value);
 
     if (value.trim() !== "") {
-      const filtered = originalList.filter((Parcours) =>
-        Parcours.nomParcours.toLowerCase().includes(value.toLowerCase()) ||
-        Parcours.codeParcours.toLowerCase().includes(value.toLowerCase()) ||
-        Parcours.numParcours.toString().includes(value)
+      const filtered = originalList.filter((Professeur) =>
+        Professeur.nomProfesseur.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.prenomProfesseur.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.nomCourant.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.adresse.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.grade.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.contact.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.sexe.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.email.toLowerCase().includes(value.toLowerCase()) ||
+        Professeur.numProfesseur.toString().includes(value)
       );
-      setListeParcours(filtered);
+      setlisteProfesseur(filtered);
     } else {
-      setListeParcours(originalList);
+      setlisteProfesseur(originalList);
     }
   }
   const navigate = useNavigate();
-  const versDetails = () => {
-    navigate('/professeur/detail/1')
+  const versDetails = (id) => {
+    navigate(`/professeur/detail/${id}`)
   }
   const [isclicked, setIsclicked] = useState(false)
   const [isadd, setisadd] = useState(true)
@@ -619,7 +625,7 @@ function Professeur() {
                           <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
                         </button>
                         <button className="p-1 rounded hover:bg-gray-200">
-                          <img src="/Icons/afficher.png" alt="Supprimer" className="w-5" onClick={versDetails} />
+                          <img src="/Icons/afficher.png" alt="Supprimer" className="w-5" onClick={() => versDetails(Professeur.numProfesseur)} />
                         </button>
                       </td>
                     </tr>
