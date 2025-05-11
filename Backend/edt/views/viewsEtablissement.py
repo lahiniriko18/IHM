@@ -58,7 +58,7 @@ class EtablissementView(APIView):
         except Etablissement.DoesNotExist:
             return Response({"erreur": "Etablissement introuvable"}, status=status.HTTP_404_NOT_FOUND)
 
-        donnees = request.data
+        donnees = request.data.copy()
         ancienLogo=etablissement.logo
         nouveauLogo = request.FILES.get('logo')
         if not nouveauLogo:
@@ -70,8 +70,7 @@ class EtablissementView(APIView):
                 print(absAncienLogo)
 
                 v=(absAncienLogo!=nouveauLogo)
-            print(v)
-            print(nouveauLogo)
+
             if v:
                 dossier = os.path.join(settings.MEDIA_ROOT, 'etablissements')
                 os.makedirs(dossier, exist_ok=True)
@@ -89,8 +88,6 @@ class EtablissementView(APIView):
                 donnees['logo'] = logoChemin
             else:
                 donnees['logo'] = ancienLogo
-        print(donnees)
-        print(donnees.get('logo'))
         serializer = EtablissementSerializer(etablissement, data=donnees)
         if serializer.is_valid():
             etablissements = serializer.save()
