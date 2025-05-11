@@ -4,13 +4,12 @@ import axios from "axios"
 function Salle() {
   const { isReduire } = useSidebar();
   const [isclicked, setIsclicked] = useState(false);
-  const [listeMatiere, setListeMatiere] = useState([]);
+  const [listeSalle, setListeSalle] = useState([]);
   const [originalList, setOriginalList] = useState([]);
   const [isadd, setisadd] = useState(true);
-  const [actionButtonsVisible, setActionButtonsVisible] = useState(false);
-  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
-
-  const listeSalle = Array.from({ length: 16 }, (_, i) => `S${String(i + 1).padStart(3, '0')}`);
+  const [isLoading, setIsLoading] = useState(true);
+  const [id, setId] = useState()
+  const [dataSalle, setDataSalle] = useState({ nomSalle: "", lieuSalle: "" })
   const nombreElemParParge = 8;
   const [pageActuel, setPageActuel] = useState(1);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -18,7 +17,7 @@ function Salle() {
   const [error, setError] = useState({ status: false, composant: "", message: "" })
   const sendData = async () => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/matiere/ajouter/", dataMatiere)
+      const response = await axios.post("http://127.0.0.1:8000/api/salle/ajouter/", dataSalle)
       if (response.status !== 201) {
         throw new Error('Erreur code : ' + response.status)
       }
@@ -30,9 +29,9 @@ function Salle() {
       console.log("Le tache est terminé")
     }
   }
-  const removeMatiere = async (id) => {
+  const removeSalle = async (id) => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/matiere/supprimer/${parseInt(id)}`)
+      const response = await axios.delete(`http://127.0.0.1:8000/api/salle/supprimer/${parseInt(id)}`)
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
       }
@@ -44,7 +43,7 @@ function Salle() {
   }
   const putData = async () => {
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/matiere/modifier/${id}`, dataMatiere)
+      const response = await axios.put(`http://127.0.0.1:8000/api/salle/modifier/${id}`, dataSalle)
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status)
       }
@@ -60,12 +59,14 @@ function Salle() {
   const getData = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/matiere/");
+      const response = await axios.get("http://127.0.0.1:8000/api/salle/");
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
-      setListeMatiere(response.data);
-      setOriginalList(response.data);  // ✅ Mise à jour ici
+      setListeSalle(response.data);
+      setOriginalList(response.data);
+
+      // ✅ Mise à jour ici
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -73,11 +74,11 @@ function Salle() {
       console.log("Le tache est terminé");
     }
   };
-  const editMatiere = (numMatiere) => {
-    const selectedMatiere = listeMatiere.find((item) => item.numMatiere === numMatiere)
-    if (selectedMatiere) {
-      setDataMatiere({ ...dataMatiere, nomMatiere: selectedMatiere.nomMatiere, codeMatiere: selectedMatiere.codeMatiere })
-      setId(selectedMatiere.numMatiere)
+  const editSalle = (numSalle) => {
+    const selectedSalle = listeSalle.find((item) => item.numSalle === numSalle)
+    if (selectedSalle) {
+      setDataSalle({ ...dataSalle, nomSalle: selectedSalle.nomSalle, lieuSalle: selectedSalle.lieuSalle })
+      setId(selectedSalle.numSalle)
     }
   }
   const confirmerSuppression = (id) => {
@@ -90,19 +91,20 @@ function Salle() {
     setSearch(value);
 
     if (value.trim() !== "") {
-      const filtered = originalList.filter((matiere) =>
-        matiere.nomMatiere.toLowerCase().includes(value.toLowerCase()) ||
-        matiere.codeMatiere.toLowerCase().includes(value.toLowerCase()) ||
-        matiere.numMatiere.toString().includes(value)
+      const filtered = originalList.filter((Salle) =>
+        Salle.nomSalle.toLowerCase().includes(value.toLowerCase()) ||
+        Salle.lieuSalle.toLowerCase().includes(value.toLowerCase()) ||
+        Salle.numSalle.toString().includes(value)
       );
-      setListeMatiere(filtered);
+      setListeSalle(filtered);
     } else {
-      setListeMatiere(originalList);
+      setListeSalle(originalList);
     }
   }
 
   useEffect(() => {
     getData()
+
   }, [])
   const totalPages = Math.ceil(listeSalle.length / nombreElemParParge);
   const currentData = listeSalle.slice((pageActuel - 1) * nombreElemParParge, pageActuel * nombreElemParParge);
@@ -121,29 +123,6 @@ function Salle() {
       }
     }
     return pages;
-  };
-
-  const handleRowClick = (index) => {
-    setSelectedRowIndex(index);
-    setActionButtonsVisible(true);
-  };
-
-  const handleEditClick = (index) => {
-    const salleToEdit = currentData[index];
-    setIdSalle(salleToEdit); // Assuming displayed value is ID for now
-    setNomSalle(salleToEdit); // You'll likely need to fetch actual data
-    setLieuSalle('Atanambao'); // You'll likely need to fetch actual data
-    setisadd(false);
-    setIsclicked(true);
-    setActionButtonsVisible(false);
-    setSelectedRowIndex(null);
-  };
-
-  const handleDeleteClick = (index) => {
-    console.log('Supprimer la salle à l\'index:', index);
-    setActionButtonsVisible(false);
-    setSelectedRowIndex(null);
-    // Implement your delete logic here
   };
 
   return (
@@ -168,7 +147,7 @@ function Salle() {
                 onClick={() => {
                   setIsclicked(false);
                   setError({ ...error, status: false })
-                  setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+                  setDataSalle({ nomSalle: "", lieuSalle: "" })
                 }}
               />
             </div>
@@ -179,12 +158,12 @@ function Salle() {
               <label className="font-semibold text-sm mb-1">Nom de la salle</label>
               <input
                 type="text"
-                value={dataMatiere.nomMatiere}
-                onChange={(e) => setDataMatiere({ ...dataMatiere, nomMatiere: e.target.value })}
+                value={dataSalle.nomSalle}
+                onChange={(e) => setDataSalle({ ...dataSalle, nomSalle: e.target.value })}
                 className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               />
               {
-                (error.status && error.composant === "nomMatiere") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+                (error.status && error.composant === "nomSalle") && (<p className='text-red-600 text-sm'>{error.message}</p>)
               }
             </div>
 
@@ -192,12 +171,12 @@ function Salle() {
               <label className="font-semibold text-sm mb-1">Lieu de la salle</label>
               <input
                 type="text"
-                value={dataMatiere.codeMatiere}
-                onChange={(e) => setDataMatiere({ ...dataMatiere, codeMatiere: e.target.value })}
+                value={dataSalle.lieuSalle}
+                onChange={(e) => setDataSalle({ ...dataSalle, lieuSalle: e.target.value })}
                 className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               />
               {
-                (error.status && error.composant === "codeMatiere") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+                (error.status && error.composant === "lieuSalle") && (<p className='text-red-600 text-sm'>{error.message}</p>)
               }
             </div>
 
@@ -205,21 +184,21 @@ function Salle() {
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  if (dataMatiere.nomMatiere.trim() !== "" && dataMatiere.codeMatiere.trim() !== "") {
+                  if (dataSalle.nomSalle.trim() !== "" && dataSalle.lieuSalle.trim() !== "") {
                     if (isadd) {
                       sendData()
-                      setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+                      setDataSalle({ nomSalle: "", lieuSalle: "" })
                       setIsclicked(false);
                       setError({ ...error, status: false })
                     }
                     else {
                       putData()
-                      setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+                      setDataSalle({ nomSalle: "", lieuSalle: "" })
                       setIsclicked(false);
                       setError({ ...error, status: false })
                     }
                   } else {
-                    (dataMatiere.nomMatiere.trim() === "") ? setError({ error, status: true, composant: "nomMatiere", message: "Le nom du matiere ne peut pas etre vide" }) : setError({ error, status: true, composant: "codeMatiere", message: "Le code du matiere ne peut pas etre vide" })
+                    (dataSalle.nomSalle.trim() === "") ? setError({ error, status: true, composant: "nomSalle", message: "Le nom du Salle ne peut pas etre vide" }) : setError({ error, status: true, composant: "lieuSalle", message: "Le lieu de la Salle ne peut pas etre vide" })
                   }
                 }}
               >
@@ -237,7 +216,7 @@ function Salle() {
           >
             <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
               <div className="flex justify-between items-center w-full">
-                <h1 className="text-blue-600 text-xl font-bold">Suppression Matiere</h1>
+                <h1 className="text-blue-600 text-xl font-bold">Suppression Salle</h1>
                 <img
                   src="/Icons/annuler.png"
                   alt="Quitter"
@@ -258,7 +237,7 @@ function Salle() {
                   className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                   onClick={() => {
                     if (id !== "") {
-                      removeMatiere(id)
+                      removeSalle(id)
                     }
                     setIsConfirmModalOpen(false);
                   }}
@@ -306,7 +285,7 @@ function Salle() {
               <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
               <p className="text-gray-400 mt-2">Chargement des données...</p>
             </div>
-          ) : listeMatiere.length === 0 ? (
+          ) : listeSalle.length === 0 ? (
             <div className="w-full h-40 flex flex-col items-center justify-center mt-[10%]">
               <img src="/Icons/vide.png" alt="Vide" className='w-14' />
               <p className='text-gray-400'>Aucun données trouvé</p>
@@ -319,20 +298,32 @@ function Salle() {
                     <th className="px-4 py-4">#</th>
                     <th className="px-4 py-4">Nom de la salle</th>
                     <th className="px-4 py-4">Lieu de la salle</th>
+                    <th className="px-4 py-4">Statut actuel de la salle</th>
                     <th className="px-4 py-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {currentData.map((salle, index) => (
+                  {currentData.map((Salle, index) => (
+
+
                     <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
-                      <td className="px-4 py-2 text-center">{Matiere.numMatiere}</td>
-                      <td className="px-4 py-2 text-center">{Matiere.nomMatiere}</td>
-                      <td className="px-4 py-2 text-center">{Matiere.codeMatiere}</td>
+                      <td className="px-4 py-2 text-center">{Salle.numSalle}</td>
+                      <td className="px-4 py-2 text-center">{Salle.nomSalle}</td>
+                      <td className="px-4 py-2 text-center">{Salle.lieuSalle}</td>
+                      <td className="px-4 py-2 text-center">
+
+                        <span
+                          className={`px-2 py-1 rounded text-white text-xs font-semibold
+                           ${!Salle.status ? "bg-green-600" : "bg-red-500"}`}
+                        >
+                          {!Salle.status ? "libre" : "Occupé"}
+                        </span>
+                      </td>
                       <td className="px-4 py-2 flex justify-center items-center gap-2">
                         <button className="p-1 rounded hover:bg-gray-200">
-                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editMatiere(Matiere.numMatiere) }} />
+                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editSalle(Salle.numSalle) }} />
                         </button>
-                        <button className="p-1 rounded hover:bg-gray-200" onClick={() => confirmerSuppression(Matiere.numMatiere)}>
+                        <button className="p-1 rounded hover:bg-gray-200" onClick={() => confirmerSuppression(Salle.numSalle)}>
                           <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
                         </button>
                       </td>
