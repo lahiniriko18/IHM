@@ -58,7 +58,7 @@ class ProfesseurView(APIView):
         donnees = request.data
         ancienPhotos=professeur.photos
         nouveauPhotos = request.FILES.get('photos')
-
+        print(donnees)
         if nouveauPhotos:
             dossier = os.path.join(settings.MEDIA_ROOT, 'professeurs')
             os.makedirs(dossier, exist_ok=True)
@@ -77,11 +77,11 @@ class ProfesseurView(APIView):
                     os.remove(cheminAncienPhotos)
             donnees['photos'] = photosChemin
             
-        serializer=ProfesseurSerializer(professeur, data=request.data)
+        serializer=ProfesseurSerializer(professeur, data=donnees)
         if serializer.is_valid():
             prof=serializer.save()
             donnee = ProfesseurSerializer(prof).data
-
+            
             if donnee['photos']:
                 verifChemin = os.path.join(settings.MEDIA_ROOT, donnee['photos'])
                 if os.path.exists(verifChemin):
