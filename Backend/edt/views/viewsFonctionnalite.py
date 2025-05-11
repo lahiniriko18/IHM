@@ -51,7 +51,7 @@ class EmailView(APIView):
         pj=request.FILES.get('pj')
         mail=EnvoyerMail()
         mail.envoyerMail(data.get('sujet','Aucun sujet'),data['message'],data['destinataire'],pj)
-        return Response({"message":data})
+        return Response({"message":"Email envoyé avec succès !"}, status=status.HTTP_200_OK)
 
 class MdpOublieView(APIView):
     def post(self, request):
