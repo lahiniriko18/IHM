@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSidebar } from '../Context/SidebarContext';
-
+import axios from "axios"
 function Salle() {
   const { isReduire } = useSidebar();
-  const [idSalle, setIdSalle] = useState('');
-  const [nomSalle, setNomSalle] = useState('');
-  const [lieuSalle, setLieuSalle] = useState('');
   const [isclicked, setIsclicked] = useState(false);
+  const [listeMatiere, setListeMatiere] = useState([]);
+  const [originalList, setOriginalList] = useState([]);
   const [isadd, setisadd] = useState(true);
   const [actionButtonsVisible, setActionButtonsVisible] = useState(false);
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
@@ -14,7 +13,97 @@ function Salle() {
   const listeSalle = Array.from({ length: 16 }, (_, i) => `S${String(i + 1).padStart(3, '0')}`);
   const nombreElemParParge = 8;
   const [pageActuel, setPageActuel] = useState(1);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [search, setSearch] = useState('')
+  const [error, setError] = useState({ status: false, composant: "", message: "" })
+  const sendData = async () => {
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/matiere/ajouter/", dataMatiere)
+      if (response.status !== 201) {
+        throw new Error('Erreur code : ' + response.status)
+      }
+      console.log("ajouter")
+      getData()
+    } catch (error) {
+      console.error(error.message)
+    } finally {
+      console.log("Le tache est terminé")
+    }
+  }
+  const removeMatiere = async (id) => {
+    try {
+      const response = await axios.delete(`http://127.0.0.1:8000/api/matiere/supprimer/${parseInt(id)}`)
+      if (response.status !== 200 && response.status !== 204) {
+        throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
+      }
+      console.log(`Utilisateur ${id} supprimé avec succès`);
+      getData()
+    } catch (error) {
+      console.log("Erreur:", error.message)
+    }
+  }
+  const putData = async () => {
+    try {
+      const response = await axios.put(`http://127.0.0.1:8000/api/matiere/modifier/${id}`, dataMatiere)
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status)
+      }
+      console.log("ajouter")
+      getData()
+    } catch (error) {
+      console.error(error.message)
+    } finally {
+      console.log("Le tache est terminé")
+    }
+  }
 
+  const getData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/matiere/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeMatiere(response.data);
+      setOriginalList(response.data);  // ✅ Mise à jour ici
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setIsLoading(false);
+      console.log("Le tache est terminé");
+    }
+  };
+  const editMatiere = (numMatiere) => {
+    const selectedMatiere = listeMatiere.find((item) => item.numMatiere === numMatiere)
+    if (selectedMatiere) {
+      setDataMatiere({ ...dataMatiere, nomMatiere: selectedMatiere.nomMatiere, codeMatiere: selectedMatiere.codeMatiere })
+      setId(selectedMatiere.numMatiere)
+    }
+  }
+  const confirmerSuppression = (id) => {
+    setId(id);
+    setIsConfirmModalOpen(true);
+  }
+
+  function handleSearch(e) {
+    const value = e.target.value;
+    setSearch(value);
+
+    if (value.trim() !== "") {
+      const filtered = originalList.filter((matiere) =>
+        matiere.nomMatiere.toLowerCase().includes(value.toLowerCase()) ||
+        matiere.codeMatiere.toLowerCase().includes(value.toLowerCase()) ||
+        matiere.numMatiere.toString().includes(value)
+      );
+      setListeMatiere(filtered);
+    } else {
+      setListeMatiere(originalList);
+    }
+  }
+
+  useEffect(() => {
+    getData()
+  }, [])
   const totalPages = Math.ceil(listeSalle.length / nombreElemParParge);
   const currentData = listeSalle.slice((pageActuel - 1) * nombreElemParParge, pageActuel * nombreElemParParge);
 
@@ -76,46 +165,62 @@ function Salle() {
                 src="/Icons/annuler.png"
                 alt="Quitter"
                 className="w-6 h-6 cursor-pointer"
-                onClick={() => setIsclicked(false)}
+                onClick={() => {
+                  setIsclicked(false);
+                  setError({ ...error, status: false })
+                  setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+                }}
               />
             </div>
 
-            <div className="flex flex-col w-full">
-              <label className="font-semibold text-sm mb-1">Identifiant de la salle</label>
-              <input
-                type="text"
-                value={idSalle}
-                onChange={(e) => setIdSalle(e.target.value)}
-                className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-              />
-            </div>
+
 
             <div className="flex flex-col w-full">
               <label className="font-semibold text-sm mb-1">Nom de la salle</label>
               <input
                 type="text"
-                value={nomSalle}
-                onChange={(e) => setNomSalle(e.target.value)}
+                value={dataMatiere.nomMatiere}
+                onChange={(e) => setDataMatiere({ ...dataMatiere, nomMatiere: e.target.value })}
                 className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               />
+              {
+                (error.status && error.composant === "nomMatiere") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+              }
             </div>
 
             <div className="flex flex-col w-full">
               <label className="font-semibold text-sm mb-1">Lieu de la salle</label>
               <input
                 type="text"
-                value={lieuSalle}
-                onChange={(e) => setLieuSalle(e.target.value)}
+                value={dataMatiere.codeMatiere}
+                onChange={(e) => setDataMatiere({ ...dataMatiere, codeMatiere: e.target.value })}
                 className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               />
+              {
+                (error.status && error.composant === "codeMatiere") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+              }
             </div>
 
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  console.log(isadd ? 'Salle ajoutée' : 'Salle modifiée', { idSalle, nomSalle, lieuSalle });
-                  setIsclicked(false);
+                  if (dataMatiere.nomMatiere.trim() !== "" && dataMatiere.codeMatiere.trim() !== "") {
+                    if (isadd) {
+                      sendData()
+                      setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+                      setIsclicked(false);
+                      setError({ ...error, status: false })
+                    }
+                    else {
+                      putData()
+                      setDataMatiere({ nomMatiere: "", codeMatiere: "" })
+                      setIsclicked(false);
+                      setError({ ...error, status: false })
+                    }
+                  } else {
+                    (dataMatiere.nomMatiere.trim() === "") ? setError({ error, status: true, composant: "nomMatiere", message: "Le nom du matiere ne peut pas etre vide" }) : setError({ error, status: true, composant: "codeMatiere", message: "Le code du matiere ne peut pas etre vide" })
+                  }
                 }}
               >
                 {isadd ? 'AJOUTER' : 'MODIFIER'}
@@ -124,24 +229,64 @@ function Salle() {
           </div>
         </div>
       )}
+      {
+        (isConfirmModalOpen) && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center"
+            tabIndex="-1"
+          >
+            <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
+              <div className="flex justify-between items-center w-full">
+                <h1 className="text-blue-600 text-xl font-bold">Suppression Matiere</h1>
+                <img
+                  src="/Icons/annuler.png"
+                  alt="Quitter"
+                  className="w-6 h-6 cursor-pointer"
+                  onClick={() => {
+                    setIsConfirmModalOpen(false);
+                    setId('')
+                  }}
+                />
+              </div>
+              <div className="flex flex-row gap-2">
+                <img src="/Icons/attention.png" alt="Attention" />
+                <p>Etes vous sur de vouloir supprimer cette salle ?</p>
+              </div>
+              <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
+              <div className="w-full flex justify-center">
+                <button
+                  className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
+                  onClick={() => {
+                    if (id !== "") {
+                      removeMatiere(id)
+                    }
+                    setIsConfirmModalOpen(false);
+                  }}
 
+                >
+                  VALIDER
+                </button>
+              </div>
+            </div>
+          </div >
+        )
+      }
       <div className="absolute top-0 left-[25%]  w-[60%]  h-14 flex justify-center items-center z-[51]">
         <input
           type="text"
           placeholder="Rechercher ici..."
-          value={idSalle}
-          onChange={(e) => setIdSalle(e.target.value)}
+          value={search}
+          onChange={handleSearch}
           className="border p-2 ps-12 relative rounded w-[50%]  focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
         <img src="/Icons/rechercher.png" alt="Search" className="w-6 absolute left-[26%]" />
       </div>
 
       <div
-        className={`${
-          isReduire
-            ? 'fixed h-screen right-0 top-14 left-20 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700'
-            : 'fixed h-screen right-0 top-14 left-56 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700'
-        }`}
+        className={`${isReduire
+          ? 'fixed h-screen right-0 top-14 left-20 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700'
+          : 'fixed h-screen right-0 top-14 left-56 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700'
+          }`}
       >
         <div className="flex justify-between w-full">
           <h1 className="font-bold">Liste des salles enregistrées</h1>
@@ -155,93 +300,82 @@ function Salle() {
             <img src="/Icons/plus-claire.png" alt="Plus" className="w-6 h-6" /> Nouveau
           </button>
         </div>
+        {
+          isLoading ? (
+            <div className="w-full h-40 flex flex-col items-center  justify-center mt-[10%]">
+              <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+              <p className="text-gray-400 mt-2">Chargement des données...</p>
+            </div>
+          ) : listeMatiere.length === 0 ? (
+            <div className="w-full h-40 flex flex-col items-center justify-center mt-[10%]">
+              <img src="/Icons/vide.png" alt="Vide" className='w-14' />
+              <p className='text-gray-400'>Aucun données trouvé</p>
+            </div>
+          ) : (<div>
+            <div className="w-full border rounded-t-lg overflow-hidden">
+              <table className="table-auto w-full border-collapse">
+                <thead>
+                  <tr className="bg-blue-500 text-white text-sm">
+                    <th className="px-4 py-4">#</th>
+                    <th className="px-4 py-4">Nom de la salle</th>
+                    <th className="px-4 py-4">Lieu de la salle</th>
+                    <th className="px-4 py-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {currentData.map((salle, index) => (
+                    <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
+                      <td className="px-4 py-2 text-center">{Matiere.numMatiere}</td>
+                      <td className="px-4 py-2 text-center">{Matiere.nomMatiere}</td>
+                      <td className="px-4 py-2 text-center">{Matiere.codeMatiere}</td>
+                      <td className="px-4 py-2 flex justify-center items-center gap-2">
+                        <button className="p-1 rounded hover:bg-gray-200">
+                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editMatiere(Matiere.numMatiere) }} />
+                        </button>
+                        <button className="p-1 rounded hover:bg-gray-200" onClick={() => confirmerSuppression(Matiere.numMatiere)}>
+                          <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-        <div className="w-full border rounded-t-lg overflow-hidden">
-          <table className="table-auto w-full border-collapse">
-            <thead>
-              <tr className="bg-blue-500 text-white text-sm">
-                <th className="px-4 py-4">#</th>
-                <th className="px-4 py-4">Nom de la salle</th>
-                <th className="px-4 py-4">Lieu de la salle</th>
-                <th className="px-4 py-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-sm">
-              {currentData.map((salle, index) => (
-                <tr
-                  key={index}
-                  className={`border-b transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-gray-100 cursor-pointer ${
-                    selectedRowIndex === index ? 'bg-gray-200' : ''
-                  }`}
-                  onClick={() => handleRowClick(index)}
+            <footer className="w-full flex justify-center gap-2 p-4">
+              {/* Flèche précédente */}
+              <button
+                onClick={() => setPageActuel((prev) => Math.max(prev - 1, 1))}
+                disabled={pageActuel === 1}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 hover:scale-105 transition duration-200 disabled:opacity-50"
+              >
+                <img src="/Icons/vers-le-bas.png" alt="Précédent" className="w-5 rotate-90" />
+              </button>
+
+              {/* Numéros de page */}
+              {getPageNumbers().map((page, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => typeof page === 'number' && setPageActuel(page)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition duration-200 ${page === pageActuel ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:scale-105'
+                    }`}
                 >
-                  <td className="px-4 py-2 text-center">{(pageActuel - 1) * nombreElemParParge + index + 1}</td>
-                  <td className="px-4 py-2 text-center">{salle}</td>
-                  <td className="px-4 py-2 text-center">Atanambao</td>
-                  <td className="px-4 py-2 relative">
-                    <div className="flex justify-center items-center">
-                      {actionButtonsVisible && selectedRowIndex === index ? (
-                        <div className="flex justify-center items-center gap-2 transition-all duration-300">
-                          <button
-                            className="flex items-center gap-1 p-1 rounded border border-blue-500 hover:bg-blue-500 hover:text-white transition duration-200"
-                            onClick={() => handleEditClick(index)}
-                          >
-                            <img src="/Icons/modifier.png" alt="Modifier" className="w-5" />
-                            <span className="hidden sm:inline">Modifier</span>
-                          </button>
-                          <button
-                            className="flex items-center gap-1 p-1 rounded border border-red-500 hover:bg-red-500 hover:text-white transition duration-200"
-                            onClick={() => handleDeleteClick(index)}
-                          >
-                            <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
-                            <span className="hidden sm:inline">Supprimer</span>
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex justify-center items-center gap-2 opacity-50 transition-all duration-300">
-                          <img src="/Icons/icons8-menu-2-50.png" alt="Menu" className="w-5" />
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                  {page}
+                </button>
               ))}
-            </tbody>
-          </table>
-        </div>
 
-        <footer className="w-full flex justify-center gap-2 p-4">
-          {/* Flèche précédente */}
-          <button
-            onClick={() => setPageActuel((prev) => Math.max(prev - 1, 1))}
-            disabled={pageActuel === 1}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 hover:scale-105 transition duration-200 disabled:opacity-50"
-          >
-            <img src="/Icons/vers-le-bas.png" alt="Précédent" className="w-5 rotate-90" />
-          </button>
+              {/* Flèche suivante */}
+              <button
+                onClick={() => setPageActuel((prev) => Math.min(prev + 1, totalPages))}
+                disabled={pageActuel === totalPages}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 hover:scale-105 transition duration-200 disabled:opacity-50"
+              >
+                <img src="/Icons/vers-le-bas.png" alt="Suivant" className="w-5 rotate-[270deg]" />
+              </button>
+            </footer>
+          </div>)
+        }
 
-          {/* Numéros de page */}
-          {getPageNumbers().map((page, idx) => (
-            <button
-              key={idx}
-              onClick={() => typeof page === 'number' && setPageActuel(page)}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition duration-200 ${
-                page === pageActuel ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:scale-105'
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-
-          {/* Flèche suivante */}
-          <button
-            onClick={() => setPageActuel((prev) => Math.min(prev + 1, totalPages))}
-            disabled={pageActuel === totalPages}
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 hover:scale-105 transition duration-200 disabled:opacity-50"
-          >
-            <img src="/Icons/vers-le-bas.png" alt="Suivant" className="w-5 rotate-[270deg]" />
-          </button>
-        </footer>
       </div>
     </>
   );
