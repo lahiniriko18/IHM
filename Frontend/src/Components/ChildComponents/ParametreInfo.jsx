@@ -34,6 +34,7 @@ function ParametreInfo() {
   };
   const handleDeleteLogo = () => {
     setSelectedFile(null);
+    alert(selectedFile)
     setIsLogoDeleted(true);
     setPreview(null);
     document.getElementById('file-name').textContent = "Aucun fichier choisi";

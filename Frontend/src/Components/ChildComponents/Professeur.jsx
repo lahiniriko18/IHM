@@ -31,8 +31,10 @@ function Professeur() {
   })
   const handleDeletephotos = () => {
     setSelectedFile(null);
+
     setIsphotosDeleted(true);
     setPreview(null);
+
     document.getElementById('file-name').textContent = "Aucun fichier choisi";
   };
   const handleFileChange = (e) => {
@@ -114,8 +116,6 @@ function Professeur() {
     Object.entries(dataProfesseur).forEach(([key, value]) => {
       formData.append(key, value);
     });
-
-
     if (selectedFile) {
       // Cas 3 : Nouveau photos sélectionné
       const renamedFile = renameFile(selectedFile);
@@ -125,7 +125,7 @@ function Professeur() {
       formData.append('photos', '');
     } else {
       // Cas 1 : Aucun changement -> garder l'ancien chemin
-      formData.append('photos', `${dataProfesseur.photos}`);
+      formData.append('photos', 'noChange');
     }
     try {
       const response = await axios.put(`http://127.0.0.1:8000/api/professeur/modifier/${id}`, formData, {
@@ -489,17 +489,21 @@ function Professeur() {
                       };
                       sendData(updateProfesseur);
                       console.log(dataProfesseur)
+                      setSelectedFile(null)
+                      setIsclicked(false);
+                      setPreview(null)
                     } else {
                       const updateProfesseur = {
                         ...dataProfesseur,
                         numEtablissement: numEtablissement
                       };
                       putData(updateProfesseur);
+                      setSelectedFile(null)
+                      setIsclicked(false);
+                      setPreview(null)
                     }
                     setdataProfesseur({ nomProfesseur: "", prenomProfesseur: "", adresse: "", contact: "", email: "", nomCourant: "", photos: "", grade: "", sexe: "" })
-                    setSelectedFile(null)
-                    setIsclicked(false);
-                    setPreview(null)
+
                   }
                 }}
               >
@@ -582,8 +586,8 @@ function Professeur() {
               <p className='text-gray-400'>Aucun données trouvé</p>
             </div>
           ) : (<div>
-            <div className="w-full border rounded-t-lg overflow-hidden">
-              <table className="table-auto w-full border-collapse">
+            <div className="w-full border rounded-t-lg overflow-x-auto">
+              <table className="table-auto overflow-y w-full border-collapse">
                 <thead>
                   <tr className="bg-blue-500 text-white text-sm">
                     <th className="px-4 py-4">#</th>
