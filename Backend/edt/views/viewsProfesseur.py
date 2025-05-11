@@ -60,7 +60,6 @@ class ProfesseurView(APIView):
         photosChemin=ancienPhotos
         if not nouveauPhotos:
             nouveauPhotos=request.data.get('photos')
-
         if nouveauPhotos:
             v=True
             if ancienPhotos:
@@ -81,7 +80,6 @@ class ProfesseurView(APIView):
             existeAutre = Professeur.objects.filter(photos=ancienPhotos).exclude(pk=professeur.numProfesseur).exists()
             if os.path.exists(cheminAncienPhotos) and not existeAutre:
                 os.remove(cheminAncienPhotos)
-
         donnees['photos'] = photosChemin
         serializer=ProfesseurSerializer(professeur, data=donnees)
         if serializer.is_valid():
