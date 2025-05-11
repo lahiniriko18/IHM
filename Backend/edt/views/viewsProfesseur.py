@@ -17,7 +17,7 @@ class ProfesseurView(APIView):
                     ligne['photos']=request.build_absolute_uri(settings.MEDIA_URL + ligne['photos'])
                 else:
                     ligne['photos']=''
-        return Response(donnees)
+        return Response(donnees, status=status.HTTP_200_OK)
     
     def post(self, request):
         donnees=request.data
@@ -60,9 +60,7 @@ class ProfesseurView(APIView):
         photosChemin=''
         if not nouveauPhotos:
             nouveauPhotos=request.data.get('photos')
-        print(nouveauPhotos)
         if nouveauPhotos:
-            print("zah")
             v=True
             if ancienPhotos:
                 absAncienPhotos=request.build_absolute_uri(settings.MEDIA_URL + ancienPhotos)
@@ -112,3 +110,20 @@ class ProfesseurView(APIView):
             return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
         except professeur.DoesNotExist:
             return Response({'erreur':'Professeur introuvable !'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ProfesseurDetailView(APIView):
+    def get(self, request, numProfesseur):
+        try:
+            professeur=Professeur.objects.get(pk=numProfesseur)
+        except Professeur.DoesNotExist:
+            return Response({"erreur":"Professeur introuvable !"}, status=status.HTTP_404_NOT_FOUND)
+        donnee=ProfesseurSerializer(professeur).data
+        
+        if donnee['photos']:
+            verifChemin=os.path.join(settings.MEDIA_ROOT, donnee['photos'])
+            if os.path.exists(verifChemin):
+                donnee['photos']=request.build_absolute_uri(settings.MEDIA_URL + donnee['photos'])
+            else:
+                donnee['photos']=''
+        return Response(donnee,status=status.HTTP_200_OK)
