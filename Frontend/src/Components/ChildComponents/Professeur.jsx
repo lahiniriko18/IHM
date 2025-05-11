@@ -591,15 +591,14 @@ function Professeur() {
                 <thead>
                   <tr className="bg-blue-500 text-white text-sm">
                     <th className="px-4 py-4">#</th>
-                    <th className="px-4 py-4">PDP</th>
+                    {/* <th className="px-4 py-4">PDP</th> */}
                     <th className="px-4 py-4">Nom</th>
-
                     <th className="px-4 py-4">Prenom</th>
-                    <th className="px-4 py-4">Nom Courant</th>
+                    {/* <th className="px-4 py-4">Nom Courant</th> */}
                     <th className="px-4 py-4">Email</th>
                     <th className="px-4 py-4">adresse</th>
-                    <th className="px-4 py-4">Grade</th>
-                    <th className="px-4 py-4">Sexe</th>
+                    {/* <th className="px-4 py-4">Grade</th> */}
+                    {/* <th className="px-4 py-4">Sexe</th> */}
                     <th className="px-4 py-4">Contact</th>
                     <th className="px-4 py-4">Actions</th>
                   </tr>
@@ -608,19 +607,18 @@ function Professeur() {
                   {currentData.map((Professeur, index) => (
                     <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
                       <td className="px-4 py-2 text-center">{Professeur.numProfesseur}</td>
-                      <td className="px-4 py-2 text-center">
+                      {/* <td className="px-4 py-2 text-center">
                         {Professeur.photos && Professeur.photos !== "" && (
                           <img src={Professeur.photos} alt="Logo établissement" className="w-8 h-8 rounded-full object-cover" />
                         )}
-
-                      </td>
+                      </td> */}
                       <td className="px-4 py-2 text-center">{Professeur.nomProfesseur}</td>
                       <td className="px-4 py-2 text-center">{Professeur.prenomProfesseur}</td>
-                      <td className="px-4 py-2 text-center">{Professeur.nomCourant}</td>
+                      {/* <td className="px-4 py-2 text-center">{Professeur.nomCourant}</td> */}
                       <td className="px-4 py-2 text-center">{Professeur.email}</td>
                       <td className="px-4 py-2 text-center">{Professeur.adresse}</td>
-                      <td className="px-4 py-2 text-center">{Professeur.grade}</td>
-                      <td className="px-4 py-2 text-center">{Professeur.sexe}</td>
+                      {/* <td className="px-4 py-2 text-center">{Professeur.grade}</td> */}
+                      {/* <td className="px-4 py-2 text-center">{Professeur.sexe}</td> */}
                       <td className="px-4 py-2 text-center">{Professeur.contact}</td>
                       <td className="px-4 py-2 flex justify-center items-center gap-2">
                         <button className="p-1 rounded hover:bg-gray-200">
