@@ -20,7 +20,7 @@ class ProfesseurSerializer(serializers.ModelSerializer):
     def validate_sexe(self, value):
         if value.lower() not in ["masculin","féminin"]:
             raise serializers.ValidationError({"sexe":"Le sexe est invalide"})
-        return value
+        return value.capitalize()
     def validate_contact(self,contact):
         contactFiltrer=contact.replace(" ","")
         pattern=r'^(?:\+261|0)(20|32|33|34|37|38)\d{7}$'

@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from ..serializer.serializerProfesseur import ProfesseurSerializer
-from ..serializer.serializerEtablissement import professeurserializer
 from ..models import Professeur
 import os
 class ProfesseurView(APIView):
@@ -61,7 +60,6 @@ class ProfesseurView(APIView):
         photosChemin=ancienPhotos
         if not nouveauPhotos:
             nouveauPhotos=request.data.get('photos')
-        
 
         if nouveauPhotos:
             v=True

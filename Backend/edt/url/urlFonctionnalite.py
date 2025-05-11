@@ -6,4 +6,4 @@ urlpatterns = [
     path('email/mdpOublie/', MdpOublieView.as_view(), name='fonctionnalite.mailMdpOublie'),
     path('excel/televerser/',ExcelView.as_view(), name='excel.televerser'),
     path('excel/telecharger/',ExcelView.as_view(), name='excel.telecharger'),
-]
+]  
