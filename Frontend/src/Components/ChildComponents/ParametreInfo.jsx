@@ -98,7 +98,7 @@ function ParametreInfo() {
       formData.append('logo', renamedFile);
     } else if (isLogoDeleted) {
       // Cas 2 : Utilisateur a supprimé le logo
-      formData.append('logo', ''); // ou tu peux laisser vide si le back comprend ça
+      formData.append('logo', '');
     } else {
       // Cas 1 : Aucun changement -> garder l'ancien chemin
       formData.append('logo', `${dataEtablissement.logo}`);
