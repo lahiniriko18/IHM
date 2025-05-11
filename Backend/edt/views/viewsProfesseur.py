@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from ..serializer.serializerProfesseur import ProfesseurSerializer
-from ..serializer.serializerEtablissement import EtablissementSerializer
 from ..models import Professeur
 import os
 class ProfesseurView(APIView):
@@ -55,27 +54,35 @@ class ProfesseurView(APIView):
         except Professeur.DoesNotExist:
             return Response({"erreur":"Professeur introuvable !"}, status=status.HTTP_404_NOT_FOUND)
         
-        donnees = request.data
+        donnees = request.data.copy()
         ancienPhotos=professeur.photos
         nouveauPhotos = request.FILES.get('photos')
+        photosChemin=ancienPhotos
+        if not nouveauPhotos:
+            nouveauPhotos=request.data.get('photos')
+
         if nouveauPhotos:
-            dossier = os.path.join(settings.MEDIA_ROOT, 'professeurs')
-            os.makedirs(dossier, exist_ok=True)
-            chemin_fichier = os.path.join(dossier, nouveauPhotos.name)
+            v=True
+            if ancienPhotos:
+                absAncienPhotos=request.build_absolute_uri(settings.MEDIA_URL + ancienPhotos)
+                v=(absAncienPhotos!=nouveauPhotos)
+            if v:
+                dossier = os.path.join(settings.MEDIA_ROOT, 'professeurs')
+                os.makedirs(dossier, exist_ok=True)
+                chemin_fichier = os.path.join(dossier, nouveauPhotos.name)
 
-            with open(chemin_fichier, 'wb+') as destination:
-                for c in nouveauPhotos.chunks():
-                    destination.write(c)
+                with open(chemin_fichier, 'wb+') as destination:
+                    for c in nouveauPhotos.chunks():
+                        destination.write(c)
+                photosChemin = f"professeurs/{nouveauPhotos.name}"
 
-            photosChemin = f"professeurs/{nouveauPhotos.name}"
+        if ancienPhotos and photosChemin!=ancienPhotos:
+            cheminAncienPhotos=os.path.join(settings.MEDIA_ROOT, ancienPhotos)
+            existeAutre = Professeur.objects.filter(logo=ancienPhotos).exclude(pk=professeur.numProfesseur).exists()
+            if os.path.exists(cheminAncienPhotos) and not existeAutre:
+                os.remove(cheminAncienPhotos)
 
-            if ancienPhotos and photosChemin!=ancienPhotos:
-                cheminAncienPhotos=os.path.join(settings.MEDIA_ROOT, ancienPhotos)
-                existeAutre = Professeur.objects.filter(photos=ancienPhotos).exclude(pk=professeur.numProfesseur).exists()
-                if os.path.exists(cheminAncienPhotos) and not existeAutre:
-                    os.remove(cheminAncienPhotos)
-            donnees['photos'] = photosChemin
-        print(donnees)
+        donnees['photos'] = photosChemin
         serializer=ProfesseurSerializer(professeur, data=donnees)
         if serializer.is_valid():
             prof=serializer.save()

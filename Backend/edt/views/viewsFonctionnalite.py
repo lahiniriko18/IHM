@@ -2,22 +2,23 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.conf import settings
 from rest_framework import status
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.http import FileResponse
 import random as rd
 import pandas as pd
 import os
 from ..serializer.serializerExcel import ExcelSerializer
 class EnvoyerMail:
-    def envoyerMail(self, sujet, message, destinataire, destinateur=None):
-        send_mail(
-            sujet,
-            message,
-            destinateur,
-            [destinataire],
+    def envoyerMail(self, sujet, message, destinataire, pj=None):
+        email=EmailMessage(
+            subject=sujet,
+            body=message,
+            to=[destinataire],
             fail_silently=True
         )
-
+        if pj:
+            email.attach(pj.name, pj.read(), pj.content_type)
+        email.send()
 class ExcelView(APIView):
     def post(self, request):
         serializer=ExcelSerializer(data=request.data)
@@ -48,7 +49,7 @@ class ExcelView(APIView):
 class EmailView(APIView):
     def post(self, request):
         data=request.data
-        EnvoyerMail.envoyerMail(data['sujet'], data['message'], data['destinataire'], data.get('destinateur'))
+        EnvoyerMail.envoyerMail(data.get('sujet','Aucun objet'), data['message'], data['destinataire'])
         return Response({"message":data})
 
 class MdpOublieView(APIView):
