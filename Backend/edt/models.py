@@ -91,6 +91,8 @@ class Groupe(models.Model):
 class Salle(models.Model):
     numSalle=models.AutoField(primary_key=True)
     nomSalle=models.CharField(max_length=30)
+    lieuSalle=models.CharField(max_length=30, null=True)
+    statut=models.BooleanField(default=True)
 
     class Meta:
         db_table='salle'
