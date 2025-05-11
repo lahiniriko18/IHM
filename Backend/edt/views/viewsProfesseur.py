@@ -78,7 +78,7 @@ class ProfesseurView(APIView):
 
         if ancienPhotos and photosChemin!=ancienPhotos:
             cheminAncienPhotos=os.path.join(settings.MEDIA_ROOT, ancienPhotos)
-            existeAutre = Professeur.objects.filter(logo=ancienPhotos).exclude(pk=professeur.numProfesseur).exists()
+            existeAutre = Professeur.objects.filter(photos=ancienPhotos).exclude(pk=professeur.numProfesseur).exists()
             if os.path.exists(cheminAncienPhotos) and not existeAutre:
                 os.remove(cheminAncienPhotos)
 
