@@ -8,7 +8,7 @@ class EtablissementSerializer(serializers.ModelSerializer):
     class Meta:
         model=Etablissement
         fields=["numEtablissement","nomEtablissement","adresse","email",
-                "slogant","logo","contact"]
+                "slogant","logo","contact","maxUtilisateur"]
         
     def validate_contact(self,contact):
         contactFiltrer=contact.replace(" ","")

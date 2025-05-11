@@ -15,6 +15,8 @@ function ParametreInfo() {
   const [isLoading, setIsLoading] = useState(true);
   const [id, setId] = useState()
   const [preview, setPreview] = useState(null);
+  const [isLogoDeleted, setIsLogoDeleted] = useState(false);
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [dataEtablissement, setdataEtablissement] = useState({ nomEtablissement: "", adresse: "", email: "", slogant: "", contact: "", })
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -30,6 +32,13 @@ function ParametreInfo() {
       document.getElementById('file-name').textContent = file.name;
     }
   };
+  const handleDeleteLogo = () => {
+    setSelectedFile(null);
+    setIsLogoDeleted(true);
+    setPreview(null);
+    document.getElementById('file-name').textContent = "Aucun fichier choisi";
+  };
+
   const renameFile = (file) => {
     const extension = file.name.split('.').pop();
     const newFileName = `image_${Date.now()}.${extension}`;
@@ -83,32 +92,43 @@ function ParametreInfo() {
       formData.append(key, value);
     });
 
-
     if (selectedFile) {
+      // Cas 3 : Nouveau logo sélectionné
       const renamedFile = renameFile(selectedFile);
-      formData.append('logo', renamedFile); // clé = "logo"
+      formData.append('logo', renamedFile);
+    } else if (isLogoDeleted) {
+      // Cas 2 : Utilisateur a supprimé le logo
+      formData.append('logo', ''); // ou tu peux laisser vide si le back comprend ça
+    } else {
+      // Cas 1 : Aucun changement -> garder l'ancien chemin
+      formData.append('logo', dataEtablissement.logo);
     }
+
     try {
       const response = await axios.put(`http://127.0.0.1:8000/api/etablissement/modifier/${id}`, formData, {
         headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      })
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status)
+        throw new Error('Erreur code : ' + response.status);
       }
-      console.log("ajouter")
-      getData()
+
+      console.log("Établissement modifié !");
+      getData();
+      setIsclicked(false); // Fermer la modale après succès
     } catch (error) {
       if (error.response) {
-        console.error("Erreur du serveur :", error.response.data)
+        console.error("Erreur du serveur :", error.response.data);
       } else {
-        console.error("Erreur inconnue :", error.message)
+        console.error("Erreur inconnue :", error.message);
       }
     } finally {
-      console.log("Le tache est terminé")
+      console.log("La tâche est terminée");
     }
-  }
+  };
+
 
   const getData = async () => {
     setIsLoading(true);
@@ -131,7 +151,7 @@ function ParametreInfo() {
       console.log("Le tache est terminé");
     }
   };
-  const editetablissement = (numEtablissement) => {
+  const editEtablissement = (numEtablissement) => {
     const selectedEtablissement = listeEtablissement.find((item) => item.numEtablissement === numEtablissement);
     if (selectedEtablissement) {
       setdataEtablissement({
@@ -255,6 +275,7 @@ function ParametreInfo() {
                   setError({ ...error, status: false })
                   setdataEtablissement({ nomEtablissement: "", adresse: "", contact: "", email: "", slogant: "" })
                   setSelectedFile(null)
+                  setPreview(null)
                 }}
               />
             </div>
@@ -323,8 +344,10 @@ function ParametreInfo() {
                   }
                 </div>
               </div>
-              <div className='w-[50%] flex justify-center items-center flex-col gap-2'>
-                <div className="w-40 h-40 rounded-full bg-gray-200">
+              <div className='w-[50%] flex justify-center items-center flex-col gap-2 relative'>
+
+                <div className="w-40 h-40 rounded-full bg-gray-200 relative">
+                  {preview && <img src="/Icons/supprimer.png" alt="preview" className="absolute top-0 left-36 w-7 cursor-pointer hover:scale-105 duration-200" onClick={handleDeleteLogo} />}
                   {preview && <img src={preview} alt="preview" className="w-40 h-40 rounded-full object-cover" />}
                 </div>
                 <div className="flex flex-col justify-center w-full">
@@ -366,6 +389,7 @@ function ParametreInfo() {
                     setdataEtablissement({ nomEtablissement: "", adresse: "", contact: "", email: "", slogant: "" })
                     setSelectedFile(null)
                     setIsclicked(false);
+                    setPreview(null)
                   }
                 }}
               >
@@ -476,7 +500,7 @@ function ParametreInfo() {
 
                       <td className="px-4 py-2 flex justify-center items-center gap-2">
                         <button className="p-1 rounded hover:bg-gray-200">
-                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editetablissement(etablissement.numEtablissement) }} />
+                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editEtablissement(etablissement.numEtablissement) }} />
                         </button>
                         <button className="p-1 rounded hover:bg-gray-200" onClick={() => confirmerSuppression(etablissement.numEtablissement)}>
                           <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
