@@ -91,7 +91,7 @@ function ParametreInfo() {
     Object.entries(dataEtablissement).forEach(([key, value]) => {
       formData.append(key, value);
     });
-
+    formData.append('numEtablissement', id);
     if (selectedFile) {
       // Cas 3 : Nouveau logo sélectionné
       const renamedFile = renameFile(selectedFile);

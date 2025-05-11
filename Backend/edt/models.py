@@ -157,16 +157,11 @@ class Enseigner(models.Model):
     
 
 class Utilisateur(AbstractUser):
-<<<<<<< HEAD
     numEtablissement=models.ForeignKey(Etablissement, related_name='utilisateurs', on_delete=models.CASCADE, db_column='numEtablissement', default=1)
-=======
-    numEtablissement=models.ForeignKey(Etablissement, related_name='utilisateurs', on_delete=models.CASCADE, db_column='numEtablissement',null=True)
->>>>>>> a93f7e54b49e5762d40245b1cfb5ce78acacf59f
     contact=models.CharField(max_length=17)
     datenaiss=models.DateField(null=True)
     description=models.TextField(null=True)
     image=models.CharField(max_length=255, null=True)
-
     is_superuser=models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
