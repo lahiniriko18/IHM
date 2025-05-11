@@ -10,7 +10,6 @@ class Etablissement(models.Model):
     logo=models.CharField(max_length=100, null=True)
     contact=models.CharField(max_length=17)
     maxUtilisateur=models.IntegerField(default=3)
-
     class Meta:
         db_table='etablissement'
     def __str__(self):
@@ -158,6 +157,7 @@ class Enseigner(models.Model):
     
 
 class Utilisateur(AbstractUser):
+
     numEtablissement=models.ForeignKey(Etablissement, related_name='utilisateurs', on_delete=models.CASCADE, db_column='numEtablissement',null=True)
     contact=models.CharField(max_length=17)
     datenaiss=models.DateField(null=True)

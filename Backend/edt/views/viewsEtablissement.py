@@ -73,7 +73,7 @@ class EtablissementView(APIView):
 
             logoChemin = f"etablissements/{nouveauLogo.name}"
 
-            if logoChemin!=ancienLogo:
+            if logoChemin!=ancienLogo and ancienLogo:
                 cheminAncienLogo=os.path.join(settings.MEDIA_ROOT, ancienLogo)
                 existeAutre = Etablissement.objects.filter(logo=ancienLogo).exclude(pk=etablissement.numEtablissement).exists()
                 if os.path.exists(cheminAncienLogo) and not existeAutre:
@@ -87,7 +87,7 @@ class EtablissementView(APIView):
 
             if donnee['logo']:
                 verifChemin = os.path.join(settings.MEDIA_ROOT, donnee['logo'])
-                if os.path.exists(verifChemin) and not existeAutre:
+                if os.path.exists(verifChemin):
                     donnee['logo'] = request.build_absolute_uri(settings.MEDIA_URL + donnee['logo'])
                 else:
                     donnee['logo'] = ''
