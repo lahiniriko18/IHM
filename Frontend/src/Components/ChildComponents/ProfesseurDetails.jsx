@@ -46,6 +46,10 @@ function ProfesseurDetails() {
               <span className='text-gray-600'>{listeProfesseur.nomProfesseur}</span>
             </div>
             <div className="flex flex-row gap-2">
+              <p className="font-semibold">Nom du professeur : </p>
+              <span className='text-gray-600'>{listeProfesseur.prenomProfesseur}</span>
+            </div>
+            <div className="flex flex-row gap-2">
               <p className="font-semibold">Leur grade : </p>
               <span className='text-gray-600'>{listeProfesseur.grade}</span>
             </div>
@@ -80,7 +84,7 @@ function ProfesseurDetails() {
           </div>
           <div className="flex justify-center items-center  w-96 h-96">
             <div className="w-64 h-64 bg-gray-200 rounded-full flex justify-center items-center text-white font-bold">
-              <img src={listeProfesseur.photos} alt="preview" className="w-40 h-40 rounded-full object-cover" />
+              <img src={listeProfesseur.photos} alt="preview" className="w-64 h-64 rounded-full object-cover" />
             </div>
           </div>
 
