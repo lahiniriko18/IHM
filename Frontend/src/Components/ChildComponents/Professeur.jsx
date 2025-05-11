@@ -260,11 +260,11 @@ function Professeur() {
       const filtered = originalList.filter((Professeur) =>
         Professeur.nomProfesseur.toLowerCase().includes(value.toLowerCase()) ||
         Professeur.prenomProfesseur.toLowerCase().includes(value.toLowerCase()) ||
-        Professeur.nomCourant.toLowerCase().includes(value.toLowerCase()) ||
+        // Professeur.nomCourant.toLowerCase().includes(value.toLowerCase()) ||
         Professeur.adresse.toLowerCase().includes(value.toLowerCase()) ||
-        Professeur.grade.toLowerCase().includes(value.toLowerCase()) ||
+        // Professeur.grade.toLowerCase().includes(value.toLowerCase()) ||
         Professeur.contact.toLowerCase().includes(value.toLowerCase()) ||
-        Professeur.sexe.toLowerCase().includes(value.toLowerCase()) ||
+        // Professeur.sexe.toLowerCase().includes(value.toLowerCase()) ||
         Professeur.email.toLowerCase().includes(value.toLowerCase()) ||
         Professeur.numProfesseur.toString().includes(value)
       );
