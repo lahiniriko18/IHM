@@ -63,14 +63,12 @@ class EtablissementView(APIView):
         nouveauLogo = request.FILES.get('logo')
         if not nouveauLogo:
             nouveauLogo=request.data.get('logo')
+        logoChemin=ancienLogo
         if nouveauLogo:
             v=True
             if ancienLogo:
                 absAncienLogo=request.build_absolute_uri(settings.MEDIA_URL + ancienLogo)
-                print(absAncienLogo)
-
                 v=(absAncienLogo!=nouveauLogo)
-
             if v:
                 dossier = os.path.join(settings.MEDIA_ROOT, 'etablissements')
                 os.makedirs(dossier, exist_ok=True)
@@ -80,14 +78,12 @@ class EtablissementView(APIView):
                     for c in nouveauLogo.chunks():
                         destination.write(c)
                 logoChemin = f"etablissements/{nouveauLogo.name}"
-                if ancienLogo and logoChemin!=ancienLogo and ancienLogo:
-                    cheminAncienLogo=os.path.join(settings.MEDIA_ROOT, ancienLogo)
-                    existeAutre = Etablissement.objects.filter(logo=ancienLogo).exclude(pk=etablissement.numEtablissement).exists()
-                    if os.path.exists(cheminAncienLogo) and not existeAutre:
-                        os.remove(cheminAncienLogo)
-                donnees['logo'] = logoChemin
-            else:
-                donnees['logo'] = ancienLogo
+        if ancienLogo and logoChemin!=ancienLogo:
+            cheminAncienLogo=os.path.join(settings.MEDIA_ROOT, ancienLogo)
+            existeAutre = Etablissement.objects.filter(logo=ancienLogo).exclude(pk=etablissement.numEtablissement).exists()
+            if os.path.exists(cheminAncienLogo) and not existeAutre:
+                os.remove(cheminAncienLogo)
+        donnees['logo'] = logoChemin
         serializer = EtablissementSerializer(etablissement, data=donnees)
         if serializer.is_valid():
             etablissements = serializer.save()
