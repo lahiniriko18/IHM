@@ -75,6 +75,7 @@ class ProfesseurView(APIView):
                 if os.path.exists(cheminAncienPhotos) and not existeAutre:
                     os.remove(cheminAncienPhotos)
             donnees['photos'] = photosChemin
+        print(donnees)
         serializer=ProfesseurSerializer(professeur, data=donnees)
         if serializer.is_valid():
             prof=serializer.save()
