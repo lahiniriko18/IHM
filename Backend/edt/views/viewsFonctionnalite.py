@@ -13,8 +13,7 @@ class EnvoyerMail:
         email=EmailMessage(
             subject=sujet,
             body=message,
-            to=[destinataire],
-            fail_silently=True
+            to=[destinataire]
         )
         if pj:
             email.attach(pj.name, pj.read(), pj.content_type)
@@ -49,7 +48,9 @@ class ExcelView(APIView):
 class EmailView(APIView):
     def post(self, request):
         data=request.data
-        EnvoyerMail.envoyerMail(data.get('sujet','Aucun objet'), data['message'], data['destinataire'])
+        pj=request.FILES.get('pj')
+        mail=EnvoyerMail()
+        mail.envoyerMail(data.get('sujet','Aucun sujet'),data['message'],data['destinataire'],pj)
         return Response({"message":data})
 
 class MdpOublieView(APIView):
@@ -58,7 +59,7 @@ class MdpOublieView(APIView):
         sujet="Code de validation"
         code=str(rd.randint(0,999999)).zfill(6)
         message=f"Voiçi votre code de validation: {code}"
-        EnvoyerMail.envoyerMail(sujet, message, data['destinataire'], data.get('destinateur'))
+        EnvoyerMail.envoyerMail(sujet, message, data['destinataire'])
         return Response({"message":"Code de validation envoyé avec succès !"})
 
     
