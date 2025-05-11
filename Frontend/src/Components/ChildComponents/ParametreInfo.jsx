@@ -91,7 +91,7 @@ function ParametreInfo() {
     Object.entries(dataEtablissement).forEach(([key, value]) => {
       formData.append(key, value);
     });
-    formData.append('numEtablissement', id);
+
     if (selectedFile) {
       // Cas 3 : Nouveau logo sélectionné
       const renamedFile = renameFile(selectedFile);
@@ -101,7 +101,7 @@ function ParametreInfo() {
       formData.append('logo', ''); // ou tu peux laisser vide si le back comprend ça
     } else {
       // Cas 1 : Aucun changement -> garder l'ancien chemin
-      formData.append('logo', dataEtablissement.logo);
+      formData.append('logo', `${dataEtablissement.logo}`);
     }
 
     try {
