@@ -73,7 +73,7 @@ class EtablissementView(APIView):
 
             logoChemin = f"etablissements/{nouveauLogo.name}"
 
-            if logoChemin!=ancienLogo and ancienLogo:
+            if ancienLogo and logoChemin!=ancienLogo and ancienLogo:
                 cheminAncienLogo=os.path.join(settings.MEDIA_ROOT, ancienLogo)
                 existeAutre = Etablissement.objects.filter(logo=ancienLogo).exclude(pk=etablissement.numEtablissement).exists()
                 if os.path.exists(cheminAncienLogo) and not existeAutre:

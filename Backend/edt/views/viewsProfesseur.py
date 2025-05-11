@@ -72,11 +72,9 @@ class ProfesseurView(APIView):
             if ancienPhotos and photosChemin!=ancienPhotos:
                 cheminAncienPhotos=os.path.join(settings.MEDIA_ROOT, ancienPhotos)
                 existeAutre = Professeur.objects.filter(photos=ancienPhotos).exclude(pk=professeur.numProfesseur).exists()
-                print(existeAutre)
                 if os.path.exists(cheminAncienPhotos) and not existeAutre:
                     os.remove(cheminAncienPhotos)
             donnees['photos'] = photosChemin
-            
         serializer=ProfesseurSerializer(professeur, data=donnees)
         if serializer.is_valid():
             prof=serializer.save()
