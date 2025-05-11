@@ -2,12 +2,27 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..serializer.serializerSalle import SalleSerializer
+from ..serializer.serializerEdt import EdtSerializer
 from ..models import Salle
+from datetime import date,datetime  
 class SalleView(APIView):
     def get(self, request):
         salles=Salle.objects.all()
         serializer=SalleSerializer(salles, many=True)
-        return Response(serializer.data)
+        donnees=serializer.data
+        dateActuel=date.today()
+        heureActuel=datetime.now().time()
+        for i,salle in enumerate(salles):
+            edt=salle.edts.filter(date=dateActuel,heureDebut__lte=heureActuel,heureFin__gte=heureActuel).exists()
+            if edt and salle.statut:
+                donnees[i]["statut"]=not edt
+                serializerModif=SalleSerializer(salle,donnees[i])
+                if serializerModif.is_valid():
+                    serializerModif.save()
+                else:
+                    return Response(serializerModif.errors,status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(donnees)
     
     def post(self, request):
         serializer=SalleSerializer(data=request.data)
