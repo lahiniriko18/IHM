@@ -125,7 +125,7 @@ function Professeur() {
       formData.append('photos', '');
     } else {
       // Cas 1 : Aucun changement -> garder l'ancien chemin
-      formData.append('photos', 'noChange');
+      formData.append('photos', `${dataProfesseur.photos}`);
     }
     try {
       const response = await axios.put(`http://127.0.0.1:8000/api/professeur/modifier/${id}`, formData, {
