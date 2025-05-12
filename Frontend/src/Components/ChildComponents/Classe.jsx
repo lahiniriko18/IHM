@@ -29,12 +29,7 @@ function Classe() {
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
-      if (response.data.length > 0) {
-        setListeGroupe((response.data));
-      } else {
-        // setError({ status: true, composant: "groupe", message: "Aucun groupe trouvé !" });
-        console.log("Aucun groupe trouvé !");
-      }
+      setListeGroupe((response.data));
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -43,7 +38,7 @@ function Classe() {
   };
   const sendData = async (ClasseData) => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/Classe/ajouter/", ClasseData);
+      const response = await axios.post("http://127.0.0.1:8000/api/classe/ajouter/", ClasseData);
       if (response.status !== 201) throw new Error('Erreur code : ' + response.status);
       console.log("ajouter");
       getData();
@@ -54,7 +49,7 @@ function Classe() {
 
   const putData = async (ClasseData) => {
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/Classe/modifier/${id}`, ClasseData);
+      const response = await axios.put(`http://127.0.0.1:8000/api/classe/modifier/${id}`, ClasseData);
       if (response.status !== 200) throw new Error('Erreur code : ' + response.status);
       console.log("modifié");
       getData();
@@ -65,7 +60,7 @@ function Classe() {
 
   const removeClasse = async (id) => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/Classe/supprimer/${parseInt(id)}`)
+      const response = await axios.delete(`http://127.0.0.1:8000/api/classe/supprimer/${parseInt(id)}`)
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
       }
@@ -79,7 +74,7 @@ function Classe() {
   const getData = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/Classe/");
+      const response = await axios.get("http://127.0.0.1:8000/api/classe/");
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -107,8 +102,12 @@ function Classe() {
   const editClasse = (numClasse) => {
     const selectedClasse = listeClasse.find((item) => item.numClasse === numClasse)
     if (selectedClasse) {
-      setDataClasse({ ...dataClasse, niveau: selectedClasse.niveau, groupe: selectedClasse.groupe, parcours: selectedClasse.parcours })
+      console.log((selectedClasse));
+
+      setDataClasse({ ...dataClasse, niveau: selectedClasse.niveau, groupe: selectedClasse.groupe, parcours: selectedClasse.parcours }) ? console.log(dataClasse) : console.log("erreur")
       setId(selectedClasse.numClasse)
+      // console.log(dataClasse)
+
     }
   }
   const confirmerSuppression = (id) => {
@@ -143,6 +142,15 @@ function Classe() {
     value: Groupe.numGroupe,
     label: Groupe.nomGroupe
   }));
+
+  const optionNiveau = [
+    { label: 'l1', label: "L1" },
+    { label: 'l2', label: "L2" },
+    { label: 'l3', label: "L3" },
+    { label: 'M1', label: "M1" },
+    { label: 'M2', label: "M2" },
+
+  ];
 
 
   const nombreElemParParge = 8;
@@ -182,7 +190,11 @@ function Classe() {
                 src="/Icons/annuler.png"
                 alt="Quitter"
                 className="w-6 h-6 cursor-pointer"
-                onClick={() => setIsclicked(false)}
+                onClick={() => {
+                  setIsclicked(false)
+                  setDataClasse({ niveau: "", groupe: null, niveau: null });
+                  setError({ ...error, status: false })
+                }}
               />
             </div>
 
@@ -191,14 +203,14 @@ function Classe() {
               <Creatable
                 isClearable
                 placeholder="Choisissez ou créez un niveau"
-                onChange={(newValue) => setDataClasse({ ...dataClasse, niveau: newValue ? newValue.value : null })}
-                options={[
-                  { value: 'l1', label: 'L1' },
-                  { value: 'l2', label: 'L2' },
-                  { value: 'l3', label: 'L3' },
-                  { value: 'M1', label: 'M1' },
-                  { value: 'M2', label: 'M2' },
-                ]}
+                onChange={(selectedOption) => {
+                  setDataClasse((prev) => ({
+                    ...prev,
+                    niveau: selectedOption ? selectedOption.value : null
+                  }));
+                }}
+                value={optionNiveau.find((option) => option.value === dataClasse.niveau) || null}
+                options={optionNiveau}
                 className="text-sm"
               />
               {
@@ -240,12 +252,12 @@ function Classe() {
                 onChange={(selectedOption) => {
                   setDataClasse((prev) => ({
                     ...prev,
-                    groupe: selectedOption ? selectedOption.label : null
+                    groupe: selectedOption && selectedOption.label
                   }));
                 }}
                 value={
                   optionGroupe.find(
-                    (option) => option.value === dataClasse.groupe
+                    (option) => option.label === dataClasse.groupe
                   ) || null}
                 className="text-sm"
               />
@@ -259,12 +271,13 @@ function Classe() {
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  if (dataClasse.niveau.trim() !== "" && dataClasse.groupe.trim() !== "") {
+                  if (dataClasse.niveau.trim() !== "") {
                     if (isadd) {
                       const updateClasse = {
                         ...dataClasse,
                       };
                       sendData(updateClasse);
+                      console.log(dataClasse)
                       setDataClasse({ niveau: "", groupe: null, niveau: null });
                     } else {
                       const updateClasse = {
@@ -275,8 +288,8 @@ function Classe() {
                     }
                     setIsclicked(false);
                   } else {
-                    (dataClasse.niveau.trim() === "") ? setError({ error, status: true, composant: "niveau", message: "Le nom du Classe ne peut pas etre vide" }) : (!dataClasse.parcours) ? setError({ error, status: true, composant: "parcours", message: "Le parcours ne peut pas etre vide" }) : setError({ error, status: true, composant: "groupe", message: "Le code du Classe ne peut pas etre vide" })
-
+                    console.log(dataClasse)
+                      (dataClasse.niveau.trim() === "") ? setError({ error, status: true, composant: "niveau", message: "Le niveau ne peut pas etre vide" }) : (!dataClasse.parcours) && setError({ error, status: true, composant: "parcours", message: "Le parcours ne peut pas etre vide" })
                   }
                 }}
               >
@@ -371,10 +384,9 @@ function Classe() {
               </thead>
               <tbody className="text-sm">
                 {currentData.map((Classe, index) => (
-                  <tr key={index} className="border-b transition-all duration-300 hover:scale-105 hover:shadow-lg hover:bg-gray-100">
+                  <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
                     <td className="px-4 py-2 text-center">{Classe.numClasse}</td>
                     <td className="px-4 py-2 text-center">{Classe.niveau}</td>
-                    <td className="px-4 py-2 text-center">{Classe.groupe}</td>
 
                     <td className="px-4 py-2 flex justify-center items-center gap-2">
                       <button className="p-1 rounded hover:bg-gray-200">
