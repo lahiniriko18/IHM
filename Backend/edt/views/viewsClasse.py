@@ -48,31 +48,31 @@ class ClasseView(APIView):
             if not parcours:
                 return Response("Parcours introuvable !",status=status.HTTP_404_NOT_FOUND)
             
-        classe=Classe.objects.filter(niveau=donnees.get('niveau'))
-        serializer=ClasseSerializer(data=donneeClasse)
-        if serializer.is_valid():
-            if not classe:
+        classe=Classe.objects.filter(niveau=donnees.get('niveau').upper()).first()
+        if not classe:
+            serializer=ClasseSerializer(data=donneeClasse)
+            if serializer.is_valid():
                 classe=serializer.save()
-            if numGroupe:
-                donneePosseder={
-                    "numClasse":classe.numClasse,
-                    "numGroupe":numGroupe
-                }
-                serializerPossede=PossederSerializer(data=donneePosseder)
-                if serializerPossede.is_valid():
-                    serializerPossede.save()
-                else:
-                    return Response(serializerPossede.errors, status=status.HTTP_400_BAD_REQUEST)
-            if numParcours:
-                donneeConstituer={
-                    "numClasse":classe.numClasse,
-                    "numParcours":numParcours
-                }
-                serializerConstitue=ConstituerSerializer(data=donneeConstituer)
-                if serializerConstitue.is_valid():
-                    serializerConstitue.save()
-                else:
-                    return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
+        if numGroupe:
+            donneePosseder={
+                "numClasse":classe.numClasse,
+                "numGroupe":numGroupe
+            }
+            serializerPossede=PossederSerializer(data=donneePosseder)
+            if serializerPossede.is_valid():
+                serializerPossede.save()
+            else:
+                return Response(serializerPossede.errors, status=status.HTTP_400_BAD_REQUEST)
+        if numParcours:
+            donneeConstituer={
+                "numClasse":classe.numClasse,
+                "numParcours":numParcours
+            }
+            serializerConstitue=ConstituerSerializer(data=donneeConstituer)
+            if serializerConstitue.is_valid():
+                serializerConstitue.save()
+            else:
+                return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
             return Response(ClasseSerializer(classe).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def put(self, request, numClasse):
