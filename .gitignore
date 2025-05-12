@@ -3,6 +3,7 @@
 **/__pycache__/
 **/*.pyc
 /Backend/env/
+/Backend/media/
 
 # ---- React ----
 /Frontend/node_modules/

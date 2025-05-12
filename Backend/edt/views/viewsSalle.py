@@ -14,7 +14,7 @@ class SalleView(APIView):
         heureActuel=datetime.now().time()
         for i,salle in enumerate(salles):
             edt=salle.edts.filter(date=dateActuel,heureDebut__lte=heureActuel,heureFin__gte=heureActuel).exists()
-            if edt and salle.statut:
+            if edt == salle.statut:
                 donnees[i]["statut"]=not edt
                 serializerModif=SalleSerializer(salle,donnees[i])
                 if serializerModif.is_valid():
@@ -23,6 +23,7 @@ class SalleView(APIView):
                     return Response(serializerModif.errors,status=status.HTTP_400_BAD_REQUEST)
 
         return Response(donnees)
+    
     
     def post(self, request):
         serializer=SalleSerializer(data=request.data)
