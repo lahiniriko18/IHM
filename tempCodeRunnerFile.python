@@ -1,3 +1,1 @@
-d=["a","b","c"]
-d.append(["d","e"])
-print(d)
+print(False  and True)
