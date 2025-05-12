@@ -152,7 +152,19 @@ function Classe() {
 
   ];
 
-
+  const rows = [];
+  listeClasse.forEach((classe) => {
+    classe.parcours.forEach((parcours) => {
+      classe.groupes.forEach((groupe) => {
+        rows.push({
+          numClasse: classe.numClasse,
+          niveau: classe.niveau,
+          parcours: parcours.nomParcours,
+          groupe: groupe.nomGroupe
+        });
+      });
+    });
+  });
   const nombreElemParParge = 8;
   const [pageActuel, setPageActuel] = useState(1);
 
