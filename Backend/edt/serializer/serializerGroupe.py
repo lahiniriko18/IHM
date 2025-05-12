@@ -10,7 +10,7 @@ class GroupeSerializer(serializers.ModelSerializer):
     def validate_nomGroupe(self, value):
         pattern=r'^groupe'
         if not re.match(pattern, value.lower()):
-            raise serializers.ValidationError({"nomGroupe":"Groupe invalide !"})
+            raise serializers.ValidationError("Groupe invalide !")
         return value
     def validate(self, data):
         return data
