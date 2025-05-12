@@ -47,9 +47,12 @@ class ClasseView(APIView):
             parcours=Parcours.objects.filter(pk=numParcours).exists()
             if not parcours:
                 return Response("Parcours introuvable !",status=status.HTTP_404_NOT_FOUND)
+            
+        classe=Classe.objects.filter(niveau=donnees.get('niveau'))
         serializer=ClasseSerializer(data=donneeClasse)
         if serializer.is_valid():
-            classe=serializer.save()
+            if not classe:
+                classe=serializer.save()
             if numGroupe:
                 donneePosseder={
                     "numClasse":classe.numClasse,
@@ -92,10 +95,23 @@ class ClasseView(APIView):
             return Response({'erreur':'Classe introuvable'}, status=status.HTTP_404_NOT_FOUND)
 
 
-# class ModifClasseView(APIView):
-#     def get(self, request, numClasse):
-#         try:
-#             classe=Classe.objects.get(pk=numClasse)
-#         except Classe.DoesNotExist:
-#             return Response({"erreur":"Classe introuvable"}, status=status.HTTP_404_NOT_FOUND)
-#         posseder=classe.posseders.filter()
+class ModifClasseView(APIView):
+    def post(self, request):
+        donnee=request.data
+        numGroupeDonnee=donnee.get('numGroupe')
+        numParcoursDonnee=donnee.get('numParcours')
+        try:
+            classe=Classe.objects.get(pk=donnee["numClasse"])
+        except Classe.DoesNotExist:
+            return Response({"erreur":"Classe introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        donnees=ClasseSerializer(classe).data
+        donnees['groupe']=None
+        donnees['parcours']=None
+        if numGroupeDonnee:
+            posseder=classe.posseders.filter(numGroupe=numGroupeDonnee).first()
+            donnees['groupe']=GroupeSerializer(posseder.numGroupe).data
+        if numParcoursDonnee:
+            constitue=classe.constituers.filter(numParcours=numParcoursDonnee).first()
+            donnees['parcours']=ParcoursSerializer(constitue.numParcours).data
+
+        return Response(donnees, status=status.HTTP_200_OK)
