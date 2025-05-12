@@ -48,7 +48,7 @@ class ClasseView(APIView):
             if not parcours:
                 return Response("Parcours introuvable !",status=status.HTTP_404_NOT_FOUND)
             
-        classe=Classe.objects.filter(niveau=donnees.get('niveau').upper())
+        classe=Classe.objects.filter(niveau=donnees.get('niveau').upper()).first()
         if not classe:
             serializer=ClasseSerializer(data=donneeClasse)
             if serializer.is_valid():
