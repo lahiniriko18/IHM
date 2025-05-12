@@ -12,6 +12,7 @@ import pandas as pd
 import os
 from openpyxl import load_workbook
 from ..models import Edt
+from datetime import datetime
 class EdtView(APIView):
     def get(self, request):
         edts=Edt.objects.all()
@@ -55,6 +56,26 @@ class EdtTableauView(APIView):
                 donneeAjout.append(EdtSerializer(edt).data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(donneeAjout,status=status.HTTP_201_CREATED)
+    
+
+class ListeEdtView(APIView):
+    def post(self, request):
+        donnee=request.data
+        dateDebut=donnee.get('dateDebut')
+        dateFin=donnee.get('dateFin')
+        print(dateDebut,dateFin)
+        try:
+            dateDebutObj=datetime.strptime(dateDebut, "%Y-%m-%d").date()
+            dateFinObj=datetime.strptime(dateFin, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return Response({"erreur": "Date invalide !"}, status=status.HTTP_400_BAD_REQUEST)
+        if dateDebutObj > dateFinObj:
+            return Response({"erreur": "Date de début doit être inférieur au date de fin !"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        edts=Edt.objects.filter(date__range=(dateDebutObj,dateFinObj))
+        serializer=EdtSerializer(edts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ModeleExcelView(APIView):
     def get(self, request, typeFichier):

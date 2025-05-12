@@ -128,7 +128,7 @@ class Constituer(models.Model):
 class Posseder(models.Model):
     numPosseder=models.AutoField(primary_key=True)
     numClasse=models.ForeignKey(Classe, related_name='posseders', on_delete=models.CASCADE, db_column='numClasse')
-    numGroupe=models.ForeignKey(Groupe, related_name='possedes', on_delete=models.CASCADE, db_column='numGroupe')
+    numGroupe=models.ForeignKey(Groupe, related_name='posseders', on_delete=models.CASCADE, db_column='numGroupe')
 
     class Meta:
         db_table='posseder'

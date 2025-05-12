@@ -5,13 +5,26 @@ from ..serializer.serializerClasse import ClasseSerializer
 from ..serializer.serializerGroupe import GroupeSerializer
 from ..serializer.serializerPosseder import PossederSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
+from ..serializer.serializerParcours import ParcoursSerializer
 from ..models import Classe,Groupe,Parcours
 from django.db.models import Q
 class ClasseView(APIView):
     def get(self, request):
         classes=Classe.objects.all()
         serializer=ClasseSerializer(classes, many=True)
-        return Response(serializer.data)
+        donnees=serializer.data
+        for i,classe in enumerate(classes):
+            posseders=classe.posseders.filter()
+            constituers=classe.constituers.filter()
+            donnneePossede=[]
+            donnneeConstitue=[]
+            for p in posseders:
+                donnneePossede.append(GroupeSerializer(p.numGroupe).data)
+            for c in constituers:
+                donnneeConstitue.append(ParcoursSerializer(c.numParcours).data)
+            donnees[i]["groupes"]=donnneePossede
+            donnees[i]["parcours"]=donnneeConstitue
+        return Response(donnees)
     
     def post(self, request):
         donnees=request.data
@@ -64,6 +77,7 @@ class ClasseView(APIView):
             classe=Classe.objects.get(pk=numClasse)
         except Classe.DoesNotExist:
             return Response({"erreur":"Classe introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        
         serializer=ClasseSerializer(classe, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -76,3 +90,12 @@ class ClasseView(APIView):
             return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
         except Classe.DoesNotExist:
             return Response({'erreur':'Classe introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
+
+# class ModifClasseView(APIView):
+#     def get(self, request, numClasse):
+#         try:
+#             classe=Classe.objects.get(pk=numClasse)
+#         except Classe.DoesNotExist:
+#             return Response({"erreur":"Classe introuvable"}, status=status.HTTP_404_NOT_FOUND)
+#         posseder=classe.posseders.filter()

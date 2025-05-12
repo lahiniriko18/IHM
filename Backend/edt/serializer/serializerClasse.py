@@ -18,7 +18,7 @@ class ClasseSerializer(serializers.ModelSerializer):
     def validate_niveau(self, value):
         if value.upper() not in ["L1","L2","L3","M1","M2"]:
             raise serializers.ValidationError({"niveau":"Niveau invalide !"})
-        return value
+        return value.upper()
     def validate(self, data):
         return data
     def create(self, validated_data):
