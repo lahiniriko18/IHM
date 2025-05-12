@@ -70,6 +70,7 @@ function Classe() {
       console.log("Erreur:", error.message)
     }
   }
+  const [rows, setRows] = useState([]);
 
   const getData = async () => {
     setIsLoading(true);
@@ -79,7 +80,30 @@ function Classe() {
         throw new Error('Erreur code : ' + response.status);
       }
       setListeClasse(response.data);
-      setOriginalList(response.data);  // ✅ Mise à jour ici
+      setOriginalList(response.data);
+      const rawData = response.data;
+      setListeClasse(rawData);
+      setOriginalList(rawData);
+
+      const newRows = [];
+
+      rawData.forEach((classe) => {
+        const parcoursList = Array.isArray(classe.parcours) ? classe.parcours : [];
+        const groupesList = Array.isArray(classe.groupes) ? classe.groupes : [];
+
+        parcoursList.forEach((parcours) => {
+          groupesList.forEach((groupe) => {
+            newRows.push({
+              numClasse: classe.numClasse,
+              niveau: classe.niveau,
+              parcours: parcours.nomParcours,
+              groupe: groupe.nomGroupe,
+            });
+          });
+        });
+      });
+
+      setRows(newRows);  // ✅ Mise à jour ici
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -103,8 +127,13 @@ function Classe() {
     const selectedClasse = listeClasse.find((item) => item.numClasse === numClasse)
     if (selectedClasse) {
       console.log((selectedClasse));
+      setDataClasse({
+        ...dataClasse,
+        niveau: selectedClasse.niveau,
+        groupe: selectedClasse.groupe?.nomGroupe ?? "", // ou juste `selectedClasse.groupe`
+        parcours: selectedClasse.parcours?.numParcours ?? null
+      });
 
-      setDataClasse({ ...dataClasse, niveau: selectedClasse.niveau, groupe: selectedClasse.groupe, parcours: selectedClasse.parcours }) ? console.log(dataClasse) : console.log("erreur")
       setId(selectedClasse.numClasse)
       // console.log(dataClasse)
 
@@ -151,20 +180,6 @@ function Classe() {
     { value: 'M2', label: "M2" },
 
   ];
-
-  const rows = [];
-  listeClasse.forEach((classe) => {
-    classe.parcours.forEach((parcours) => {
-      classe.groupes.forEach((groupe) => {
-        rows.push({
-          numClasse: classe.numClasse,
-          niveau: classe.niveau,
-          parcours: parcours.nomParcours,
-          groupe: groupe.nomGroupe
-        });
-      });
-    });
-  });
   const nombreElemParParge = 8;
   const [pageActuel, setPageActuel] = useState(1);
 
@@ -397,12 +412,12 @@ function Classe() {
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {currentData.map((Classe, index) => (
+                {rows.map((Classe, index) => (
                   <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
                     <td className="px-4 py-2 text-center">{Classe.numClasse}</td>
-                    <td className="px-4 py-2 text-center">{Classe.niveau}</td>
-                    <td className="px-4 py-2 text-center">{Classe.groupes.map((g) => g.nomGroupe).join(", ")}</td>
-                    <td className="px-4 py-2 text-center">{Classe.parcours.map((p) => p.nomParcours).join(", ")}</td>
+                    <td className="px-4 py-2 text-center">{Classe.niveau.toUpperCase()}</td>
+                    <td className="px-4 py-2 text-center">{Classe.parcours}</td>
+                    <td className="px-4 py-2 text-center">{Classe.groupe}</td>
                     <td className="px-4 py-2 flex justify-center items-center gap-2">
                       <button className="p-1 rounded hover:bg-gray-200">
                         <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editClasse(Classe.numClasse) }} />
