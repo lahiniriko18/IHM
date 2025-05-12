@@ -5,7 +5,6 @@ from django.conf import settings
 from django.http  import FileResponse
 from datetime import datetime
 from ..serializer.serializerEdt import EdtSerializer
-from ..serializer.serializerPosseder import PossederSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerExcel import ExcelSerializer,DataSerializer
 import pandas as pd
@@ -226,14 +225,14 @@ class EdtExcelView(APIView):
                                 valeurJour=ligne.get(jour)
                                 for val in valeurJour:
                                     if isinstance(val, dict):
-                                        if not val["classeGroupe"]:
-                                            donneePosseder={
-                                                "numClasse":classeParcours["classe"],
-                                                "numGroupe":val["groupe"]
-                                            }
-                                            serializerPosseder=PossederSerializer(data=donneePosseder)
-                                            if serializerPosseder.is_valid():
-                                                serializerPosseder.save()
+                                        # if not val["classeGroupe"]:
+                                        #     donneePosseder={
+                                        #         "numClasse":classeParcours["classe"],
+                                        #         "numGroupe":val["groupe"]
+                                        #     }
+                                        #     serializerPosseder=PossederSerializer(data=donneePosseder)
+                                        #     if serializerPosseder.is_valid():
+                                        #         serializerPosseder.save()
                                         dateObj=datetime.strptime(dates.get(jour.lower()),"%d-%m-%Y")
                                         dateSql=dateObj.strftime("%Y-%m-%d")
                                         donneEdt={

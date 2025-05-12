@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from datetime import datetime, timedelta,time
-from ..models import Classe,Parcours,Groupe,Posseder,Matiere,Professeur,Enseigner,Salle,Constituer
+from ..models import Classe,Parcours,Groupe,Matiere,Professeur,Enseigner,Salle,Constituer
 from django.db.models import Q
 import pandas as pd
 from openpyxl import load_workbook
@@ -208,9 +208,9 @@ class ContenuSerializer(serializers.Serializer):
                     continue
                 groupeParCase.append(groupe.numGroupe)
                 numClasseInstance=self.context.get("classe")
-                classeGroupe = Posseder.objects.filter(numClasse=numClasseInstance, numGroupe=groupe.numGroupe).exists()
+                # classeGroupe = Posseder.objects.filter(numClasse=numClasseInstance, numGroupe=groupe.numGroupe).exists()
                 caseContenu["groupe"]=groupe.numGroupe
-                caseContenu["classeGroupe"]=classeGroupe
+                # caseContenu["classeGroupe"]=classeGroupe
 
                 ##### Traitement du matière #####
                 matiereStr = valeur[1]

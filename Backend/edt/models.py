@@ -81,6 +81,7 @@ class Classe(models.Model):
 class Groupe(models.Model):
     numGroupe=models.AutoField(primary_key=True)
     nomGroupe=models.CharField(max_length=20)
+    numClasse=models.ForeignKey(Classe, related_name='groupes', on_delete=models.CASCADE, db_column='numClasse', null=True)
 
     class Meta:
         db_table='groupe'
@@ -125,15 +126,6 @@ class Constituer(models.Model):
         db_table='constituer'
     def __str__(self):
         return f"{self.numConstituer} dans une classe {self.numClasse}"
-class Posseder(models.Model):
-    numPosseder=models.AutoField(primary_key=True)
-    numClasse=models.ForeignKey(Classe, related_name='posseders', on_delete=models.CASCADE, db_column='numClasse')
-    numGroupe=models.ForeignKey(Groupe, related_name='posseders', on_delete=models.CASCADE, db_column='numGroupe')
-
-    class Meta:
-        db_table='posseder'
-    def __str__(self):
-        return f"{self.numPosseder} dans une classe {self.numClasse}"
 
 
 class Avoir(models.Model):

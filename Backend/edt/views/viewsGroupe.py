@@ -19,8 +19,8 @@ class GroupeView(APIView):
         try:
             groupe=Groupe.objects.get(pk=numGroupe)
         except Groupe.DoesNotExist:
-            return Response({"erreur":"Groupe introuvable"}, status=status.HTTP_404_NOT_FOUND)
-        serializer=GroupeSerializer(Groupe, data=request.data)
+            return Response({"erreur":"Groupe introuvable !"}, status=status.HTTP_404_NOT_FOUND)
+        serializer=GroupeSerializer(groupe, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

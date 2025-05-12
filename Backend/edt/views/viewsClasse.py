@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..serializer.serializerClasse import ClasseSerializer
 from ..serializer.serializerGroupe import GroupeSerializer
-from ..serializer.serializerPosseder import PossederSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerParcours import ParcoursSerializer
 from ..models import Classe,Groupe,Parcours
@@ -12,37 +11,31 @@ class ClasseView(APIView):
     def get(self, request):
         classes=Classe.objects.all()
         serializer=ClasseSerializer(classes, many=True)
-        donnees=serializer.data
+        donneeClasse=serializer.data
+        donnees=[]
         for i,classe in enumerate(classes):
-            posseders=classe.posseders.filter()
+            
             constituers=classe.constituers.filter()
-            donnneePossede=[]
-            donnneeConstitue=[]
-            for p in posseders:
-                donnneePossede.append(GroupeSerializer(p.numGroupe).data)
+            parcours=[]
             for c in constituers:
-                donnneeConstitue.append(ParcoursSerializer(c.numParcours).data)
-            donnees[i]["groupes"]=donnneePossede
-            donnees[i]["parcours"]=donnneeConstitue
+                parcours.append(ParcoursSerializer(c.numParcours).data)
+            donneeGroupe=Groupe.objects.filter(numClasse=classe.numClasse)
+            groupes=GroupeSerializer(donneeGroupe, many=True).data
+
+            for parcour in parcours:
+                for groupe in groupes:
+                    donnees.append(ClasseSerializer(classe).data)
+                    donnees[-1]['parcours']=parcour
+                    donnees[-1]['groupes']=groupe
+
         return Response(donnees)
     
     def post(self, request):
         donnees=request.data
         groupeDonnee=donnees.get('groupe')
-        numGroupe=None
         numParcours=donnees.get('parcours')
         donneeClasse={"niveau":donnees.get('niveau')}
-        if groupeDonnee:
-            groupe=Groupe.objects.filter(nomGroupe=groupeDonnee.strip()).first()
-            if groupe:
-                numGroupe=groupe.numGroupe
-            else:
-                serializerGroupe=GroupeSerializer(data={"nomGroupe":f"Groupe {groupeDonnee.strip()}"})
-                if serializerGroupe.is_valid():
-                    groupe=serializerGroupe.save()
-                    numGroupe=groupe.numGroupe
-                else:
-                    return Response(serializerGroupe.errors, status=status.HTTP_400_BAD_REQUEST)
+
         if numParcours:
             parcours=Parcours.objects.filter(pk=numParcours).exists()
             if not parcours:
@@ -53,28 +46,35 @@ class ClasseView(APIView):
             serializer=ClasseSerializer(data=donneeClasse)
             if serializer.is_valid():
                 classe=serializer.save()
-        if numGroupe:
-            donneePosseder={
-                "numClasse":classe.numClasse,
-                "numGroupe":numGroupe
-            }
-            serializerPossede=PossederSerializer(data=donneePosseder)
-            if serializerPossede.is_valid():
-                serializerPossede.save()
             else:
-                return Response(serializerPossede.errors, status=status.HTTP_400_BAD_REQUEST)
-        if numParcours:
-            donneeConstituer={
-                "numClasse":classe.numClasse,
-                "numParcours":numParcours
-            }
-            serializerConstitue=ConstituerSerializer(data=donneeConstituer)
-            if serializerConstitue.is_valid():
-                serializerConstitue.save()
-            else:
-                return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response(ClasseSerializer(classe).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if groupeDonnee:
+            groupe=classe.groupes.filter().first()
+            if not groupe:
+                donneeGroupe={
+                    "nomGroupe":f"Groupe {groupeDonnee}",
+                    "numClasse":classe.numClasse
+                }
+                serializerGroupe=GroupeSerializer(data=donneeGroupe)
+                if serializerGroupe.is_valid():
+                    groupe=serializerGroupe.save()
+                else:
+                    return Response(serializerGroupe.errors, status=status.HTTP_400_BAD_REQUEST)
+        if numParcours :
+            constituer=classe.constituers.filter(numParcours=numParcours).exists()
+            if not constituer:
+                donneeConstituer={
+                    "numClasse":classe.numClasse,
+                    "numParcours":numParcours
+                }
+                serializerConstitue=ConstituerSerializer(data=donneeConstituer)
+                if serializerConstitue.is_valid():
+                    serializerConstitue.save()
+                else:
+                    return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(ClasseSerializer(classe).data, status=status.HTTP_201_CREATED)
+    
+
     def put(self, request, numClasse):
         try:
             classe=Classe.objects.get(pk=numClasse)
