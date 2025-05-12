@@ -144,11 +144,11 @@ function Classe() {
   }));
 
   const optionNiveau = [
-    { label: 'l1', label: "L1" },
-    { label: 'l2', label: "L2" },
-    { label: 'l3', label: "L3" },
-    { label: 'M1', label: "M1" },
-    { label: 'M2', label: "M2" },
+    { value: 'l1', label: "L1" },
+    { value: 'l2', label: "L2" },
+    { value: 'l3', label: "L3" },
+    { value: 'M1', label: "M1" },
+    { value: 'M2', label: "M2" },
 
   ];
 
@@ -379,6 +379,8 @@ function Classe() {
                 <tr className="bg-blue-500 text-white text-sm">
                   <th className="px-4 py-4">#</th>
                   <th className="px-4 py-4">Niveau</th>
+                  <th className="px-4 py-4">Groupe</th>
+                  <th>Parcours</th>
                   <th className="px-4 py-4">Actions</th>
                 </tr>
               </thead>
@@ -387,7 +389,8 @@ function Classe() {
                   <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
                     <td className="px-4 py-2 text-center">{Classe.numClasse}</td>
                     <td className="px-4 py-2 text-center">{Classe.niveau}</td>
-
+                    <td className="px-4 py-2 text-center">{Classe.groupes.map((g) => g.nomGroupe).join(", ")}</td>
+                    <td className="px-4 py-2 text-center">{Classe.parcours.map((p) => p.nomParcours).join(", ")}</td>
                     <td className="px-4 py-2 flex justify-center items-center gap-2">
                       <button className="p-1 rounded hover:bg-gray-200">
                         <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editClasse(Classe.numClasse) }} />
