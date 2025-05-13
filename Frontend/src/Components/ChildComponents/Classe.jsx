@@ -282,6 +282,7 @@ function Classe() {
                         sendData(updateClasse);
                         setDataClasse({ niveau: "", groupe: null, parcours: null });
                         setError({ status: false, composant: "", message: "" });
+                        setIsclicked(false);
                       }
                     } else {
                       const updateClasse = {
