@@ -169,6 +169,7 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
+
                 codeGroupe = None
                 for code in ["groupe","grp","gr","g"]:
                     if code in groupeStr and codeGroupe is None:codeGroupe=code
@@ -181,15 +182,16 @@ class ContenuSerializer(serializers.Serializer):
                         
                     )
                     continue
-                groupeNum=groupeStr.replace(codeGroupe,'')
-                if not groupeNum.isdigit():
-                    erreur.append(
-                        self.messageErreurSemaine({
-                            "texte":"Format du groupe invalide !",
-                            "aide":"Format: grp1 ou g1 ou groupe1"
-                        },jour,i+1)
-                    )
-                    continue
+                classe=Classe.objects.filter()
+                # groupeNum=groupeStr.replace(codeGroupe,'')
+                # if not groupeNum.isdigit():
+                #     erreur.append(
+                #         self.messageErreurSemaine({
+                #             "texte":"Format du groupe invalide !",
+                #             "aide":"Format: grp1 ou g1 ou groupe1"
+                #         },jour,i+1)
+                #     )
+                #     continue
                 # groupe = Groupe.objects.filter(nomGroupe=f"Groupe {groupeNum}").first()
                 # if not groupe:
                 #     erreur.append(

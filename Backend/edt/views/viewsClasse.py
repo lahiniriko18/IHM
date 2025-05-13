@@ -4,7 +4,7 @@ from rest_framework import status
 from ..serializer.serializerClasse import ClasseSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerParcours import ParcoursSerializer
-from ..models import Classe,Parcours
+from ..models import Classe,Parcours,Constituer
 from django.db.models import Q
 class ClasseView(APIView):
     def get(self, request):
@@ -36,28 +36,33 @@ class ClasseView(APIView):
             parcours=Parcours.objects.filter(pk=numParcours).exists()
             if not parcours:
                 return Response("Parcours introuvable !",status=status.HTTP_404_NOT_FOUND)
-            
+        
+        
         classe=Classe.objects.filter(niveau=donneeClasse['niveau'].upper(), groupe=donneeClasse['groupe']).first()
         if classe:
+            constitue=classe.constituers.filter(numParcours=numParcours).first()
+            if not constitue:
+                serializerConstitue=ConstituerSerializer(data={"numClasse":classe.numClasse,"numParcours":numParcours})
+                return Response(ClasseSerializer(classe).data, status=status.HTTP_200_OK)
             return Response("Ce classe existe déjà !",status=status.HTTP_401_UNAUTHORIZED)
-        
-        serializer=ClasseSerializer(data=donneeClasse)
-        if serializer.is_valid():
-            classe=serializer.save()
-            if numParcours :
-                constituer=classe.constituers.filter(numParcours=numParcours).exists()
-                if not constituer:
-                    donneeConstituer={
-                        "numClasse":classe.numClasse,
-                        "numParcours":numParcours
-                    }
-                    serializerConstitue=ConstituerSerializer(data=donneeConstituer)
-                    if serializerConstitue.is_valid():
-                        serializerConstitue.save()
-                    else:
-                        return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response(ClasseSerializer(classe).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer=ClasseSerializer(data=donneeClasse)
+            if serializer.is_valid():
+                classe=serializer.save()
+                if numParcours :
+                    constituer=classe.constituers.filter(numParcours=numParcours).exists()
+                    if not constituer:
+                        donneeConstituer={
+                            "numClasse":classe.numClasse,
+                            "numParcours":numParcours
+                        }
+                        serializerConstitue=ConstituerSerializer(data=donneeConstituer)
+                        if serializerConstitue.is_valid():
+                            serializerConstitue.save()
+                        else:
+                            return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(ClasseSerializer(classe).data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
     def put(self, request, numClasse):

@@ -4,14 +4,7 @@ from ..models import Classe
 from django.core.exceptions import ValidationError
 
 class ClasseSerializer(serializers.ModelSerializer):
-    niveau = serializers.CharField( 
-        validators=[
-            UniqueValidator(
-                queryset=Classe.objects.all(),
-                message="Ce niveau existe déjà. Le niveau est unique !"
-            )
-        ]
-    )
+    niveau = serializers.CharField()
     class Meta:
         model=Classe
         fields=["numClasse","niveau","groupe"]
