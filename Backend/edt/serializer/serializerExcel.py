@@ -157,7 +157,8 @@ class ContenuSerializer(serializers.Serializer):
                     )
                     continue
                 parcoursStr, groupeStr=valeur[0].lower().split()
-                numParcoursInstance = self.context.get("parcours")
+                parcoursInstance=self.context.get("parcours")
+                numParcoursInstance = parcoursInstance.numParcours
                 codeParcours=None
                 parcours = Parcours.objects.filter(numParcours=numParcoursInstance).first()
                 if parcours:
@@ -182,37 +183,25 @@ class ContenuSerializer(serializers.Serializer):
                         
                     )
                     continue
-                classe=Classe.objects.filter()
-                # groupeNum=groupeStr.replace(codeGroupe,'')
-                # if not groupeNum.isdigit():
-                #     erreur.append(
-                #         self.messageErreurSemaine({
-                #             "texte":"Format du groupe invalide !",
-                #             "aide":"Format: grp1 ou g1 ou groupe1"
-                #         },jour,i+1)
-                #     )
-                #     continue
-                # groupe = Groupe.objects.filter(nomGroupe=f"Groupe {groupeNum}").first()
-                # if not groupe:
-                #     erreur.append(
-                #         self.messageErreurSemaine({
-                #             "texte":"Groupe introuvable !",
-                #         },jour,i+1)
-                #     )
-                #     continue
-                # if groupe.numGroupe in groupeParCase:
-                #     erreur.append(
-                #         self.messageErreurSemaine({
-                #             "texte":"Impossible d'ajouter deux fois une groupe en même horaire !",
-                #             "aide":"Veuillez ajouter une autre groupe."
-                #         },jour,i+1)
-                #     )
-                #     continue
-                # groupeParCase.append(groupe.numGroupe)
-                # numClasseInstance=self.context.get("classe")
-                # classeGroupe = Posseder.objects.filter(numClasse=numClasseInstance, numGroupe=groupe.numGroupe).exists()
-                # caseContenu["groupe"]=groupe.numGroupe
-                # caseContenu["classeGroupe"]=classeGroupe
+                classeInstance=self.context.get('classe')
+                groupeNum=groupeStr.replace(codeGroupe,'')
+                if classeInstance.groupe != f"Groupe {groupeNum}" and classeInstance.groupe!=groupeStr:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Groupe introuvable !",
+                        },jour,i+1)
+                    )
+                    continue
+                if classeInstance.groupe in groupeParCase:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Impossible d'ajouter deux fois une groupe en même horaire !",
+                            "aide":"Veuillez ajouter une autre groupe."
+                        },jour,i+1)
+                    )
+                    continue
+                groupeParCase.append(classeInstance.groupe)
+                caseContenu["classe"]=classeInstance.numClasse
 
                 ##### Traitement du matière #####
                 matiereStr = valeur[1]
@@ -426,8 +415,8 @@ class DataSerializer(serializers.Serializer):
             messageErreur("Parcours introuvable !")
         constitue=Constituer.objects.filter(numParcours=parcours.numParcours, numClasse=classe.numClasse).exists()
         classeParcours = {
-            "classe":classe.numClasse,
-            "parcours":parcours.numParcours,
+            "classe":classe,
+            "parcours":parcours,
             "constitue":constitue
         }
         titre.append(classeParcours)

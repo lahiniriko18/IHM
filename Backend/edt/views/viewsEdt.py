@@ -197,7 +197,6 @@ class EdtExcelView(APIView):
                     "contenu":dataContenu,
                     "typeFichier":typeFichier
                 }
-                # test git hub
                 serializer=DataSerializer(data=data)
                 if serializer.is_valid():
                     donnee = serializer.validated_data
@@ -213,8 +212,8 @@ class EdtExcelView(APIView):
                     if len(contenu) > 0:
                         if not classeParcours["constitue"]:
                             donneeConstituer={
-                                "numParcours":classeParcours["parcours"],
-                                "numClasse":classeParcours["classe"]
+                                "numParcours":classeParcours["parcours"].numParcours,
+                                "numClasse":classeParcours["classe"].numClasse
                             }
                             serializerConstituer = ConstituerSerializer(data=donneeConstituer)
                             if serializerConstituer.is_valid():
@@ -225,25 +224,18 @@ class EdtExcelView(APIView):
                                 valeurJour=ligne.get(jour)
                                 for val in valeurJour:
                                     if isinstance(val, dict):
-                                        # if not val["classeGroupe"]:
-                                        #     donneePosseder={
-                                        #         "numClasse":classeParcours["classe"],
-                                        #         "numGroupe":val["groupe"]
-                                        #     }
-                                        #     serializerPosseder=PossederSerializer(data=donneePosseder)
-                                        #     if serializerPosseder.is_valid():
-                                        #         serializerPosseder.save()
                                         dateObj=datetime.strptime(dates.get(jour.lower()),"%d-%m-%Y")
                                         dateSql=dateObj.strftime("%Y-%m-%d")
                                         donneEdt={
                                             "numMatiere":val["matiere"],
-                                            "numParcours":classeParcours["parcours"],
+                                            "numParcours":classeParcours["parcours"].numParcours,
                                             "numSalle":val["salle"],
-                                            "numClasse":classeParcours["classe"],
+                                            "numClasse":classeParcours["classe"].numClasse,
                                             "date":dateSql,
                                             "heureDebut":horaire["heureDebut"],
                                             "heureFin":horaire["heureFin"]
                                         }
+                                        print("zah")
                                         serializerEdt= EdtSerializer(data=donneEdt)
                                         if serializerEdt.is_valid():
                                             serializerEdt.save()
