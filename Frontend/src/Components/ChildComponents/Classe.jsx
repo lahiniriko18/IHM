@@ -152,14 +152,13 @@ function Classe() {
     label: Groupe.nomGroupe
   }));
 
-  const optionNiveau = [
+  const [optionNiveau, setOptionNiveau] = useState([
     { value: 'l1', label: "L1" },
     { value: 'l2', label: "L2" },
     { value: 'l3', label: "L3" },
     { value: 'M1', label: "M1" },
     { value: 'M2', label: "M2" },
-
-  ];
+  ]);
   const nombreElemParParge = 8;
   const [pageActuel, setPageActuel] = useState(1);
 
@@ -216,6 +215,18 @@ function Classe() {
                     niveau: selectedOption ? selectedOption.value : null
                   }));
                 }}
+                isValidNewOption={() => false}
+                // Ajoutez cette fonction pour gérer la création d'une nouvelle option
+                onCreateOption={(inputValue) => {
+                  const newValue = inputValue.toLowerCase();
+                  setDataClasse((prev) => ({
+                    ...prev,
+                    niveau: newValue
+                  }));
+
+                  // Optionnellement, vous pouvez aussi ajouter cette nouvelle option à vos options
+                  setOptionNiveau([...optionNiveau, { value: newValue, label: inputValue }]);
+                }}
                 value={optionNiveau.find((option) => option.value === dataClasse.niveau) || null}
                 options={optionNiveau}
                 className="text-sm"
@@ -252,7 +263,7 @@ function Classe() {
 
             <div className="flex flex-col w-full">
               <label className="font-semibold text-sm mb-1">Groupe :</label>
-              <input type="text" value={dataClasse.groupe} onChange={(e) => setDataClasse({ ...dataClasse, groupe: e.target.value })} className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition" placeholder="Entrer le groupe ou laissez vide s'il n y pas" />
+              <input type="text" value={dataClasse.groupe} onChange={(e) => setDataClasse({ ...dataClasse, groupe: e.target.value })} className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition" placeholder="ex:1,2 ou A,B ou vide" />
               {
                 (error.status && error.composant === "groupe") && (<p className='text-red-600 text-sm'>{error.message}</p>)
               }
