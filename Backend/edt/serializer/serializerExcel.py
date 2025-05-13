@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from datetime import datetime, timedelta,time
-from ..models import Classe,Parcours,Groupe,Matiere,Professeur,Enseigner,Salle,Constituer
+from ..models import Classe,Parcours,Matiere,Professeur,Enseigner,Salle,Constituer
 from django.db.models import Q
 import pandas as pd
 from openpyxl import load_workbook
@@ -190,26 +190,26 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
-                groupe = Groupe.objects.filter(nomGroupe=f"Groupe {groupeNum}").first()
-                if not groupe:
-                    erreur.append(
-                        self.messageErreurSemaine({
-                            "texte":"Groupe introuvable !",
-                        },jour,i+1)
-                    )
-                    continue
-                if groupe.numGroupe in groupeParCase:
-                    erreur.append(
-                        self.messageErreurSemaine({
-                            "texte":"Impossible d'ajouter deux fois une groupe en même horaire !",
-                            "aide":"Veuillez ajouter une autre groupe."
-                        },jour,i+1)
-                    )
-                    continue
-                groupeParCase.append(groupe.numGroupe)
-                numClasseInstance=self.context.get("classe")
+                # groupe = Groupe.objects.filter(nomGroupe=f"Groupe {groupeNum}").first()
+                # if not groupe:
+                #     erreur.append(
+                #         self.messageErreurSemaine({
+                #             "texte":"Groupe introuvable !",
+                #         },jour,i+1)
+                #     )
+                #     continue
+                # if groupe.numGroupe in groupeParCase:
+                #     erreur.append(
+                #         self.messageErreurSemaine({
+                #             "texte":"Impossible d'ajouter deux fois une groupe en même horaire !",
+                #             "aide":"Veuillez ajouter une autre groupe."
+                #         },jour,i+1)
+                #     )
+                #     continue
+                # groupeParCase.append(groupe.numGroupe)
+                # numClasseInstance=self.context.get("classe")
                 # classeGroupe = Posseder.objects.filter(numClasse=numClasseInstance, numGroupe=groupe.numGroupe).exists()
-                caseContenu["groupe"]=groupe.numGroupe
+                # caseContenu["groupe"]=groupe.numGroupe
                 # caseContenu["classeGroupe"]=classeGroupe
 
                 ##### Traitement du matière #####

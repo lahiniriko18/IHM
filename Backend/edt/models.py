@@ -72,21 +72,13 @@ class Matiere(models.Model):
 class Classe(models.Model):
     numClasse=models.AutoField(primary_key=True)
     niveau=models.CharField(max_length=5)
+    groupe=models.CharField(max_length=20, null=True)
 
     class Meta:
         db_table='classe'
     def __str__(self):
         return self.niveau
     
-class Groupe(models.Model):
-    numGroupe=models.AutoField(primary_key=True)
-    nomGroupe=models.CharField(max_length=20)
-    numClasse=models.ForeignKey(Classe, related_name='groupes', on_delete=models.CASCADE, db_column='numClasse', null=True)
-
-    class Meta:
-        db_table='groupe'
-    def __str__(self):
-        return self.nomGroupe
 
 
 class Salle(models.Model):

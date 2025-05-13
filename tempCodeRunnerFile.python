@@ -1,1 +1,2 @@
-print(False  and True)
+m="lahiniriko jeremia"
+print(m.capitalize())
