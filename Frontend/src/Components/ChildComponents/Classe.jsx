@@ -22,20 +22,6 @@ function Classe() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState({ status: false, composant: "", message: "" })
 
-  const getGroupe = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/api/groupe/");
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status);
-      }
-      setListeGroupe((response.data));
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   const sendData = async (ClasseData) => {
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/classe/ajouter/", ClasseData);
@@ -49,7 +35,7 @@ function Classe() {
 
   const putData = async (ClasseData) => {
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/classe/modifier/${id}`, ClasseData);
+      const response = await axios.put(`http://127.0.0.1:8000/api/classe/modifier/${id}`, ClasseData,);
       if (response.status !== 200) throw new Error('Erreur code : ' + response.status);
       console.log("modifié");
       getData();
@@ -81,29 +67,6 @@ function Classe() {
       }
       setListeClasse(response.data);
       setOriginalList(response.data);
-      const rawData = response.data;
-      setListeClasse(rawData);
-      setOriginalList(rawData);
-
-      const newRows = [];
-
-      rawData.forEach((classe) => {
-        const parcoursList = Array.isArray(classe.parcours) ? classe.parcours : [];
-        const groupesList = Array.isArray(classe.groupes) ? classe.groupes : [];
-
-        parcoursList.forEach((parcours) => {
-          groupesList.forEach((groupe) => {
-            newRows.push({
-              numClasse: classe.numClasse,
-              niveau: classe.niveau,
-              parcours: parcours.nomParcours,
-              groupe: groupe.nomGroupe,
-            });
-          });
-        });
-      });
-
-      setRows(newRows);  // ✅ Mise à jour ici
     } catch (error) {
       console.error(error.message);
     } finally {
@@ -126,12 +89,12 @@ function Classe() {
   const editClasse = (numClasse) => {
     const selectedClasse = listeClasse.find((item) => item.numClasse === numClasse)
     if (selectedClasse) {
-      console.log((selectedClasse));
       setDataClasse({
         ...dataClasse,
-        niveau: selectedClasse.niveau,
-        groupe: selectedClasse.groupe?.nomGroupe ?? "", // ou juste `selectedClasse.groupe`
-        parcours: selectedClasse.parcours?.numParcours ?? null
+        niveau: selectedClasse.niveau.toLowerCase(),
+        parcours: selectedClasse.parcours?.numParcours ?? null,
+        ancienParcours: selectedClasse.parcours?.numParcours ?? null,
+        groupe: selectedClasse.groupe ? selectedClasse.groupe.toString().split(" ").slice(1).join(" ") : "",
       });
 
       setId(selectedClasse.numClasse)
@@ -139,6 +102,21 @@ function Classe() {
 
     }
   }
+  const isExistClasse = (data, isEdit = false, currentId = null) => {
+    const existingClasse = listeClasse.find((classe) => {
+      if (isEdit && classe.numClasse === currentId) {
+        return false;
+      }
+
+      return (
+        classe.niveau === data.niveau.toUpperCase() &&
+        classe.parcours?.numParcours === data.parcours &&
+        classe.groupe === (data.groupe ? `Groupe ${data.groupe}` : null)
+      );
+    });
+
+    return !!existingClasse; // Retourne true si une correspondance est trouvée, sinon false
+  };
   const confirmerSuppression = (id) => {
     setId(id);
     setIsConfirmModalOpen(true);
@@ -151,6 +129,8 @@ function Classe() {
     if (value.trim() !== "") {
       const filtered = originalList.filter((Classe) =>
         Classe.niveau.toLowerCase().includes(value.toLowerCase()) ||
+        (Classe.groupe && Classe.groupe.toLowerCase().includes(value.toLowerCase())) ||
+        Classe.parcours.nomParcours.toLowerCase().includes(value.toLowerCase()) ||
         Classe.numClasse.toString().includes(value)
       );
       setListeClasse(filtered);
@@ -161,8 +141,8 @@ function Classe() {
   useEffect(() => {
     getData()
     getDataparcours()
-    getGroupe()
   }, [])
+
   const optionsParcours = listeParcours.map((Parcours) => ({
     value: Parcours.numParcours,
     label: Parcours.nomParcours
@@ -226,7 +206,7 @@ function Classe() {
             </div>
 
             <div className="flex flex-col w-full">
-              <label className="font-semibold text-sm mb-1">Niveau</label>
+              <label className="font-semibold text-sm mb-1">Niveau :</label>
               <Creatable
                 isClearable
                 placeholder="Choisissez ou créez un niveau"
@@ -247,7 +227,7 @@ function Classe() {
 
 
             <div className="flex flex-col w-full">
-              <label className="font-semibold text-sm mb-1">Classe</label>
+              <label className="font-semibold text-sm mb-1">Parcours :</label>
               <Creatable
                 isClearable
                 placeholder="Choisissez ou créez un Classe"
@@ -271,25 +251,13 @@ function Classe() {
             </div>
 
             <div className="flex flex-col w-full">
-              <label className="font-semibold text-sm mb-1">Groupe</label>
-              <Creatable
-                isClearable
-                placeholder="Choisissez ou créez un groupe"
-                options={optionGroupe}
-                onChange={(selectedOption) => {
-                  setDataClasse((prev) => ({
-                    ...prev,
-                    groupe: selectedOption && selectedOption.label
-                  }));
-                }}
-                value={
-                  optionGroupe.find(
-                    (option) => option.label === dataClasse.groupe
-                  ) || null}
-                className="text-sm"
-              />
+              <label className="font-semibold text-sm mb-1">Groupe :</label>
+              <input type="text" value={dataClasse.groupe} onChange={(e) => setDataClasse({ ...dataClasse, groupe: e.target.value })} className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition" placeholder="Entrer le groupe ou laissez vide s'il n y pas" />
               {
                 (error.status && error.composant === "groupe") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+              }
+              {
+                (error.status && error.composant === "global") && (<p className='text-red-600 text-sm'>{error.message}</p>)
               }
             </div>
             <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
@@ -298,25 +266,57 @@ function Classe() {
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  if (dataClasse.niveau.trim() !== "") {
+                  if (dataClasse.niveau && dataClasse.niveau.trim() !== "") {
                     if (isadd) {
                       const updateClasse = {
                         ...dataClasse,
                       };
-                      sendData(updateClasse);
-                      console.log(dataClasse)
-                      setDataClasse({ niveau: "", groupe: null, niveau: null });
+
+                      if (isExistClasse(updateClasse)) {
+                        setError({
+                          status: true,
+                          composant: "global",
+                          message: "Classe existe déjà",
+                        });
+                      } else {
+                        sendData(updateClasse);
+                        setDataClasse({ niveau: "", groupe: null, parcours: null });
+                        setError({ status: false, composant: "", message: "" });
+                      }
                     } else {
                       const updateClasse = {
                         ...dataClasse,
+                        ancienParcours: dataClasse.ancienParcours,
                       };
-                      putData(updateClasse);
-                      setDataClasse({ niveau: "", groupe: null, niveau: null });
+
+                      if (isExistClasse(updateClasse, true, id)) {
+                        setError({
+                          status: true,
+                          composant: "global",
+                          message: "Classe existe déjà",
+                        });
+                      } else {
+                        putData(updateClasse);
+                        setDataClasse({ niveau: "", groupe: null, parcours: null });
+                        setError({ status: false, composant: "", message: "" });
+                        setIsclicked(false);
+                      }
                     }
-                    setIsclicked(false);
+
                   } else {
-                    console.log(dataClasse)
-                      (dataClasse.niveau.trim() === "") ? setError({ error, status: true, composant: "niveau", message: "Le niveau ne peut pas etre vide" }) : (!dataClasse.parcours) && setError({ error, status: true, composant: "parcours", message: "Le parcours ne peut pas etre vide" })
+                    if (!dataClasse.niveau || dataClasse.niveau.trim() === "") {
+                      setError({
+                        status: true,
+                        composant: "niveau",
+                        message: "Le niveau ne peut pas être vide",
+                      });
+                    } else if (!dataClasse.parcours) {
+                      setError({
+                        status: true,
+                        composant: "parcours",
+                        message: "Le parcours ne peut pas être vide",
+                      });
+                    }
                   }
                 }}
               >
@@ -359,7 +359,6 @@ function Classe() {
                     }
                     setIsConfirmModalOpen(false);
                   }}
-
                 >
                   VALIDER
                 </button>
@@ -391,7 +390,7 @@ function Classe() {
         </div>
         {
           isLoading ? (
-            <div className="w-full h-40 flex flex-col items-center  justify-center mt-[10%]">
+            <div className="w-full h-40 flex flex-col items-center  justify-center </div>mt-[10%]">
               <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
               <p className="text-gray-400 mt-2">Chargement des données...</p>
             </div>
@@ -407,17 +406,34 @@ function Classe() {
                   <th className="px-4 py-4">#</th>
                   <th className="px-4 py-4">Niveau</th>
                   <th className="px-4 py-4">Groupe</th>
-                  <th>Parcours</th>
+                  <th className="px-4 py-4">Parcours</th>
+                  <th className="px-4 py-4">Code</th>
                   <th className="px-4 py-4">Actions</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {rows.map((Classe, index) => (
+                {currentData.map((Classe, index) => (
                   <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
+
                     <td className="px-4 py-2 text-center">{Classe.numClasse}</td>
                     <td className="px-4 py-2 text-center">{Classe.niveau.toUpperCase()}</td>
-                    <td className="px-4 py-2 text-center">{Classe.parcours}</td>
-                    <td className="px-4 py-2 text-center">{Classe.groupe}</td>
+                    <td className="px-4 py-2 text-center">
+                      {Classe.groupe ? Classe.groupe : "Aucun groupe"}
+                    </td>
+                    <td className="px-4 py-2 text-center">{Classe.parcours ? Classe.parcours.nomParcours : "Aucun parcours"}</td>
+                    <td className="px-4 py-2 text-center">
+                      {[
+                        Classe.niveau ? Classe.niveau.toUpperCase() : null, // Niveau
+                        Classe.parcours?.codeParcours || null,             // Code du parcours
+                        Classe.groupe
+                          ? (!Classe.parcours // Si le parcours est absent
+                            ? `GP${Classe.groupe.split(" ").slice(1).join("")}` // Ajouter "GP" devant le groupe
+                            : Classe.groupe.split(" ").slice(1).join("")) // Sinon, juste retirer "Groupe"
+                          : null // Si le groupe est null
+                      ]
+                        .filter(Boolean) // Filtrer les valeurs nulles ou undefined
+                        .join("") || "Aucun code"}
+                    </td>
                     <td className="px-4 py-2 flex justify-center items-center gap-2">
                       <button className="p-1 rounded hover:bg-gray-200">
                         <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editClasse(Classe.numClasse) }} />
