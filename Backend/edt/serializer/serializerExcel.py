@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from datetime import datetime, timedelta,time
 from ..models import Classe,Parcours,Matiere,Professeur,Enseigner,Salle,Constituer
+from ..serializer.serializerClasse import ClasseSerializer
+from ..serializer.serializerParcours import ParcoursSerializer
+from ..serializer.serializerConstituer import ConstituerSerializer
 from django.db.models import Q
 import pandas as pd
 from openpyxl import load_workbook
@@ -158,7 +161,7 @@ class ContenuSerializer(serializers.Serializer):
                     continue
                 parcoursStr, groupeStr=valeur[0].lower().split()
                 parcoursInstance=self.context.get("parcours")
-                numParcoursInstance = parcoursInstance.numParcours
+                numParcoursInstance = parcoursInstance.get('numParcours')
                 codeParcours=None
                 parcours = Parcours.objects.filter(numParcours=numParcoursInstance).first()
                 if parcours:
@@ -184,15 +187,16 @@ class ContenuSerializer(serializers.Serializer):
                     )
                     continue
                 classeInstance=self.context.get('classe')
+                groupe=classeInstance.get('groupe')
                 groupeNum=groupeStr.replace(codeGroupe,'')
-                if classeInstance.groupe != f"Groupe {groupeNum}" and classeInstance.groupe!=groupeStr:
+                if groupe != f"Groupe {groupeNum}" and groupe!=groupeStr:
                     erreur.append(
                         self.messageErreurSemaine({
                             "texte":"Groupe introuvable !",
                         },jour,i+1)
                     )
                     continue
-                if classeInstance.groupe in groupeParCase:
+                if groupe in groupeParCase:
                     erreur.append(
                         self.messageErreurSemaine({
                             "texte":"Impossible d'ajouter deux fois une groupe en même horaire !",
@@ -200,8 +204,8 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
-                groupeParCase.append(classeInstance.groupe)
-                caseContenu["classe"]=classeInstance.numClasse
+                groupeParCase.append(groupe)
+                caseContenu["classe"]=classeInstance.get('numClasse')
 
                 ##### Traitement du matière #####
                 matiereStr = valeur[1]
@@ -294,6 +298,13 @@ class ContenuSerializer(serializers.Serializer):
                         },jour,i+1)
                     )
                     continue
+                if not salle.statut:
+                    erreur.append(
+                        self.messageErreurSemaine({
+                            "texte":"Cette salle est n'est pas libre dans ce horaire !",
+                            "aide":"Veuillez sélectionner une autre salle !"
+                        },jour,i+1)
+                    )
                 if salle.numSalle in salleParCase:
                     erreur.append(
                         self.messageErreurSemaine({
@@ -415,8 +426,8 @@ class DataSerializer(serializers.Serializer):
             messageErreur("Parcours introuvable !")
         constitue=Constituer.objects.filter(numParcours=parcours.numParcours, numClasse=classe.numClasse).exists()
         classeParcours = {
-            "classe":classe,
-            "parcours":parcours,
+            "classe":ClasseSerializer(classe).data,
+            "parcours":ParcoursSerializer(parcours).data,
             "constitue":constitue
         }
         titre.append(classeParcours)
