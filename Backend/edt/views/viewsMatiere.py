@@ -60,7 +60,7 @@ class MatiereView(APIView):
                         })
                 if sorted(npPossede) != sorted(niveauParcours):
                     for p in posseders:
-                        if p.niveauParcours not in niveauParcours:
+                        if p.numNiveauParcours not in niveauParcours:
                             p.delete()
                 if len(donneePossede) > 0:
                     serializerPossede=PossederSerializer(data=donneePossede, many=True)
