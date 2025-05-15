@@ -51,7 +51,7 @@ class ProfesseurView(APIView):
                 for numMatiere in numMatieres:
                     donneeEns.append({
                         "numProfesseur":professeur.numProfesseur,
-                        "numMatiere":numMatiere
+                        "numMatiere":int(numMatiere)
                     })
                 serializerEns=EnseignerSerializer(data=donneeEns, many=True)
                 if serializerEns.is_valid():
