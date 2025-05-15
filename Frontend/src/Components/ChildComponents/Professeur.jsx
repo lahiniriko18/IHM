@@ -14,6 +14,7 @@ function Professeur() {
   const [originalList, setOriginalList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [id, setId] = useState()
+  const [listeMatiere, setListeMatiere] = useState([]);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isphotosDeleted, setIsphotosDeleted] = useState(false);
   const [error, setError] = useState({ status: false, composant: "", message: "" })
@@ -26,8 +27,9 @@ function Professeur() {
     photos: "",
     contact: "",
     adresse: "",
-    email: "",  // Il manquait `email`
-    numEtablissement: null
+    email: "",
+    numEtablissement: null,
+    matieres: []
   })
   const handleDeletephotos = () => {
     setSelectedFile(null);
@@ -51,7 +53,22 @@ function Professeur() {
     const newFileName = `image_${Date.now()}.${extension}`;
     return new File([file], newFileName, { type: file.type });
   };
-
+  const getDataMatiere = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/matiere/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeMatiere(response.data);
+      // ✅ Mise à jour ici
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+      setIsLoading(false);
+      console.log("Le tache est terminé");
+    }
+  };
   const getNumEtablissement = async () => {
     setIsLoading(true);
     try {
@@ -212,10 +229,13 @@ function Professeur() {
   useEffect(() => {
     getData()
     getNumEtablissement()
-    console.log(listeProfesseur);
-
-
+    getDataMatiere();
   }, [])
+  const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere))
+    .map((Matiere) => ({
+      value: Matiere.numMatiere,
+      label: Matiere.nomMatiere ? Matiere.nomMatiere : (Matiere.codeMatiere ? ` (${Matiere.codeMatiere})` : ""),
+    }));
 
   const validateForm = () => {
     let isValid = true;
@@ -356,31 +376,33 @@ function Professeur() {
                     (error.status && error.composant === "prenomProfesseur") && (<p className='text-red-600 text-sm'>{error.message}</p>)
                   }
                 </div>
-                <div className="flex flex-col w-full">
-                  <label className="font-semibold text-sm mb-1">Grade :</label>
-                  <input
-                    type="text"
-                    value={dataProfesseur.grade}
-                    onChange={(e) => setdataProfesseur({ ...dataProfesseur, grade: e.target.value })}
-                    className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                  />
-                  {
-                    (error.status && error.composant === "grade") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                  }
-                </div>
-                <div className="flex flex-col w-full">
-                  <label className="font-semibold text-sm mb-1">Adresse :</label>
-                  <input
-                    type="text"
-                    value={dataProfesseur.adresse}
-                    onChange={(e) => setdataProfesseur({ ...dataProfesseur, adresse: e.target.value })}
-                    className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                  />
-                  {
-                    (error.status && error.composant === "adresse") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                  }
-                </div>
 
+                <div className="flex flex-row gap-2">
+                  <div className="flex flex-col w-full">
+                    <label className="font-semibold text-sm mb-1">Grade :</label>
+                    <input
+                      type="text"
+                      value={dataProfesseur.grade}
+                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, grade: e.target.value })}
+                      className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                    />
+                    {
+                      (error.status && error.composant === "grade") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+                    }
+                  </div>
+                  <div className="flex flex-col w-full">
+                    <label className="font-semibold text-sm mb-1">Adresse :</label>
+                    <input
+                      type="text"
+                      value={dataProfesseur.adresse}
+                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, adresse: e.target.value })}
+                      className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                    />
+                    {
+                      (error.status && error.composant === "adresse") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+                    }
+                  </div>
+                </div>
 
                 <div className="flex flex-row w-full gap-2 items-center justify-between">
                   <div className="flex flex-col w-full">
@@ -413,7 +435,27 @@ function Professeur() {
 
                   </div>
                 </div>
+                <div className="flex flex-col w-full">
+                  <label className="font-semibold text-sm mb-1">Matiere</label>
+                  <Creatable
+                    isClearable
+                    isMulti
+                    isValidNewOption={() => false}
+                    placeholder="Choisir le matiere"
+                    options={optionsMatiere}
+                    onChange={(selectedOption) => {
+                      setdataProfesseur((prev) => ({
+                        ...prev,
+                        matieres: selectedOption ? selectedOption.map((opt) => opt.value) : []
+                      }));
+                    }}
+                    value={optionsMatiere.filter((option) =>
+                      dataProfesseur.matieres.includes(option.value)
+                    )}
+                    className="text-sm"
+                  />
 
+                </div>
                 <div className="flex flex-row w-full gap-2 items-center justify-between">
 
                   <div className="flex flex-col w-full">
@@ -444,6 +486,7 @@ function Professeur() {
                   </div>
 
                 </div>
+
               </div>
               {/*right section */}
               <div className='w-[50%] flex justify-center items-center flex-col gap-2'>

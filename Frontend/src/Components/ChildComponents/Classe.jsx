@@ -91,7 +91,7 @@ function Classe() {
     if (selectedClasse) {
       setDataClasse({
         ...dataClasse,
-        niveau: selectedClasse.niveau.toLowerCase(),
+        niveau: selectedClasse.niveau,
         parcours: selectedClasse.parcours?.numParcours ?? null,
         ancienParcours: selectedClasse.parcours?.numParcours ?? null,
         groupe: selectedClasse.groupe ? selectedClasse.groupe.toString().split(" ").slice(1).join(" ") : "",
@@ -153,9 +153,9 @@ function Classe() {
   }));
 
   const [optionNiveau, setOptionNiveau] = useState([
-    { value: 'l1', label: "L1" },
-    { value: 'l2', label: "L2" },
-    { value: 'l3', label: "L3" },
+    { value: 'L1', label: "L1" },
+    { value: 'L2', label: "L2" },
+    { value: 'L3', label: "L3" },
     { value: 'M1', label: "M1" },
     { value: 'M2', label: "M2" },
   ]);
@@ -216,15 +216,13 @@ function Classe() {
                   }));
                 }}
                 isValidNewOption={() => false}
-                // Ajoutez cette fonction pour gérer la création d'une nouvelle option
+            
                 onCreateOption={(inputValue) => {
                   const newValue = inputValue.toLowerCase();
                   setDataClasse((prev) => ({
                     ...prev,
                     niveau: newValue
                   }));
-
-                  // Optionnellement, vous pouvez aussi ajouter cette nouvelle option à vos options
                   setOptionNiveau([...optionNiveau, { value: newValue, label: inputValue }]);
                 }}
                 value={optionNiveau.find((option) => option.value === dataClasse.niveau) || null}
@@ -277,7 +275,7 @@ function Classe() {
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  if (dataClasse.niveau && dataClasse.niveau.trim() !== "") {
+                  if ((dataClasse.niveau && dataClasse.niveau.trim() !== "") && (dataClasse.parcours && dataClasse.niveau.trim() !== "")) {
                     if (isadd) {
                       const updateClasse = {
                         ...dataClasse,

@@ -96,6 +96,9 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 ```bash
 cd ../Frontend
 npm install
+npm install date-fns
+npm i --save react-drag-drop-files
+npm i react pick-color
 npm run dev
 ```
 
