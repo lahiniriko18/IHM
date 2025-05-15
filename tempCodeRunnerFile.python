@@ -1,1 +1,6 @@
-print(len(None))
+t=[]
+
+if t:
+    print("zah")
+else:
+    print("leka")

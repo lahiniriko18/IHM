@@ -5,7 +5,7 @@ from ..serializer.serializerClasse import ClasseSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerParcours import ParcoursSerializer
 from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
-from ..models import Classe,Parcours,Constituer
+from ..models import Classe,Parcours,Constituer,NiveauParcours
 from django.db.models import Q
 class ClasseView(APIView):
     def get(self, request):
@@ -76,7 +76,6 @@ class ClasseView(APIView):
     def put(self, request, numClasse):
         donnees=request.data
         numParcours=donnees.get('parcours')
-        ancienParcours=donnees.get('ancienParcours')
         donneeClasse={
             "niveau":donnees.get('niveau'),
             "groupe":donnees.get('groupe')
@@ -87,31 +86,49 @@ class ClasseView(APIView):
             return Response({"erreur":"Classe introuvable !"}, status=status.HTTP_404_NOT_FOUND)
         
         if numParcours:
+            ancienNumParcours=None
+            ancienConstitue=ConstituerSerializer(classe.constituers.filter().first()).data
+            if ancienConstitue:
+                ancienNumParcours=ancienConstitue['numParcours']
             parcours=Parcours.objects.filter(pk=numParcours).exists()
             if not parcours:
                 return Response({"erreur":"Parcours introuvable !"}, status=status.HTTP_404_NOT_FOUND)
             classeParcours=classe.constituers.filter(numParcours=numParcours).exclude(numParcours=numParcours).exists()
             if classeParcours:
                 return Response("Ce parcours est déjà liée par ce classe !")
-            
-            classeParcours=classe.constituers.filter(numParcours=ancienParcours).first()
-            if classeParcours:
-                if classeParcours.numParcours!=numParcours:
-                    serializerConstitue=ConstituerSerializer(classeParcours,data={"numClasse":classe.numClasse,"numParcours":numParcours})
-                    if serializerConstitue.is_valid():
-                        serializerConstitue.save()
-                    else:
-                        return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                serializerConstitue=ConstituerSerializer(data={"numClasse":classe.numClasse,"numParcours":numParcours})
-                if serializerConstitue.is_valid():
-                    serializerConstitue.save()
-                else:
-                    return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
+            ancienClasse=ClasseSerializer(classe).data
+            if donneeClasse['niveau'] != ancienClasse.ge('niveau') or donneeClasse['groupe'] != ancienClasse.get('groupe'):
+                constitue=Constituer.objects.filter(numClasse=numClasse).first()
+                if constitue:
+                    constitue.delete()
 
+                classeNiveau=Classe.objects.filter(niveau=classe.niveau).exclude(pk=classe.numClasse)
+                verif=False
+                for cn in classeNiveau:
+                    constitueVerif=cn.constituers.filter(numParcours=ancienNumParcours).exists()
+                    if constitueVerif:
+                        verif=constitueVerif
+
+                if not verif:
+                    niveauParcours=NiveauParcours.objects.filter(niveau=classe.niveau, numParcours=ancienNumParcours).first()
+                    if niveauParcours:
+                        niveauParcours.delete()
+                
+            serializerConstitue=ConstituerSerializer(data={"numClasse":classe.numClasse,"numParcours":numParcours})
+            if serializerConstitue.is_valid():
+                serializerConstitue.save()
+            else:
+                return Response(serializerConstitue.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer=ClasseSerializer(classe, data=donneeClasse)
         if serializer.is_valid():
-            serializer.save()
+            classe=serializer.save()
+            donneeNp={
+                "niveau":classe.niveau,
+                "numParcours":numParcours
+            }
+            serializerNp=NiveauParcoursSerializer(data=donneeNp)
+            if serializerNp.is_valid():
+                serializerNp.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
