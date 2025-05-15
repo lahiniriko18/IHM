@@ -74,13 +74,19 @@ function ProfesseurDetails() {
               <span className='text-gray-600 '>{listeProfesseur.nomCourant}</span>
             </div>
             <div className="flex flex-row gap-2">
-              <p className="font-semibold">Heure totale sur l'année universitaire 2024-2025 : </p>
-              <span className='text-gray-600 '>52 Heures</span>
+              <p className="font-semibold">Matières enseigné : </p>
+              <span className='text-gray-600 '>
+                {Array.isArray(listeProfesseur.matieres) &&
+                  listeProfesseur.matieres.map((item, idx) => (
+                    <strong key={idx}>{item.nomMatiere}, </strong>
+                  ))
+                }
+              </span>
             </div>
-            <div className="flex flex-col gap-2">
+            {/* <div className="flex flex-col gap-2">
               <p className="font-semibold text-bleu">Representation de heure chaque semaine : </p>
               <img src="/Images/cercle.png" alt="" className='w-64' />
-            </div>
+            </div> */}
           </div>
           <div className="flex justify-center items-center  w-96 h-96">
             <div className="w-64 h-64 bg-gray-200 rounded-full flex justify-center items-center text-white font-bold">
