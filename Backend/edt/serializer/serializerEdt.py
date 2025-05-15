@@ -120,8 +120,7 @@ class EdtSerializer(serializers.ModelSerializer):
 #         if len(dates) != 6:
 #             raise serializers.ValidationError("L'emploi du temps doit contenir le date de Lundi au Samedi")
         
-#         dateDebut=dates.get("lundi")
-        
+#         return data
 
 
 # class EdtTableSerializer(serializers.ListSerializer):

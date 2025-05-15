@@ -146,28 +146,6 @@ class ClasseView(APIView):
             return Response({'erreur':'Classe introuvable !'}, status=status.HTTP_404_NOT_FOUND)
         
 class ClasseListView(APIView):
-    def post(self, request):
-
-        donnees=request.data
-        numParcours=donnees.get('numParcours')
-        classes=Classe.objects.filter(niveau=donnees.get('niveau'))
-        if classes:
-            donneeClasse=[]
-            for classe in classes:
-                constituers=classe.constituers.filter(numParcours=numParcours)
-                parcours=[]
-                for c in constituers:
-                    parcours.append(ParcoursSerializer(c.numParcours).data)
-                if len(parcours) > 0:
-                    for p in parcours:
-                        donneeClasse.append(ClasseSerializer(classe).data)
-                        donneeClasse[-1]["parcours"]=p
-                else:
-                    donneeClasse.append(ClasseSerializer(classe).data)
-                    donneeClasse[-1]["parcours"]=""
-            return Response(donneeClasse, status=status.HTTP_200_OK)
-        else:
-            return Response({"erreur":"Classe introuvable !"}, status=status.HTTP_404_NOT_FOUND)
         
     def get(self, request, numClasse):
 
@@ -188,3 +166,13 @@ class ClasseListView(APIView):
             return Response(donneeClasse, status=status.HTTP_200_OK)
         else:
             return Response({"erreur":"Classe introuvable !"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ClasseNiveauParcoursView(APIView):
+    def get(self, request, numNiveauParcours):
+        niveauParcours=NiveauParcoursSerializer(NiveauParcours.objects.filter(pk=numNiveauParcours).first()).data
+
+        if niveauParcours:
+            classes=Classe.objects.filter(niveau=niveauParcours['niveau'], constituers__numParcours__numParcours=niveauParcours['numParcours'])
+            return Response(ClasseSerializer(classes, many=True).data, status=status.HTTP_200_OK)
+        return Response({"erreur":"Niveau avec parcours introuvable !"},status=status.HTTP_404_NOT_FOUND)
