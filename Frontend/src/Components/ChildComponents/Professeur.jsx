@@ -192,7 +192,6 @@ function Professeur() {
 
     }
   }
-
   const getData = async () => {
     setIsLoading(true);
     try {
