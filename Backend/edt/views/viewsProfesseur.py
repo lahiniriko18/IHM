@@ -186,9 +186,8 @@ class ProfesseurNiveauParcoursView(APIView):
         niveauParcours=NiveauParcours.objects.filter(pk=numNiveauParcours).exists()
         if niveauParcours:
             numMatieres=Matiere.objects.filter(posseders__numNiveauParcours__numNiveauParcours=numNiveauParcours).values_list('numMatiere', flat=True)
-            # donneesMatiere=[]
-            # for posseder in posseders:
-            #     donneesMatiere.append(posseder.numMatiere)
-            return Response(numMatieres, status=status.HTTP_200_OK)
+            professeurs=Professeur.objects.filter(enseigners__numMatiere__numMatiere__in=numMatieres).distinct()
+
+            return Response(ProfesseurSerializer(professeurs, many=True).data, status=status.HTTP_200_OK)
         
         return Response({"erreur":"Niveau avec parcours introuvable !"},status=status.HTTP_404_NOT_FOUND)
