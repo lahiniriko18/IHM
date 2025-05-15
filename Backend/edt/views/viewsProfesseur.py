@@ -5,7 +5,8 @@ from django.conf import settings
 from ..serializer.serializerProfesseur import ProfesseurSerializer
 from ..serializer.serializerEnseigner import EnseignerSerializer
 from ..serializer.serializerMatiere import MatiereSerializer
-from ..models import Professeur
+from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
+from ..models import Professeur,NiveauParcours,Matiere
 import os
 class ProfesseurView(APIView):
     def get(self, request):
@@ -178,3 +179,24 @@ class ProfesseurDetailView(APIView):
                 donnee['photos']=''
         donnee['matieres']=matieres
         return Response(donnee,status=status.HTTP_200_OK)
+    
+
+class ProfesseurNiveauParcoursView(APIView):
+    def get(self, request, numNiveauParcours):
+        niveauParcours=NiveauParcours.objects.filter(pk=numNiveauParcours).exists()
+        if niveauParcours:
+            numMatieres=Matiere.objects.filter(posseders__numNiveauParcours__numNiveauParcours=numNiveauParcours).values_list('numMatiere', flat=True)
+            professeurs=Professeur.objects.filter(enseigners__numMatiere__numMatiere__in=numMatieres).distinct()
+            donnees=ProfesseurSerializer(professeurs, many=True).data
+            for i,prof in enumerate(professeurs):
+                matieres=Matiere.objects.filter(enseigners__numProfesseur__numProfesseur=prof.numProfesseur)
+                donnees[i]['matieres']=MatiereSerializer(matieres, many=True).data
+                if donnees[i]['photos']:
+                    verifChemin=os.path.join(settings.MEDIA_ROOT, donnees[i]['photos'])
+                    if os.path.exists(verifChemin):
+                        donnees[i]['photos']=request.build_absolute_uri(settings.MEDIA_URL + donnees[i]['photos'])
+                    else:
+                        donnees[i]['photos']=''
+            return Response(donnees, status=status.HTTP_200_OK)
+        
+        return Response({"erreur":"Niveau avec parcours introuvable !"},status=status.HTTP_404_NOT_FOUND)
