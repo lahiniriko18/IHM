@@ -5,7 +5,8 @@ from django.conf import settings
 from ..serializer.serializerProfesseur import ProfesseurSerializer
 from ..serializer.serializerEnseigner import EnseignerSerializer
 from ..serializer.serializerMatiere import MatiereSerializer
-from ..models import Professeur
+from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
+from ..models import Professeur,NiveauParcours,Matiere
 import os
 class ProfesseurView(APIView):
     def get(self, request):
@@ -178,3 +179,16 @@ class ProfesseurDetailView(APIView):
                 donnee['photos']=''
         donnee['matieres']=matieres
         return Response(donnee,status=status.HTTP_200_OK)
+    
+
+class ProfesseurNiveauParcoursView(APIView):
+    def get(self, request, numNiveauParcours):
+        niveauParcours=NiveauParcours.objects.filter(pk=numNiveauParcours).exists()
+        if niveauParcours:
+            numMatieres=Matiere.objects.filter(posseders__numNiveauParcours__numNiveauParcours=numNiveauParcours).values_list('numMatiere', flat=True)
+            # donneesMatiere=[]
+            # for posseder in posseders:
+            #     donneesMatiere.append(posseder.numMatiere)
+            return Response(numMatieres, status=status.HTTP_200_OK)
+        
+        return Response({"erreur":"Niveau avec parcours introuvable !"},status=status.HTTP_404_NOT_FOUND)

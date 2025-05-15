@@ -93,4 +93,14 @@ class MatiereDetailView(APIView):
             niveauParcours.append(NiveauParcoursSerializer(possede.numNiveauParcours).data)
         donnee['niveauParcours']=niveauParcours
         return Response(donnee,status=status.HTTP_200_OK)
+
+
+class MatiereNiveauParcoursView(APIView):
+    def get(self, request, numNiveauParcours):
+        niveauParcours=NiveauParcours.objects.filter(pk=numNiveauParcours).exists()
+        if niveauParcours:
+            matieres=Matiere.objects.filter(posseders__numNiveauParcours__numNiveauParcours=numNiveauParcours)
+            return Response(MatiereSerializer(matieres, many=True).data, status=status.HTTP_200_OK)
+        
+        return Response({"erreur":"Niveau avec parcours introuvable !"},status=status.HTTP_404_NOT_FOUND)
     
