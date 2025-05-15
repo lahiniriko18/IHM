@@ -126,7 +126,7 @@ function Matiere() {
       setId(selectedMatiere.numMatiere);
       setisadd(false);
       setIsclicked(true);
-      setdataMatiere({
+      setDataMatiere({
         nomMatiere: selectedMatiere.nomMatiere || "",
         codeMatiere: selectedMatiere.codeMatiere || "",
         niveauParcours: Array.isArray(selectedMatiere.niveauParcours)
