@@ -43,6 +43,7 @@ class MatiereView(APIView):
                         "numProfesseur":professeur,
                         "numMatiere":matiere.numMatiere
                     })
+                print(donneeEns)
                 serializerEns=EnseignerSerializer(data=donneeEns, many=True)
                 if serializerEns.is_valid():
                     serializerEns.save()

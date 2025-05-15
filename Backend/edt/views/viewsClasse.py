@@ -174,5 +174,9 @@ class ClasseNiveauParcoursView(APIView):
 
         if niveauParcours:
             classes=Classe.objects.filter(niveau=niveauParcours['niveau'], constituers__numParcours__numParcours=niveauParcours['numParcours'])
-            return Response(ClasseSerializer(classes, many=True).data, status=status.HTTP_200_OK)
+            donnees=ClasseSerializer(classes, many=True).data
+            for i,classe in enumerate(classes):
+                parcours=Parcours.objects.filter(constituers__numClasse__numClasse=classe.numClasse)
+                donnees[i]['parcours']=ParcoursSerializer(parcours, many=True).data
+            return Response(donnees, status=status.HTTP_200_OK)
         return Response({"erreur":"Niveau avec parcours introuvable !"},status=status.HTTP_404_NOT_FOUND)
