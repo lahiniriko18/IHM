@@ -97,7 +97,7 @@ class ClasseView(APIView):
             if classeParcours:
                 return Response("Ce parcours est déjà liée par ce classe !")
             ancienClasse=ClasseSerializer(classe).data
-            if donneeClasse['niveau'] != ancienClasse.ge('niveau') or donneeClasse['groupe'] != ancienClasse.get('groupe'):
+            if donneeClasse['niveau'] != ancienClasse.get('niveau') or donneeClasse['groupe'] != ancienClasse.get('groupe'):
                 constitue=Constituer.objects.filter(numClasse=numClasse).first()
                 if constitue:
                     constitue.delete()
