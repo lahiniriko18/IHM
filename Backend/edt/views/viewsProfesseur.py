@@ -23,8 +23,7 @@ class ProfesseurView(APIView):
     def post(self, request):
         donnees=request.data
         photos=request.data.get('photos')
-        numMatieres=donnees.get('matieres')
-        print(numMatieres)
+        numMatieres=donnees.getlist('matieres[]')
         if photos:
             dossier=os.path.join(settings.MEDIA_ROOT, 'professeurs')
             os.makedirs(dossier, exist_ok=True)
