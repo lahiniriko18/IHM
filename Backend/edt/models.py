@@ -150,8 +150,19 @@ class NiveauParcours(models.Model):
     class Meta:
         db_table='niveauparcours'
     def __str__(self):
-        return f" {self.niveau} {self.numNiveauParcours}"
-    
+        return f" {self.niveau} de {self.numNiveauParcours}"
+
+
+class Posseder(models.Model):
+    numPosseder=models.AutoField(primary_key=True)
+    numNiveauParcours=models.ForeignKey(NiveauParcours, related_name='posseders', on_delete=models.CASCADE, db_column='numNiveauParcours')
+    numMatiere=models.ForeignKey(Matiere, related_name='posseders', on_delete=models.CASCADE, db_column='numMatiere')
+
+    class Meta:
+        db_table='posseder'
+    def __str__(self):
+        return f"{self.numMatiere} de {self.numNiveauParcours}"
+
 
 class Utilisateur(AbstractUser):
 

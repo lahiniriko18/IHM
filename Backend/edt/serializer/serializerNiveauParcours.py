@@ -17,7 +17,7 @@ class NiveauParcoursSerializer(serializers.ModelSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=NiveauParcours.objects.all(),
-                fields=['niveau', 'parcours'],
+                fields=['niveau', 'numParcours'],
                 message="Ce niveau est déjà associé à ce parcours !"
             )
         ]

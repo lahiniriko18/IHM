@@ -20,6 +20,7 @@ class EnseignerSerializer(serializers.ModelSerializer):
     class Meta:
         model=Enseigner
         fields=["numEnseigner","numProfesseur","numMatiere"]
+        
     def validate(self, data):
         return data
     def create(self, validated_data):

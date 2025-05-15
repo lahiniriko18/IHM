@@ -11,9 +11,24 @@ class MatiereView(APIView):
         return Response(serializer.data)
     
     def post(self, request):
+        donnees=request.data
+        
+        niveauParcours=donnees.get('niveauParcours')
         serializer=MatiereSerializer(data=request.data)
         if serializer.is_valid():
             matiere=serializer.save()
+            if niveauParcours and len(niveauParcours) > 0:
+                donneeNp=[]
+                for niveauParcour in niveauParcours:
+                    donneeNp.append({
+                        "numNiveauParcours":niveauParcour,
+                        "numMatiere":matiere.numMatiere
+                    })
+                serializerNp=NiveauParcoursSerializer(data=donneeNp, many=True)
+                if serializerNp.is_valid():
+                    serializerNp.save()
+                else:
+                    return Response(serializerNp.errors, status=status.HTTP_400_BAD_REQUEST)
             return Response(MatiereSerializer(matiere).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def put(self, request, numMatiere):
