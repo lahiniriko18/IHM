@@ -4,7 +4,8 @@ from rest_framework import status
 from ..serializer.serializerMatiere import MatiereSerializer
 from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
 from ..serializer.serializerPosseder import PossederSerializer
-from ..models import Matiere,NiveauParcours
+from ..serializer.serializerEnseigner import EnseignerSerializer
+from ..models import Matiere,NiveauParcours,Enseigner
 class MatiereView(APIView):
     def get(self, request):
         matieres=Matiere.objects.all()
@@ -17,6 +18,9 @@ class MatiereView(APIView):
         niveauParcours=donnees.get('niveauParcours')
         if not isinstance(niveauParcours, list):
             niveauParcours=donnees.getlist('niveauParcours[]')
+        professeurs=donnees.get('professeurs')
+        if not isinstance(professeurs, list):
+            professeurs=donnees.getlist('professeurs[]')
         serializer=MatiereSerializer(data=request.data)
         if serializer.is_valid():
             matiere=serializer.save()
@@ -32,17 +36,36 @@ class MatiereView(APIView):
                     serializerPossede.save()
                 else:
                     return Response(serializerPossede.errors, status=status.HTTP_400_BAD_REQUEST)
+            if professeurs and len(professeurs) > 0:
+                donneeEns=[]
+                for professeur in professeurs:
+                    donneeEns.append({
+                        "numProfesseur":professeur,
+                        "numMatiere":matiere.numMatiere
+                    })
+                serializerEns=EnseignerSerializer(data=donneeEns, many=True)
+                if serializerEns.is_valid():
+                    serializerEns.save()
+                else:
+                    return Response(serializerEns.errors, status=status.HTTP_400_BAD_REQUEST)
             return Response(MatiereSerializer(matiere).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
     def put(self, request, numMatiere):
         try:
             matiere=Matiere.objects.get(pk=numMatiere)
         except Matiere.DoesNotExist:
             return Response({"erreur":"Matière introuvable"}, status=status.HTTP_404_NOT_FOUND)
+        
         donnees = request.data.copy()
         niveauParcours=donnees.get('niveauParcours')
         if not isinstance(niveauParcours, list):
             niveauParcours=donnees.getlist('niveauParcours[]')
+        professeurs=donnees.get('professeurs')
+        if not isinstance(professeurs, list):
+            professeurs=donnees.getlist('professeurs[]')
+
         serializer=MatiereSerializer(matiere, data=request.data)
         if serializer.is_valid():
             matiere=serializer.save()
@@ -70,6 +93,27 @@ class MatiereView(APIView):
                         return Response(serializerPossede.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"erreur":"Type de données du matière invalide !"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            if isinstance(professeurs, list):
+                numEnseigners=matiere.enseigners.filter().exclude(numProfesseur__in=professeurs)
+                if numEnseigners:
+                    numEnseigners.delete()
+                numProfEnseigner=matiere.enseigners.filter(numProfesseur__in=professeurs).values_list('numProfesseur', flat=True)
+                donneeEns=[]
+                for numProfesseur in professeurs:
+                    if numProfesseur not in numProfEnseigner:
+                        donneeEns.append({
+                            "numProfesseur":numProfesseur,
+                            "numMatiere":matiere.numMatiere
+                        })
+                serializerEns=EnseignerSerializer(data=donneeEns, many=True)
+                if serializerEns.is_valid():
+                    serializerEns.save()
+                else:
+                    return Response(serializerEns.errors, status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                return Response({"erreur":"Type de données du matière invalide !"}, status=status.HTTP_401_UNAUTHORIZED)
+            
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def delete(self, request, numMatiere):
