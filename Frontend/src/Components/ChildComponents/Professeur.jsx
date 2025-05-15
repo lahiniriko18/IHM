@@ -98,7 +98,7 @@ function Professeur() {
     });
     if (Array.isArray(dataProfesseur.matieres)) {
       dataProfesseur.matieres.forEach((val) => {
-        formData.append('matieres[]', val);
+        formData.append('matieres', val);
       });
     }
 
