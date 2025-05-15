@@ -198,7 +198,7 @@ function EdtNew() {
   //     label: Parcours.nomParcours + (Parcours.codeParcours ? ` (${Parcours.codeParcours})` : ""),
   //   }));
   const optionsSalle = listeSalle
-    .sort((a, b) => a.niveau.localeCompare(b.niveau))
+    // .sort((a, b) => a.niveau.localeCompare(b.niveau))
     .filter((Salle, index, self) =>
       index === self.findIndex((c) => c.niveau === Salle.niveau)
     )
@@ -207,7 +207,7 @@ function EdtNew() {
       label: Classe.niveau,
     }));
 
-  const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere)) // Trie par `nomMatiere`
+  const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere))
     .map((Matiere) => ({
       value: Matiere.numMatiere,
       label: Matiere.nomMatiere ? Matiere.nomMatiere : (Matiere.codeMatiere ? ` (${Matiere.codeMatiere})` : ""),
