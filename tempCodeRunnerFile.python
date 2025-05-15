@@ -1,2 +1,1 @@
-l=[1,2,5,4,4]
-print(l.sort())
+print(len(None))
