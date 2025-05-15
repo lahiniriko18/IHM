@@ -45,7 +45,7 @@ function Matiere() {
       console.log("ajouter")
       getData()
     } catch (error) {
-      console.error(error.message)
+      console.error(error.response.data)
     } finally { }
   }
   const getMatiereByOne = async (id) => {
@@ -93,7 +93,7 @@ function Matiere() {
       console.log("ajouter")
       getData()
     } catch (error) {
-      console.error(error.message)
+      console.error(response.data.message)
     } finally { }
   }
 
@@ -115,12 +115,9 @@ function Matiere() {
 
 
   const optionsClasse = listeClasse
-    .sort((a, b) => a.niveau.localeCompare(b.niveau))
-    .filter((classe, index, self) =>
-      index === self.findIndex((c) => c.niveau === classe.niveau)
-    )
+    // .sort((a, b) => a.numNiveauParcours.localeCompare(b.numNiveauParcours))
     .map((Classe) => ({
-      value: Classe.numClasse,
+      value: Classe.numNiveauParcours,
       label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
     }));
   const editMatiere = async (numMatiere) => {
@@ -251,7 +248,9 @@ function Matiere() {
                 onChange={(selectedOption) => {
                   setDataMatiere((prev) => ({
                     ...prev,
-                    niveauParcours: selectedOption ? selectedOption.map((opt) => opt.value) : []
+                    niveauParcours: Array.isArray(selectedOption)
+                      ? selectedOption.map((opt) => opt.value)
+                      : []
                   }));
                 }}
                 value={optionsClasse.filter((option) =>
