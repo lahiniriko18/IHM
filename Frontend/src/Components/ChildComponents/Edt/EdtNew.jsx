@@ -144,9 +144,9 @@ function EdtNew() {
       console.error(error.message);
     }
   };
-  const getDataMatiere = async () => {
+  const getDataMatiere = async () => {////////
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/matiere/");
+      const response = await axios.get(`http://127.0.0.1:8000/api/matiere//niveau-parcours/${dataEdt.niveau}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -157,7 +157,7 @@ function EdtNew() {
   };
   const getDataProfesseurs = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/professeur/");
+      const response = await axios.get(`http://127.0.0.1:8000/api/professeur/niveau-parcours/${dataEdt.niveau}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
