@@ -118,4 +118,28 @@ class ClasseView(APIView):
                 constitue.delete()
             return Response({'message':'Suppression avec succès !'}, status=status.HTTP_200_OK)
         except Classe.DoesNotExist:
-            return Response({'erreur':'Classe introuvable'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'erreur':'Classe introuvable !'}, status=status.HTTP_404_NOT_FOUND)
+        
+class ClasseListView(APIView):
+    def post(self, request):
+
+        donnees=request.data
+        numParcours=donnees.get('numParcours')
+        classes=Classe.objects.filter(niveau=donnees.get('niveau'))
+        if classes:
+            donneeClasse=[]
+            for classe in classes:
+                constituers=classe.constituers.filter(numParcours=numParcours)
+                parcours=[]
+                for c in constituers:
+                    parcours.append(ParcoursSerializer(c.numParcours).data)
+                if len(parcours) > 0:
+                    for p in parcours:
+                        donneeClasse.append(ClasseSerializer(classe).data)
+                        donneeClasse[-1]["parcours"]=p
+                else:
+                    donneeClasse.append(ClasseSerializer(classe).data)
+                    donneeClasse[-1]["parcours"]=""
+            return Response(donneeClasse, status=status.HTTP_200_OK)
+        else:
+            return Response({"erreur":"Classe introuvable !"}, status=status.HTTP_404_NOT_FOUND)

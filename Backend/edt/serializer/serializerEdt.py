@@ -33,11 +33,96 @@ class EdtSerializer(serializers.ModelSerializer):
     class Meta:
         model=Edt
         fields=["numEdt","numMatiere","numParcours","numSalle","numClasse",
-                    "date","heureDebut","heureFin"] 
+                    "date","heureDebut","heureFin"]
+        
+
     def validate(self, data):
         if data['heureDebut'] >= data['heureFin']:
-            raise serializers.ValidationError({"heure":"L'heure de début doit être inférieure à l'heure de fin !"})
+            raise serializers.ValidationError({"erreur":"L'heure de début doit être inférieure à l'heure de fin !"})
+        
+        salle=data.get('numSalle')
+
+        if self.instance:
+            if salle.numSalle and salle.numSalle != self.instance.numSalle:
+                if salle and not salle.statut:
+                    raise serializers.ValidationError({"erreur":f"Le salle {salle.nomSalle} n'est pas libre dans ce horaire !"})
+        else:
+            if salle and not salle.statut:
+                raise serializers.ValidationError({"erreur":f"Le salle {salle.nomSalle} n'est pas libre dans ce horaire !"})
         return data
     
     def create(self, validated_data):
-        return Edt.objects.create(**validated_data)
+        
+        if isinstance(validated_data, list):
+            for donnees in validated_data:
+                salle=donnees.get('numSalle')
+                if salle:
+                    salle.statut = False
+                salle.save()
+                donnees['numSalle']=salle
+            instances= [Edt(**valeur) for valeur in validated_data]
+            return Edt.objects.bulk_create(instances)
+        
+        else:
+            salle=validated_data.get('numSalle')
+            if salle:
+                salle.statut = False
+            salle.save()
+            validated_data['numSalle']=salle
+            return Edt.objects.create(**validated_data)
+    
+    def update(self, instances, validated_data):
+
+        if isinstance(instances,list):
+            for instance, donnnees in zip(instances, validated_data):
+
+                salle=donnnees.get('numSalle')
+                if salle.numSalle != instance.numSalle:
+                    ancienSalle = Salle.objects.filter(pk=instance.numSalle).first()
+                    ancienSalle.statut = True
+                    ancienSalle.save()
+                    salle.statut = False
+                    salle.save()
+
+                for cle, val in donnnees.items():
+                    setattr(instance, cle, val)
+                instance.save()
+            return instances
+        
+        else:
+            salle=validated_data.get('numSalle')
+            if salle.numSalle != instance.numSalle:
+                ancienSalle = Salle.objects.filter(pk=instance.numSalle).first()
+                ancienSalle.statut = True
+                ancienSalle.save()
+                salle.statut = False
+                salle.save()
+                validated_data['numSalle']=salle
+
+            return super().update(instance, validated_data)
+
+
+# class TitreSerializer(serializers.ListSerializer):
+#     titre=serializers.ListSerializer()
+
+#     def validate(self, data):
+
+#         jours=["lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+#         if len(data) != 2:
+#             raise serializers.ValidationError("Format de la titre invalide !")
+#         for ligne in data:
+#             if not isinstance(ligne, dict):
+#                 raise serializers.ValidationError("Format de la titre invalide !")
+        
+#         dates=data[0]
+#         if not isinstance(dates, dict):
+#             raise serializers.ValidationError("Format de la titre invalide !")
+#         if len(dates) != 6:
+#             raise serializers.ValidationError("L'emploi du temps doit contenir le date de Lundi au Samedi")
+        
+#         dateDebut=dates.get("lundi")
+        
+
+
+# class EdtTableSerializer(serializers.ListSerializer):
+#     titre=serializers.ListField(child=TitreSerializer())

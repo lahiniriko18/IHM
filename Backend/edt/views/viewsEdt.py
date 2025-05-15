@@ -200,6 +200,7 @@ class EdtExcelView(APIView):
                 serializer=DataSerializer(data=data)
                 if serializer.is_valid():
                     donnee = serializer.validated_data
+                    return Response(donnee)
                     contenu=donnee["contenu"]
                     dates=donnee["titre"][0]
                     classeParcours=donnee["titre"][1]
@@ -212,12 +213,13 @@ class EdtExcelView(APIView):
                     if len(contenu) > 0:
                         if not classeParcours["constitue"]:
                             donneeConstituer={
-                                "numParcours":classeParcours["parcours"].numParcours,
-                                "numClasse":classeParcours["classe"].numClasse
+                                "numParcours":classeParcours["parcours"]['numParcours'],
+                                "numClasse":classeParcours["classe"]['numClasse']
                             }
                             serializerConstituer = ConstituerSerializer(data=donneeConstituer)
                             if serializerConstituer.is_valid():
                                 serializerConstituer.save()
+                        donneEdts=[]
                         for ligne in contenu:
                             horaire=ligne["Horaire"]
                             for jour in jours:
@@ -228,19 +230,19 @@ class EdtExcelView(APIView):
                                         dateSql=dateObj.strftime("%Y-%m-%d")
                                         donneEdt={
                                             "numMatiere":val["matiere"],
-                                            "numParcours":classeParcours["parcours"].numParcours,
+                                            "numParcours":classeParcours["parcours"]['numParcours'],
                                             "numSalle":val["salle"],
-                                            "numClasse":classeParcours["classe"].numClasse,
+                                            "numClasse":classeParcours["classe"]['numClasse'],
                                             "date":dateSql,
                                             "heureDebut":horaire["heureDebut"],
                                             "heureFin":horaire["heureFin"]
                                         }
-                                        print("zah")
-                                        serializerEdt= EdtSerializer(data=donneEdt)
-                                        if serializerEdt.is_valid():
-                                            serializerEdt.save()
-                                        else:
-                                            return Response(serializerEdt.errors, status=status.HTTP_400_BAD_REQUEST)
+                                        donneEdts.append(donneEdt)
+                        serializerEdt= EdtSerializer(data=donneEdts, many=True)
+                        if serializerEdt.is_valid():
+                            serializerEdt.save()
+                        else:
+                            return Response(serializerEdt.errors, status=status.HTTP_400_BAD_REQUEST)
                     return Response({"message":"Fichier traité et ajout d'emploi du temps avec succès !"}, status=status.HTTP_200_OK)
                 return Response(serializer.errors,status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:
