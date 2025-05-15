@@ -17,6 +17,7 @@ function EdtNew() {
   const [listeMatiere, setListeMatiere] = useState([]);
   const [listeSalle, setListeSalle] = useState([]);
   const [listeClasse, setListeClasse] = useState([]);
+  const [professeursFiltres, setProfesseursFiltres] = useState([]);
   const [listeClasseSelected, setListeClasseSelected] = useState([]);
   const [listeProfesseur, setlisteProfesseur] = useState([]);
   const navigate = useNavigate();
@@ -83,7 +84,12 @@ function EdtNew() {
     }
   };
 
+  const handleChangeMatiere = (e) => {
+    const value = e.target.value;
+    setDataNewEdt({ ...dataEdt, matiere: value })
+    listeProfesseur.filter((p) => p.matieres.numMatiere == value)
 
+  }
   const handleEndDateChange = (e) => {
     const chosenEnd = parseISO(e.target.value);
     const start = parseISO(dataEdt.date_debut);
@@ -109,7 +115,7 @@ function EdtNew() {
   };
   const getDataClasse = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/niveau-parcours/");
+      const response = await axios.get(`http://127.0.0.1:8000/api/classe/niveau-parcours/${dataEdt.niveau}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -146,7 +152,7 @@ function EdtNew() {
   };
   const getDataMatiere = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/matiere/");
+      const response = await axios.get(`http://127.0.0.1:8000/api/matiere/niveau-parcours/${dataEdt.niveau}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -157,7 +163,7 @@ function EdtNew() {
   };
   const getDataProfesseurs = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/professeur/");
+      const response = await axios.get(`http://127.0.0.1:8000/api/professeur/niveau-parcours/${dataEdt.niveau}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -268,16 +274,29 @@ function EdtNew() {
                 isValidNewOption={() => false}
                 placeholder="Choisir le matiere"
                 options={optionsMatiere}
-                // onChange={(selectedOption) => {
-                //   setDataEdt((prev) => ({
-                //     ...prev,
-                //     niveau: selectedOption ? selectedOption.value : null
-                //   }));
-                // }}
+                onChange={(selectedOption) => {
+                  const numMatiere = selectedOption ? selectedOption.value : null;
+                  setDataNewEdt((prev) => ({
+                    ...prev,
+                    matiere: numMatiere
+                  }));
+                  // Filtrer les professeurs qui enseignent cette matière
+                  if (numMatiere) {
+                    setProfesseursFiltres(
+                      listeProfesseur.filter((prof) =>
+                        Array.isArray(prof.matieres) &&
+                        prof.matieres.some((m) => m.numMatiere === numMatiere)
+                      )
+                    );
+                  } else {
+                    setProfesseursFiltres([]);
+                  }
+                }}
                 value={
                   optionsMatiere.find(
                     (option) => option.value === dataNewEdt.matiere
-                  ) || null}
+                  ) || null
+                }
                 className="text-sm"
               />
             </div>
@@ -288,17 +307,34 @@ function EdtNew() {
                 isClearable
                 isValidNewOption={() => false}
                 placeholder="Choisir le professeur"
-                options={optionsProfesseur}
-                // onChange={(selectedOption) => {
-                //   setDataEdt((prev) => ({
-                //     ...prev,
-                //     niveau: selectedOption ? selectedOption.value : null
-                //   }));
-                // }}
+                options={professeursFiltres.map((Professeur) => ({
+                  value: Professeur.numProfesseur,
+                  label: `${Professeur.sexe === "Masculin" ? 'Mr' : 'Mme'} ` +
+                    (Professeur.nomCourant
+                      ? Professeur.nomCourant
+                      : Professeur.prenomProfesseur
+                        ? Professeur.prenomProfesseur
+                        : Professeur.nomProfesseur)
+                }))}
+                onChange={(selectedOption) => {
+                  setDataNewEdt((prev) => ({
+                    ...prev,
+                    professeur: selectedOption ? selectedOption.value : ""
+                  }));
+                }}
                 value={
-                  optionsProfesseur.find(
-                    (option) => option.value === dataNewEdt.professeur
-                  ) || null}
+                  professeursFiltres
+                    .map((Professeur) => ({
+                      value: Professeur.numProfesseur,
+                      label: `${Professeur.sexe === "Masculin" ? 'Mr' : 'Mme'} ` +
+                        (Professeur.nomCourant
+                          ? Professeur.nomCourant
+                          : Professeur.prenomProfesseur
+                            ? Professeur.prenomProfesseur
+                            : Professeur.nomProfesseur)
+                    }))
+                    .find((option) => option.value === dataNewEdt.professeur) || null
+                }
                 className="text-sm"
               />
             </div>

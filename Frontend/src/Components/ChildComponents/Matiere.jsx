@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from 'react'
 import { useSidebar } from '../Context/SidebarContext';
 import Creatable from 'react-select/creatable';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios'
 function Matiere() {
   const { isReduire } = useSidebar();
   const [listeMatiere, setListeMatiere] = useState([]);
   const [originalList, setOriginalList] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [id, setId] = useState()
   const [listeClasse, setListeClasse] = useState([]);
-  const [dataMatiere, setDataMatiere] = useState({ nomMatiere: "", codeMatiere: "", niveauParcours: [] })
+  const [dataMatiere, setDataMatiere] = useState({ nomMatiere: "", codeMatiere: "", niveauParcours: [], professeurs: [] })
   const [isclicked, setIsclicked] = useState(false)
   const [isadd, setisadd] = useState(true)
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isConfirmModalOpenError, setIsConfirmModalOpenError] = useState(false);
+  const [listeProfesseur, setlisteProfesseur] = useState([]);
   const [search, setSearch] = useState('')
+  const navigate = useNavigate();
   const [error, setError] = useState({ status: false, composant: "", message: "" })
   const getDataClasse = async () => {
     try {
@@ -27,6 +32,21 @@ function Matiere() {
       console.error(error.message);
     }
   };
+  const getDataProfesseurs = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/professeur/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setlisteProfesseur(response.data);
+    } catch (error) {
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
+    }
+  };
   const sendData = async () => {
     const formData = new FormData()
     Object.entries(dataMatiere).forEach(([key, value]) => {
@@ -35,6 +55,11 @@ function Matiere() {
     if (Array.isArray(dataMatiere.niveauParcours)) {
       dataMatiere.niveauParcours.forEach((val) => {
         formData.append('niveauParcours[]', val);
+      });
+    }
+    if (Array.isArray(dataMatiere.professeurs)) {
+      dataMatiere.niveauParcours.forEach((val) => {
+        formData.append('professeurs[]', val);
       });
     }
     try {
@@ -75,6 +100,7 @@ function Matiere() {
       console.log("Erreur:", error.message)
     }
   }
+
   const putData = async () => {
     const formData = new FormData()
     Object.entries(dataMatiere).forEach(([key, value]) => {
@@ -83,6 +109,11 @@ function Matiere() {
     if (Array.isArray(dataMatiere.niveauParcours)) {
       dataMatiere.niveauParcours.forEach((val) => {
         formData.append('niveauParcours[]', val);
+      });
+    }
+    if (Array.isArray(dataMatiere.professeurs)) {
+      dataMatiere.niveauParcours.forEach((val) => {
+        formData.append('professeurs[]', val);
       });
     }
     try {
@@ -120,6 +151,17 @@ function Matiere() {
       value: Classe.numNiveauParcours,
       label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
     }));
+  const optionsProfesseur = listeProfesseur
+    .sort((a, b) => a.nomProfesseur.localeCompare(b.nomProfesseur))
+    .map((Professeur) => ({
+      value: Professeur.numProfesseur,
+      label: `${Professeur.sexe === "Masculin" ? 'Mr' : 'Mme'} ` +
+        (Professeur.nomCourant
+          ? Professeur.nomCourant
+          : Professeur.prenomProfesseur
+            ? Professeur.prenomProfesseur
+            : Professeur.nomProfesseur)
+    }));
   const editMatiere = async (numMatiere) => {
     const selectedMatiere = await getMatiereByOne(numMatiere);
     if (selectedMatiere) {
@@ -136,6 +178,12 @@ function Matiere() {
               : m
           )
           : [],
+        professeur: Array.isArray(selectedMatiere.professeur) ?
+          selectedMatiere.professeur.map((m) =>
+            typeof m === "object" && m !== null
+              ? m.numProfesseur || m.value || ""
+              : m
+          ) : [],
       });
     }
   };
@@ -159,10 +207,13 @@ function Matiere() {
       setListeMatiere(originalList);
     }
   }
-
+  const versProfesseur = () => {
+    navigate('/professeur')
+  }
   useEffect(() => {
     getData()
     getDataClasse()
+    getDataProfesseurs();
   }, [])
 
 
@@ -224,6 +275,31 @@ function Matiere() {
               }
             </div>
             <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Professeur(s):</label>
+              <Creatable
+                isClearable
+                isMulti
+                isValidNewOption={() => false}
+                placeholder="Choisir le(s) professeur(s)"
+                options={optionsProfesseur}
+                onChange={(selectedOption) => {
+                  setDataMatiere((prev) => ({
+                    ...prev,
+                    professeurs: Array.isArray(selectedOption)
+                      ? selectedOption.map((opt) => opt.value)
+                      : []
+                  }));
+                }}
+                value={optionsProfesseur.filter((option) =>
+                  (dataMatiere.professeurs || []).includes(option.value)
+                )}
+                className="text-sm"
+              />
+              {
+                (error.status && error.composant === "prof") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+              }
+            </div>
+            <div className="flex flex-col w-full">
               <label className="font-semibold text-sm mb-1">Enseigné dans:</label>
               <Creatable
                 isClearable
@@ -264,7 +340,12 @@ function Matiere() {
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  if (dataMatiere.nomMatiere.trim() !== "" && dataMatiere.codeMatiere.trim() !== "") {
+                  if (dataMatiere.nomMatiere.trim() === "") {
+                    setError({ error, status: true, composant: "nomMatiere", message: "Le nom du matiere ne peut pas etre vide" })
+                  }
+                  else if (dataMatiere.professeurs.length === 0) {
+                    setError({ error, status: true, composant: "prof", message: "Selectionner au moins un professeur" })
+                  } else {
                     if (isadd) {
                       sendData()
                       setDataMatiere({ nomMatiere: "", codeMatiere: "" })
@@ -277,8 +358,6 @@ function Matiere() {
                       setIsclicked(false);
                       setError({ ...error, status: false })
                     }
-                  } else {
-                    (dataMatiere.nomMatiere.trim() === "") ? setError({ error, status: true, composant: "nomMatiere", message: "Le nom du matiere ne peut pas etre vide" }) : setError({ error, status: true, composant: "codeMatiere", message: "Le code du matiere ne peut pas etre vide" })
                   }
                 }}
               >
@@ -332,6 +411,53 @@ function Matiere() {
           </div >
         )
       }
+      {
+        (isConfirmModalOpenError) && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center"
+            tabIndex="-1"
+          >
+            <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[35%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
+              <div className="flex justify-between items-center w-full">
+                <h1 className="text-blue-600 text-xl font-bold">Creation Matiere</h1>
+                <img
+                  src="/Icons/annuler.png"
+                  alt="Quitter"
+                  className="w-6 h-6 cursor-pointer"
+                  onClick={() => {
+                    setIsConfirmModalOpenError(false);
+
+                  }}
+                />
+              </div>
+              <div className="flex flex-row gap-2">
+                <img src="/Icons/attention.png" alt="Attention" />
+                <p>Pour suivre la creation de matiere ,il faut au moins un professeur dans la section professeur</p>
+              </div>
+
+              <div className="w-full flex justify-center gap-7 items-center">
+                <button
+                  className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
+                  onClick={() => {
+                    setIsConfirmModalOpenError(false);
+                  }}
+                >
+                  Ok
+                </button>
+                <button
+                  className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
+                  onClick={() => {
+                    setIsConfirmModalOpen(false);
+                    versProfesseur();
+                  }}
+                >
+                  Creer-un
+                </button>
+              </div>
+            </div>
+          </div >
+        )
+      }
 
       {/*Search */}
       <div className="absolute top-0 left-[25%]  w-[60%]  h-14 flex justify-center items-center z-[51]">
@@ -350,7 +476,15 @@ function Matiere() {
       <div className={`${isReduire ? "fixed h-screen right-0 top-14 left-20 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700" : "fixed h-screen right-0 top-14 left-56 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700"}`}>
         <div className="flex justify-between w-full">
           <h1 className="font-bold">Liste des Matieres enregistrées</h1>
-          <button className="button flex gap-3 hover:scale-105 transition duration-200" onClick={() => { setIsclicked(true); setisadd(true); }}>
+          <button className="button flex gap-3 hover:scale-105 transition duration-200" onClick={() => {
+
+            if (Object.entries(listeProfesseur).length >0) {
+              setIsclicked(true);
+              setisadd(true);
+            } else {
+              setIsConfirmModalOpenError(true)
+            }
+          }}>
             <img src="/Icons/plus-claire.png" alt="Plus" className='w-6 h-6' /> Nouveau
           </button>
         </div>
