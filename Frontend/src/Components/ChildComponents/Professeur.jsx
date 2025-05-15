@@ -69,6 +69,22 @@ function Professeur() {
       console.log("Le tache est terminé");
     }
   };
+  const getDataOneProf = async (id) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/professeur/detail/${id}`);
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      return response.data;
+    } catch (error) {
+      console.error(error.message);
+      return null;
+    } finally {
+      setIsLoading(false);
+      console.log("Le tache est terminé");
+    }
+  };
   const getNumEtablissement = async () => {
     setIsLoading(true);
     try {
@@ -139,6 +155,11 @@ function Professeur() {
     Object.entries(dataProfesseur).forEach(([key, value]) => {
       formData.append(key, value);
     });
+    if (Array.isArray(dataProfesseur.matieres)) {
+      dataProfesseur.matieres.forEach((val) => {
+        formData.append('matieres[]', val);
+      });
+    }
     if (selectedFile) {
       // Cas 3 : Nouveau photos sélectionné
       const renamedFile = renameFile(selectedFile);
@@ -193,21 +214,9 @@ function Professeur() {
       ;
     }
   };
-  const editProfesseur = (numProfesseur) => {
-    const selectedprofesseur = listeProfesseur.find((item) => item.numProfesseur === numProfesseur);
+  const editProfesseur = async (numProfesseur) => {
+    const selectedprofesseur = await getDataOneProf(numProfesseur);
     if (selectedprofesseur) {
-      setdataProfesseur({
-        nomProfesseur: selectedprofesseur.nomProfesseur,
-        prenomProfesseur: selectedprofesseur.prenomProfesseur,
-        adresse: selectedprofesseur.adresse,
-        email: selectedprofesseur.email,
-        contact: selectedprofesseur.contact,
-        description: selectedprofesseur.description,
-        nomCourant: selectedprofesseur.nomCourant,
-        photos: selectedprofesseur.photos,
-        grade: selectedprofesseur.grade,
-        sexe: selectedprofesseur.sexe,
-      });
       setId(selectedprofesseur.numProfesseur);
       if (selectedprofesseur.photos) {
         setPreview(`${selectedprofesseur.photos}`);
@@ -216,6 +225,26 @@ function Professeur() {
       }
       setisadd(false);
       setIsclicked(true);
+
+      setdataProfesseur({
+        nomProfesseur: selectedprofesseur.nomProfesseur || "",
+        prenomProfesseur: selectedprofesseur.prenomProfesseur || "",
+        nomCourant: selectedprofesseur.nomCourant || "",
+        grade: selectedprofesseur.grade || "",
+        sexe: selectedprofesseur.sexe || "",
+        photos: selectedprofesseur.photos || "",
+        contact: selectedprofesseur.contact || "",
+        adresse: selectedprofesseur.adresse || "",
+        email: selectedprofesseur.email || "",
+        numEtablissement: selectedprofesseur.numEtablissement || null,
+        matieres: Array.isArray(selectedprofesseur.matieres)
+          ? selectedprofesseur.matieres.map((m) =>
+            typeof m === "object" && m !== null
+              ? m.numMatiere || m.value || ""
+              : m
+          )
+          : [],
+      });
     }
   };
 
@@ -235,6 +264,7 @@ function Professeur() {
     getData()
     getNumEtablissement()
     getDataMatiere();
+
   }, [])
   const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere))
     .map((Matiere) => ({
@@ -358,7 +388,7 @@ function Professeur() {
                     <label className="font-semibold text-sm mb-1">Nom professeur</label>
                     <input
                       type="text"
-                      value={dataProfesseur.nomProfesseur}
+                      value={dataProfesseur.nomProfesseur || ""}
                       onChange={(e) => setdataProfesseur({ ...dataProfesseur, nomProfesseur: e.target.value })}
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
@@ -371,7 +401,7 @@ function Professeur() {
                     <label>Prénom</label>
                     <input
                       type="text"
-                      value={dataProfesseur.prenomProfesseur}
+                      value={dataProfesseur.prenomProfesseur || ""}
                       onChange={(e) => setdataProfesseur({ ...dataProfesseur, prenomProfesseur: e.target.value })}
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
@@ -387,7 +417,7 @@ function Professeur() {
                     <label className="font-semibold text-sm mb-1">Grade :</label>
                     <input
                       type="text"
-                      value={dataProfesseur.grade}
+                      value={dataProfesseur.grade || ""}
                       onChange={(e) => setdataProfesseur({ ...dataProfesseur, grade: e.target.value })}
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
@@ -399,7 +429,7 @@ function Professeur() {
                     <label className="font-semibold text-sm mb-1">Adresse :</label>
                     <input
                       type="text"
-                      value={dataProfesseur.adresse}
+                      value={dataProfesseur.adresse || ""}
                       onChange={(e) => setdataProfesseur({ ...dataProfesseur, adresse: e.target.value })}
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
@@ -414,7 +444,7 @@ function Professeur() {
                     <label className="font-semibold text-sm mb-1">Nom courant :</label>
                     <input
                       type="text"
-                      value={dataProfesseur.nomCourant}
+                      value={dataProfesseur.nomCourant || ""}
                       onChange={(e) => setdataProfesseur({ ...dataProfesseur, nomCourant: e.target.value })}
                       className="border border-gray-300 leading-9 px-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
@@ -467,7 +497,7 @@ function Professeur() {
                     <label className="font-semibold text-sm mb-1">Email</label>
                     <input
                       type="text"
-                      value={dataProfesseur.email}
+                      value={dataProfesseur.email || ""}
                       onChange={(e) => setdataProfesseur({ ...dataProfesseur, email: e.target.value })}
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
@@ -481,7 +511,7 @@ function Professeur() {
                     <label className="font-semibold text-sm mb-1">Contact</label>
                     <input
                       type="text"
-                      value={dataProfesseur.contact}
+                      value={dataProfesseur.contact || ""}
                       onChange={(e) => setdataProfesseur({ ...dataProfesseur, contact: e.target.value })}
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
@@ -524,7 +554,7 @@ function Professeur() {
               </div>
             </div>
 
-            <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
+            <input type="hidden" name="id" value={id || ""} onChange={() => setId(e.target.value)} />
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
@@ -654,6 +684,7 @@ function Professeur() {
                 <tbody className="text-sm">
                   {currentData.map((Professeur, index) => (
                     <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
+                   
                       <td className="px-4 py-2 text-center">{Professeur.numProfesseur}</td>
                       {/* <td className="px-4 py-2 text-center">
                         {Professeur.photos && Professeur.photos !== "" && (
@@ -670,7 +701,7 @@ function Professeur() {
                       <td className="px-4 py-2 text-center">{Professeur.contact}</td>
                       <td className="px-4 py-2 flex justify-center items-center gap-2">
                         <button className="p-1 rounded hover:bg-gray-200">
-                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editProfesseur(Professeur.numProfesseur) }} />
+                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={async () => { setIsclicked(true); setisadd(false); await editProfesseur(Professeur.numProfesseur) }} />
                         </button>
                         <button className="p-1 rounded hover:bg-gray-200" onClick={() => confirmerSuppression(Professeur.numProfesseur)}>
                           <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
