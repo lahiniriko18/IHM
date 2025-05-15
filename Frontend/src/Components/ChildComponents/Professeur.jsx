@@ -203,7 +203,6 @@ function Professeur() {
         sexe: selectedprofesseur.sexe,
       });
       setId(selectedprofesseur.numProfesseur);
-      // Affiche l'image si elle existe
       if (selectedprofesseur.photos) {
         setPreview(`${selectedprofesseur.photos}`);
       } else {
@@ -450,7 +449,7 @@ function Professeur() {
                       }));
                     }}
                     value={optionsMatiere.filter((option) =>
-                      dataProfesseur.matieres.includes(option.value)
+                      (dataProfesseur.matieres || []).includes(option.value)
                     )}
                     className="text-sm"
                   />
