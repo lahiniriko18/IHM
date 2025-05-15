@@ -5,6 +5,7 @@ import Creatable from 'react-select/creatable';
 import { useLocation } from 'react-router-dom';
 import { parseISO, getDay, format, addDays, isAfter } from 'date-fns';
 import axios from 'axios';
+import Professeur from '../Professeur';
 
 function EdtNew() {
   const location = useLocation();
@@ -29,6 +30,8 @@ function EdtNew() {
     date_fin: "",
     niveau: "",
     matiere: "",
+    salle: "",
+    professeur: "",
     mode_creation: "",
     parcours: null,
     excel: null
@@ -191,20 +194,25 @@ function EdtNew() {
       value: Classe.niveau,
       label: Classe.niveau + Classe.parcours.codeParcours,
     }));
-  // const optionsParcours = listeParcours
-  //   .sort((a, b) => a.nomParcours.localeCompare(b.nomParcours)) // Trie par `nomParcours`
-  //   .map((Parcours) => ({
-  //     value: Parcours.numParcours,
-  //     label: Parcours.nomParcours + (Parcours.codeParcours ? ` (${Parcours.codeParcours})` : ""),
-  //   }));
+  const optionsProfesseur = listeProfesseur
+    .sort((a, b) => a.nomProfesseur.localeCompare(b.nomProfesseur))
+    .map((Professeur) => ({
+      value: Professeur.numProfesseur,
+      label: `${Professeur.sexe === "Masculin" ? 'Mr' : 'Mme'} ` +
+        (Professeur.nomCourant
+          ? Professeur.nomCourant
+          : Professeur.prenomProfesseur
+            ? Professeur.prenomProfesseur
+            : Professeur.nomProfesseur)
+    }));
   const optionsSalle = listeSalle
     // .sort((a, b) => a.niveau.localeCompare(b.niveau))
     .filter((Salle, index, self) =>
-      index === self.findIndex((c) => c.niveau === Salle.niveau)
+      index === self.findIndex((c) => c.nomSalle === Salle.nomSalle)
     )
     .map((Classe) => ({
-      value: Classe.niveau,
-      label: Classe.niveau,
+      value: Classe.numSalle,
+      label: Classe.nomSalle,
     }));
 
   const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere))
@@ -235,18 +243,18 @@ function EdtNew() {
 
 
             <div className="flex flex-col w-full">
-              <label className="font-semibold text-sm mb-1">Groupe</label>
+              <label className="font-semibold text-sm mb-1">Classe</label>
               <Creatable
                 isClearable
                 isValidNewOption={() => false}
-                placeholder="Choisir le groupe"
+                placeholder="Choisir le classe"
                 options={optionsClasse}
-                onChange={(selectedOption) => {
-                  setDataEdt((prev) => ({
-                    ...prev,
-                    niveau: selectedOption ? selectedOption.value : null
-                  }));
-                }}
+                // onChange={(selectedOption) => {
+                //   setDataEdt((prev) => ({
+                //     ...prev,
+                //     niveau: selectedOption ? selectedOption.value : null
+                //   }));
+                // }}
                 value={
                   optionsClasse.find(
                     (option) => option.value === dataNewEdt.niveau
@@ -259,7 +267,7 @@ function EdtNew() {
               <Creatable
                 isClearable
                 isValidNewOption={() => false}
-                placeholder="Choisir le groupe"
+                placeholder="Choisir le matiere"
                 options={optionsMatiere}
                 // onChange={(selectedOption) => {
                 //   setDataEdt((prev) => ({
@@ -270,6 +278,47 @@ function EdtNew() {
                 value={
                   optionsMatiere.find(
                     (option) => option.value === dataNewEdt.matiere
+                  ) || null}
+                className="text-sm"
+              />
+            </div>
+
+            <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Professeur</label>
+              <Creatable
+                isClearable
+                isValidNewOption={() => false}
+                placeholder="Choisir le professeur"
+                options={optionsProfesseur}
+                // onChange={(selectedOption) => {
+                //   setDataEdt((prev) => ({
+                //     ...prev,
+                //     niveau: selectedOption ? selectedOption.value : null
+                //   }));
+                // }}
+                value={
+                  optionsProfesseur.find(
+                    (option) => option.value === dataNewEdt.professeur
+                  ) || null}
+                className="text-sm"
+              />
+            </div>
+            <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Salle</label>
+              <Creatable
+                isClearable
+                isValidNewOption={() => false}
+                placeholder="Choisir le salle"
+                options={optionsSalle}
+                // onChange={(selectedOption) => {
+                //   setDataEdt((prev) => ({
+                //     ...prev,
+                //     niveau: selectedOption ? selectedOption.value : null
+                //   }));
+                // }}
+                value={
+                  optionsSalle.find(
+                    (option) => option.value === dataNewEdt.salle
                   ) || null}
                 className="text-sm"
               />
