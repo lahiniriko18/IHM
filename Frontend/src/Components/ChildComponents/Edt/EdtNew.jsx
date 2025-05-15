@@ -1,20 +1,38 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { data, useNavigate } from 'react-router-dom';
 import { useSidebar } from '../../Context/SidebarContext';
 import Creatable from 'react-select/creatable';
+import { useLocation } from 'react-router-dom';
+import { parseISO, getDay, format, addDays, isAfter } from 'date-fns';
+import axios from 'axios';
 
 function EdtNew() {
+  const location = useLocation();
+  const { dataEdt } = location.state || {};
   const [isNewValue, setIsNewValue] = useState(false);
   const [isEditHours, setIsEditHours] = useState(false);
   const [intervalHoraire, setIntervalHoraire] = useState(2);
   const [selectedCell, setSelectedCell] = useState(null);
-
+  const [listeMatiere, setListeMatiere] = useState([]);
+  const [listeSalle, setListeSalle] = useState([]);
+  const [listeClasse, setListeClasse] = useState([]);
+  const [listeClasseSelected, setListeClasseSelected] = useState([]);
+  const [listeProfesseur, setlisteProfesseur] = useState([]);
   const navigate = useNavigate();
   const { isReduire } = useSidebar();
   const [modele, setModele] = useState(1); // 1 = horaire en ligne ; 2 = horaire en colonne
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
   const [horaires, setHoraires] = useState([{ id: 1, heure_debut: 8, heure_fin: 10 }]);
-
+  const [error, setError] = useState({ status: false, composant: "", message: "" })
+  const [dataNewEdt, setDataNewEdt] = useState({
+    date_debut: "",
+    date_fin: "",
+    niveau: "",
+    matiere: "",
+    mode_creation: "",
+    parcours: null,
+    excel: null
+  })
   const versGeneral = () => navigate('/edt');
   const versCreationEdt = () => navigate('/edt/nouveau-edt');
   const versAFfichage = () => navigate('/edt/affichage-edt');
@@ -30,13 +48,170 @@ function EdtNew() {
     };
     setHoraires([...horaires, nouvelleColonne]);
   };
+  const handleStartDateChange = (e) => {
+    let selected = parseISO(e.target.value);
+    const day = getDay(selected);
+    let errorMessage = "";
 
+    if (day === 6) {
+      selected = addDays(selected, 2);
+      errorMessage = "Le samedi n’est pas autorisé. La date a été ajustée au lundi suivant.";
+    } else if (day === 0) {
+      selected = addDays(selected, 1);
+      errorMessage = "Le dimanche n’est pas autorisé. La date a été ajustée au lundi suivant.";
+    }
+
+    const correctedStart = format(selected, "yyyy-MM-dd");
+    const dayOfWeek = getDay(selected);
+    const daysUntilSaturday = 6 - dayOfWeek;
+    const suggestedEnd = addDays(selected, daysUntilSaturday);
+    const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
+
+    setDataNewEdt({
+      ...dataEdt,
+      date_debut: correctedStart,
+      date_fin: correctedEnd,
+    });
+
+    if (errorMessage) {
+      setError({ status: true, composant: "date_debut", message: errorMessage });
+    } else {
+      setError({ ...error, status: false });
+    }
+  };
+
+
+  const handleEndDateChange = (e) => {
+    const chosenEnd = parseISO(e.target.value);
+    const start = parseISO(dataEdt.date_debut);
+
+    const dayOfWeek = getDay(start);
+    const maxEnd = addDays(start, 6 - dayOfWeek);
+
+    if (isAfter(chosenEnd, maxEnd)) {
+      setError({
+        status: true,
+        composant: "date_fin",
+        message: "La date de fin ne peut pas dépasser le samedi suivant la date de début.",
+      });
+      return;
+    }
+    setDataNewEdt({ ...dataEdt, date_fin: e.target.value });
+    setError({ ...error, status: false });
+  };
   const handleClick = (jour, horaire) => {
     setSelectedCell({ jour, horaire });
     setIsNewValue(true);
     setIsEditHours(false);
   };
+  const getDataClasse = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/classe/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeClasse(response.data);
 
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+  const getDataClasseSelected = async (id) => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/classe/liste/${id}`);
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeClasseSelected(response.data);
+
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+  const getDataSalle = async () => {
+
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/salle/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeSalle(response.data);
+
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+  const getDataMatiere = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/matiere/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeMatiere(response.data)
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+  const getDataProfesseurs = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/professeur/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setlisteProfesseur(response.data);
+    } catch (error) {
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
+    }
+  };
+  useEffect(() => {
+    getDataClasse()
+    // getDataParcours();
+
+    getDataSalle();
+    getDataMatiere();
+    getDataProfesseurs();
+  }, [])
+  useEffect(() => {
+    if (dataEdt) {
+      getDataClasseSelected(dataEdt.niveau)
+      setDataNewEdt({ ...dataNewEdt, date_debut: dataEdt.date_debut, date_fin: dataEdt.date_fin })
+    }
+    console.log(dataEdt)
+  }, [])
+  const optionsClasse = listeClasse
+    .sort((a, b) => a.niveau.localeCompare(b.niveau))
+    .filter((classe, index, self) =>
+      index === self.findIndex((c) => c.niveau === classe.niveau)
+    )
+    .map((Classe) => ({
+      value: Classe.niveau,
+      label: Classe.niveau + Classe.parcours.codeParcours,
+    }));
+  // const optionsParcours = listeParcours
+  //   .sort((a, b) => a.nomParcours.localeCompare(b.nomParcours)) // Trie par `nomParcours`
+  //   .map((Parcours) => ({
+  //     value: Parcours.numParcours,
+  //     label: Parcours.nomParcours + (Parcours.codeParcours ? ` (${Parcours.codeParcours})` : ""),
+  //   }));
+  const optionsSalle = listeSalle
+    .sort((a, b) => a.niveau.localeCompare(b.niveau))
+    .filter((Salle, index, self) =>
+      index === self.findIndex((c) => c.niveau === Salle.niveau)
+    )
+    .map((Classe) => ({
+      value: Classe.niveau,
+      label: Classe.niveau,
+    }));
+
+  const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere)) // Trie par `nomMatiere`
+    .map((Matiere) => ({
+      value: Matiere.numMatiere,
+      label: Matiere.nomMatiere ? Matiere.nomMatiere : (Matiere.codeMatiere ? ` (${Matiere.codeMatiere})` : ""),
+    }));
   return (
     <>
       {/* Modal de création */}
@@ -58,24 +233,47 @@ function EdtNew() {
               />
             </div>
 
-            {["Groupe", "Matière", "Professeur", "Salle"].map((label, i) => (
-              <div key={i} className="flex flex-col w-full">
-                <label className="font-semibold text-sm mb-1">{label}</label>
-                <Creatable
-                  isClearable
-                  isValidNewOption={() => false}
-                  placeholder={`Choisissez le ${label.toLowerCase()}`}
-                  options={
-                    label === "Groupe" ? [{ value: '1', label: 'Groupe 1' }, { value: '2', label: 'Groupe 2' }]
-                      : label === "Matière" ? [{ value: '2', label: 'Python' }, { value: '4', label: 'Math Discrete' }]
-                        : label === "Professeur" ? [{ value: '3', label: 'Mr Fontaine' }, { value: '21', label: 'Mr Josué' }]
-                          : [{ value: '3', label: '106' }, { value: '21', label: '005' }]
-                  }
-                  className="text-sm"
-                />
-              </div>
-            ))}
 
+            <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Groupe</label>
+              <Creatable
+                isClearable
+                isValidNewOption={() => false}
+                placeholder="Choisir le groupe"
+                options={optionsClasse}
+                onChange={(selectedOption) => {
+                  setDataEdt((prev) => ({
+                    ...prev,
+                    niveau: selectedOption ? selectedOption.value : null
+                  }));
+                }}
+                value={
+                  optionsClasse.find(
+                    (option) => option.value === dataNewEdt.niveau
+                  ) || null}
+                className="text-sm"
+              />
+            </div>
+            <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Matiere</label>
+              <Creatable
+                isClearable
+                isValidNewOption={() => false}
+                placeholder="Choisir le groupe"
+                options={optionsMatiere}
+                // onChange={(selectedOption) => {
+                //   setDataEdt((prev) => ({
+                //     ...prev,
+                //     niveau: selectedOption ? selectedOption.value : null
+                //   }));
+                // }}
+                value={
+                  optionsMatiere.find(
+                    (option) => option.value === dataNewEdt.matiere
+                  ) || null}
+                className="text-sm"
+              />
+            </div>
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
@@ -104,12 +302,23 @@ function EdtNew() {
                 onClick={() => setIsEditHours(false)}
               />
             </div>
-
             <div className="flex flex-col gap-2">
               <label className="font-semibold text-sm mb-1">Heure de début</label>
-              <input type="time" className="border p-2 rounded w-full" />
-              <label className="font-semibold text-sm mb-1">Heure de fin</label>
-              <input type="time" className="border p-2 rounded w-full" />
+              <input
+                type="date"
+                className="border p-2 rounded w-full"
+                value={horaires.date_debut}
+                onChange={handleStartDateChange}
+              />
+
+              <label className="font-semibold text-sm mb-1" >Heure de fin</label>
+              <input
+                type="date"
+                className="border p-2 rounded w-full"
+                value={horaires.date_fin}
+                onChange={handleEndDateChange}
+              />
+
             </div>
 
             <div className="w-full flex justify-center">
@@ -135,25 +344,25 @@ function EdtNew() {
 
           <div className="flex justify-between items-center ">
             <span className="text-blue-600 font-bold flex flex-row items-center z-50">Création EDT pour :
-              <Creatable
-                isClearable
-                isValidNewOption={() => false}
-                placeholder="L1IG"
-                options={
-                  [{ value: '1', label: 'L1IG' },
-                  { value: '1', label: 'L2IG' },
-                  { value: '1', label: 'L3SR' },]
-                }
-                className="text-sm"
-              /></span>
+              <p>{listeClasseSelected.nom}</p></span>
             <div className="flex gap-2 items-center w-[70%] pe-8">
               <div className='flex items-center'>
                 <p className='w-40'>Date début : </p>
-                <input type="date" className="border p-2 rounded w-full" />
+                <input
+                  type="date"
+                  onChange={handleStartDateChange}
+                  value={dataNewEdt.date_debut || ""}
+                  className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                />
               </div>
               <div className='flex items-center'>
                 <p className='w-40'>Date fin : </p>
-                <input type="date" className="border p-2 rounded w-full" />
+                <input
+                  type="date"
+                  onChange={handleEndDateChange}
+                  value={dataNewEdt.date_fin || ""} // Toujours une string
+                  className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                />
               </div>
             </div>
           </div>
