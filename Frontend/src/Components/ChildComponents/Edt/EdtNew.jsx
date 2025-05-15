@@ -121,7 +121,7 @@ function EdtNew() {
   };
   const getDataClasseSelected = async (id) => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/classe/liste/${id}`);
+      const response = await axios.get(`http://127.0.0.1:8000/api/niveau-parcours/${id}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -392,7 +392,22 @@ function EdtNew() {
 
           <div className="flex justify-between items-center ">
             <span className="text-blue-600 font-bold flex flex-row items-center z-50">Création EDT pour :
-              <p className='ms-2'> {listeClasseSelected.length > 0 && listeClasseSelected[0].niveau + listeClasseSelected[0].parcours.codeParcours}</p></span>
+              <p className='ms-2'>
+                {listeClasseSelected && listeClasseSelected.niveau
+                  ? (
+                    listeClasseSelected.niveau +
+                    (
+                      listeClasseSelected.numParcours
+                        ? (listeClasseSelected.numParcours.codeParcours
+                          ? listeClasseSelected.numParcours.codeParcours
+                          : " - " + listeClasseSelected.numParcours.nomParcours
+                        )
+                        : ""
+                    )
+                  )
+                  : ""
+                }
+              </p></span>
             <div className="flex gap-2 items-center w-[70%] pe-8">
               <div className='flex items-center'>
                 <p className='w-40'>Date début : </p>

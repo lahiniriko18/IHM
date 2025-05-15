@@ -294,26 +294,31 @@ function Edt() {
             <div className={modeCreation === 'excel' ? `flex flex-row ` : `flex flex-col`} >
               <div className={modeCreation === 'excel' ? `w-1/2 flex flex-col gap-4 ` : `w-full`}>
                 <div className="flex flex-col gap-2">
-                  <div className="flex w-full flex-row gap-2">
-                    <div className="flex flex-col w-full">
-                      <label className="font-semibold text-sm mb-1">Date debut:</label>
-                      <input
-                        type="date"
-                        onChange={handleStartDateChange}
-                        value={dataEdt.date_debut}
-                        className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                      />
-                    </div>
-                    <div className={`${(dataEdt.date_debut.trim() == "") ? "pointer-events-none text-gray-400" : ""} flex flex-col w-full`}>
-                      <label className="font-semibold text-sm mb-1">Date fin</label>
-                      <input
-                        type="date"
-                        onChange={handleStartDateChange}
-                        value={dataEdt.date_fin}
-                        className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                      />
-                    </div>
+                  <div className="flex flex-col w-full">
+                    <label className="font-semibold text-sm mb-1">Date debut:</label>
+                    <input
+                      type="date"
+                      onChange={handleStartDateChange}
+                      value={dataEdt.date_debut}
+                      className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                    />
                   </div>
+
+                  {(error.status && error.composant === "date_debut") && (
+                    <p className="text-red-600 text-sm">{error.message}</p>
+                  )}
+                  <div className={`${(dataEdt.date_debut.trim() == "") ? "pointer-events-none text-gray-400" : ""} flex flex-col w-full`}>
+                    <label className="font-semibold text-sm mb-1">Date fin</label>
+                    <input
+                      type="date"
+                      onChange={handleStartDateChange}
+                      value={dataEdt.date_fin}
+                      className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                    />
+                  </div>
+                  {(error.status && error.composant === "date_fin") && (
+                    <p className="text-red-600 text-sm">{error.message}</p>
+                  )}
                   <div className="w-100">
                     {(error.status && error.composant === "date_debut") && (
                       <p className="text-red-600 text-sm">{error.message}</p>
@@ -347,7 +352,7 @@ function Edt() {
                     (error.status && error.composant === "niveau") && (<p className='text-red-600 text-sm'>{error.message}</p>)
                   }
                 </div>
-                <div className="flex flex-col w-full">
+                {/* <div className="flex flex-col w-full">
                   <label className="font-semibold text-sm mb-1">Parcours</label>
                   <Creatable
                     isClearable
@@ -370,7 +375,7 @@ function Edt() {
                   {
                     (error.status && error.composant === "parcours") && (<p className='text-red-600 text-sm'>{error.message}</p>)
                   }
-                </div>
+                </div> */}
 
                 <div className="flex flex-col w-full">
                   <label className="font-semibold text-sm mb-1">Mode creation</label>
@@ -471,9 +476,10 @@ function Edt() {
                     setError({ status: true, composant: "date_debut", message: "La date ne peut pas vide" });
                   } else if (!dataEdt.niveau) {
                     setError({ status: true, composant: "niveau", message: "Le niveau ne peut pas vide " });
-                  } else if (!dataEdt.parcours) {
-                    setError({ status: true, composant: "parcours", message: "Le parcours ne peut pas vide " });
-                  } else {
+                  } // else if (!dataEdt.parcours) {
+                  //   setError({ status: true, composant: "parcours", message: "Le parcours ne peut pas vide " });
+                  // }
+                  else {
                     console.log(dataEdt)
                     setIsclicked(false)
                     versCreationEdt();
