@@ -92,9 +92,15 @@ function Professeur() {
     const formData = new FormData();
 
     Object.entries(dataProfesseur).forEach(([key, value]) => {
-      formData.append(key, value);
+      if (key !== "matieres") {
+        formData.append(key, value);
+      }
     });
-
+    if (Array.isArray(dataProfesseur.matieres)) {
+      dataProfesseur.matieres.forEach((val) => {
+        formData.append('matieres[]', val);
+      });
+    }
 
     if (selectedFile) {
       const renamedFile = renameFile(selectedFile);
@@ -530,7 +536,7 @@ function Professeur() {
                         numEtablissement: numEtablissement
                       };
                       sendData(updateProfesseur);
-                      console.log(dataProfesseur)
+                      console.log("Le données sont : ", dataProfesseur, "le type de données du matiere", typeof dataProfesseur.matieres[0])
                       setSelectedFile(null)
                       setIsclicked(false);
                       setPreview(null)
