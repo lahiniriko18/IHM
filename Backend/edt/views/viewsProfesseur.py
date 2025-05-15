@@ -24,7 +24,6 @@ class ProfesseurView(APIView):
         donnees=request.data
         photos=request.data.get('photos')
         numMatieres=donnees.get('matieres')
-
         if photos:
             dossier=os.path.join(settings.MEDIA_ROOT, 'professeurs')
             os.makedirs(dossier, exist_ok=True)
@@ -51,7 +50,7 @@ class ProfesseurView(APIView):
                 for numMatiere in numMatieres:
                     donneeEns.append({
                         "numProfesseur":professeur.numProfesseur,
-                        "numMatiere":int(numMatiere)
+                        "numMatiere":numMatiere
                     })
                 serializerEns=EnseignerSerializer(data=donneeEns, many=True)
                 if serializerEns.is_valid():
@@ -153,11 +152,13 @@ class ProfesseurDetailView(APIView):
         except Professeur.DoesNotExist:
             return Response({"erreur":"Professeur introuvable !"}, status=status.HTTP_404_NOT_FOUND)
         donnee=ProfesseurSerializer(professeur).data
-        matieres=professeur.enseigners.filter()
+        matieres=EnseignerSerializer(professeur.enseigners.filter(), many=True).data
+
         if donnee['photos']:
             verifChemin=os.path.join(settings.MEDIA_ROOT, donnee['photos'])
             if os.path.exists(verifChemin):
                 donnee['photos']=request.build_absolute_uri(settings.MEDIA_URL + donnee['photos'])
             else:
                 donnee['photos']=''
+        donnee['matieres']=matieres
         return Response(donnee,status=status.HTTP_200_OK)
