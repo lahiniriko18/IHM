@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useSidebar } from '../Context/SidebarContext';
+import Creatable from 'react-select/creatable';
 import axios from 'axios'
 function Matiere() {
   const { isReduire } = useSidebar();
@@ -7,16 +8,37 @@ function Matiere() {
   const [originalList, setOriginalList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [id, setId] = useState()
-  const [dataMatiere, setDataMatiere] = useState({ nomMatiere: "", codeMatiere: "" })
+  const [listeClasse, setListeClasse] = useState([]);
+  const [dataMatiere, setDataMatiere] = useState({ nomMatiere: "", codeMatiere: "", niveauParcours: [] })
   const [isclicked, setIsclicked] = useState(false)
   const [isadd, setisadd] = useState(true)
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [search, setSearch] = useState('')
   const [error, setError] = useState({ status: false, composant: "", message: "" })
-
-  const sendData = async () => {
+  const getDataClasse = async () => {
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/matiere/ajouter/", dataMatiere)
+      const response = await axios.get("http://127.0.0.1:8000/api/niveauParcours/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeClasse(response.data);
+
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+  const sendData = async () => {
+    const formData = new FormData()
+    Object.entries(dataMatiere).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+    if (Array.isArray(dataMatiere.niveauParcours)) {
+      dataMatiere.niveauParcours.forEach((val) => {
+        formData.append('niveauParcours[]', val);
+      });
+    }
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/matiere/ajouter/", formData)
       if (response.status !== 201) {
         throw new Error('Erreur code : ' + response.status)
       }
@@ -24,10 +46,23 @@ function Matiere() {
       getData()
     } catch (error) {
       console.error(error.message)
-    } finally {
-      console.log("Le tache est terminé")
-    }
+    } finally { }
   }
+  const getMatiereByOne = async (id) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/matiere/${id}`);
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      return response.data;
+    } catch (error) {
+      console.error(error.message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const removeMatiere = async (id) => {
     try {
       const response = await axios.delete(`http://127.0.0.1:8000/api/matiere/supprimer/${parseInt(id)}`)
@@ -41,8 +76,17 @@ function Matiere() {
     }
   }
   const putData = async () => {
+    const formData = new FormData()
+    Object.entries(dataMatiere).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+    if (Array.isArray(dataMatiere.niveauParcours)) {
+      dataMatiere.niveauParcours.forEach((val) => {
+        formData.append('niveauParcours[]', val);
+      });
+    }
     try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/matiere/modifier/${id}`, dataMatiere)
+      const response = await axios.put(`http://127.0.0.1:8000/api/matiere/modifier/${id}`, formData)
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status)
       }
@@ -50,9 +94,7 @@ function Matiere() {
       getData()
     } catch (error) {
       console.error(error.message)
-    } finally {
-      console.log("Le tache est terminé")
-    }
+    } finally { }
   }
 
   const getData = async () => {
@@ -68,16 +110,38 @@ function Matiere() {
       console.error(error.message);
     } finally {
       setIsLoading(false);
-      console.log("Le tache est terminé");
     }
   };
-  const editMatiere = (numMatiere) => {
-    const selectedMatiere = listeMatiere.find((item) => item.numMatiere === numMatiere)
+
+
+  const optionsClasse = listeClasse
+    .sort((a, b) => a.niveau.localeCompare(b.niveau))
+    .filter((classe, index, self) =>
+      index === self.findIndex((c) => c.niveau === classe.niveau)
+    )
+    .map((Classe) => ({
+      value: Classe.numClasse,
+      label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
+    }));
+  const editMatiere = async (numMatiere) => {
+    const selectedMatiere = await getMatiereByOne(numMatiere);
     if (selectedMatiere) {
-      setDataMatiere({ ...dataMatiere, nomMatiere: selectedMatiere.nomMatiere, codeMatiere: selectedMatiere.codeMatiere })
-      setId(selectedMatiere.numMatiere)
+      setId(selectedMatiere.numMatiere);
+      setisadd(false);
+      setIsclicked(true);
+      setdataMatiere({
+        nomMatiere: selectedMatiere.nomMatiere || "",
+        codeMatiere: selectedMatiere.codeMatiere || "",
+        niveauParcours: Array.isArray(selectedMatiere.niveauParcours)
+          ? selectedMatiere.niveauParcours.map((m) =>
+            typeof m === "object" && m !== null
+              ? m.numNiveauParcours || m.value || ""
+              : m
+          )
+          : [],
+      });
     }
-  }
+  };
   const confirmerSuppression = (id) => {
     setId(id);
     setIsConfirmModalOpen(true);
@@ -101,6 +165,7 @@ function Matiere() {
 
   useEffect(() => {
     getData()
+    getDataClasse()
   }, [])
 
 
@@ -153,7 +218,7 @@ function Matiere() {
               <label className="font-semibold text-sm mb-1">Nom de la Matiere</label>
               <input
                 type="text"
-                value={dataMatiere.nomMatiere}
+                value={dataMatiere.nomMatiere || ""}
                 onChange={(e) => setDataMatiere({ ...dataMatiere, nomMatiere: e.target.value })}
                 className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               />
@@ -166,13 +231,34 @@ function Matiere() {
               <label className="font-semibold text-sm mb-1">Code matiere</label>
               <input
                 type="text"
-                value={dataMatiere.codeMatiere}
+                value={dataMatiere.codeMatiere || ""}
                 onChange={(e) => setDataMatiere({ ...dataMatiere, codeMatiere: e.target.value })}
                 className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               />
               {
                 (error.status && error.composant === "codeMatiere") && (<p className='text-red-600 text-sm'>{error.message}</p>)
               }
+            </div>
+
+            <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Enseigné dans:</label>
+              <Creatable
+                isClearable
+                isMulti
+                isValidNewOption={() => false}
+                placeholder="Choisir le classe"
+                options={optionsClasse}
+                onChange={(selectedOption) => {
+                  setDataMatiere((prev) => ({
+                    ...prev,
+                    niveauParcours: selectedOption ? selectedOption.map((opt) => opt.value) : []
+                  }));
+                }}
+                value={optionsClasse.filter((option) =>
+                  (dataMatiere.niveauParcours || []).includes(option.value)
+                )}
+                className="text-sm"
+              />
             </div>
             <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
             <div className="w-full flex justify-center">
@@ -300,7 +386,7 @@ function Matiere() {
                         <td className="px-4 py-2 text-center">{Matiere.codeMatiere}</td>
                         <td className="px-4 py-2 flex justify-center items-center gap-2">
                           <button className="p-1 rounded hover:bg-gray-200">
-                            <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={() => { setIsclicked(true); setisadd(false); editMatiere(Matiere.numMatiere) }} />
+                            <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={async () => { setIsclicked(true); setisadd(false); await editMatiere(Matiere.numMatiere) }} />
                           </button>
                           <button className="p-1 rounded hover:bg-gray-200" onClick={() => confirmerSuppression(Matiere.numMatiere)}>
                             <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />

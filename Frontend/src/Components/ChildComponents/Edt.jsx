@@ -39,22 +39,22 @@ function Edt() {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const arrayBuffer = event.target.result; // Résultat sous forme d'ArrayBuffer
-      const data = new Uint8Array(arrayBuffer); // Convertir en tableau d'octets
-      const binaryStr = Array.from(data).map((byte) => String.fromCharCode(byte)).join(""); // Convertir en chaîne binaire
+      const arrayBuffer = event.target.result; // 
+      const data = new Uint8Array(arrayBuffer); // 
+      const binaryStr = Array.from(data).map((byte) => String.fromCharCode(byte)).join(""); // 
 
       const workbook = XLSX.read(binaryStr, { type: "binary" });
 
-      // Lire la première feuille
+
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
 
-      // Convertir en JSON
+
       const jsonData = XLSX.utils.sheet_to_json(sheet);
       console.log("Données Excel :", jsonData);
     };
 
-    reader.readAsArrayBuffer(file); // Lire le fichier en tant qu'ArrayBuffer
+    reader.readAsArrayBuffer(file);
   };
   const handleTypeError = (err) => {
     setFile(null);
@@ -65,7 +65,7 @@ function Edt() {
   const getDataClasse = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/classe/");
+      const response = await axios.get("http://127.0.0.1:8000/api/niveauParcours/");
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -138,13 +138,13 @@ function Edt() {
     };
   }, []);
   const optionsClasse = listeClasse
-    .sort((a, b) => a.niveau.localeCompare(b.niveau))
+    // .sort((a, b) => a.niveau.localeCompare(b.niveau))
     .filter((classe, index, self) =>
       index === self.findIndex((c) => c.niveau === classe.niveau)
     )
     .map((Classe) => ({
-      value: Classe.numClasse,
-      label: Classe.niveau,
+      value: Classe.numNiveauParcours,
+      label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
     }));
 
   const optionsParcours = listeParcours
