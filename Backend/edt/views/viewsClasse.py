@@ -143,3 +143,23 @@ class ClasseListView(APIView):
             return Response(donneeClasse, status=status.HTTP_200_OK)
         else:
             return Response({"erreur":"Classe introuvable !"}, status=status.HTTP_404_NOT_FOUND)
+        
+    def get(self, request, numClasse):
+
+        classe=Classe.objects.filter(pk=numClasse).first()
+        if classe:
+            donneeClasse=[]
+            constituers=classe.constituers.filter()
+            parcours=[]
+            for c in constituers:
+                parcours.append(ParcoursSerializer(c.numParcours).data)
+            if len(parcours) > 0:
+                for p in parcours:
+                    donneeClasse.append(ClasseSerializer(classe).data)
+                    donneeClasse[-1]["parcours"]=p
+            else:
+                donneeClasse.append(ClasseSerializer(classe).data)
+                donneeClasse[-1]["parcours"]=""
+            return Response(donneeClasse, status=status.HTTP_200_OK)
+        else:
+            return Response({"erreur":"Classe introuvable !"}, status=status.HTTP_404_NOT_FOUND)

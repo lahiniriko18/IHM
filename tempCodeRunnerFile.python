@@ -1,2 +1,2 @@
-m="lahiniriko jeremia"
-print(m.capitalize())
+l=[1,2,5,4,4]
+print(l.sort())

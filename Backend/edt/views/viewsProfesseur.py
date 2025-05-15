@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from ..serializer.serializerProfesseur import ProfesseurSerializer
+from ..serializer.serializerEnseigner import EnseignerSerializer
 from ..models import Professeur
 import os
 class ProfesseurView(APIView):
@@ -22,6 +23,7 @@ class ProfesseurView(APIView):
     def post(self, request):
         donnees=request.data
         photos=request.data.get('photos')
+        numMatieres=donnees.get('matieres')
 
         if photos:
             dossier=os.path.join(settings.MEDIA_ROOT, 'professeurs')
@@ -44,7 +46,18 @@ class ProfesseurView(APIView):
                     donnee['photos']=request.build_absolute_uri(settings.MEDIA_URL + donnee['photos'])
                 else:
                     donnee['photos']=''
-
+            if len(numMatieres) > 0:
+                donneeEns=[]
+                for numMatiere in numMatieres:
+                    donneeEns.append({
+                        "numProfessseur":professeur.numProfesseur,
+                        "numMatiere":numMatiere
+                    })
+                serializerEns=EnseignerSerializer(data=donneeEns, many=True)
+                if serializerEns.is_valid():
+                    serializerEns.save()
+                else:
+                    return Response(serializerEns.errors, status=status.HTTP_400_BAD_REQUEST)
             return Response(donnee, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -93,6 +106,27 @@ class ProfesseurView(APIView):
                     donnee['photos'] = request.build_absolute_uri(settings.MEDIA_URL + donnee['photos'])
                 else:
                     donnee['photos'] = ''
+            numMatieres=donnees.get('matieres')
+
+            enseigners=prof.enseigners.filter()
+            matiereEns=[ens.numMatiere for ens in enseigners]
+            donneeEns=[]
+            for numMatiere in numMatieres:
+                if numMatiere not in matiereEns:
+                    donneeEns.append({
+                        "numProfesseur":prof.numProfesseur,
+                        "numMatiere":numMatiere
+                    })
+            if sorted(matiereEns) != sorted(numMatieres):
+                for ens in enseigners:
+                    if ens.numMatiere not in numMatieres:
+                        ens.delete()
+            if len(donneeEns) > 0:
+                serializerEns=EnseignerSerializer(data=donneeEns, many=True)
+                if serializerEns.is_valid():
+                    serializerEns.save()
+                else:
+                    return Response(serializerEns.errors, status=status.HTTP_400_BAD_REQUEST)
             return Response(donnee, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -119,7 +153,7 @@ class ProfesseurDetailView(APIView):
         except Professeur.DoesNotExist:
             return Response({"erreur":"Professeur introuvable !"}, status=status.HTTP_404_NOT_FOUND)
         donnee=ProfesseurSerializer(professeur).data
-        
+        matieres=professeur.enseigners.filter()
         if donnee['photos']:
             verifChemin=os.path.join(settings.MEDIA_ROOT, donnee['photos'])
             if os.path.exists(verifChemin):

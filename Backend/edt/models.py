@@ -140,6 +140,17 @@ class Enseigner(models.Model):
         db_table='enseigner'
     def __str__(self):
         return f"{self.numEnseigner} par {self.numProfesseur}"
+
+
+class NiveauParcours(models.Model):
+    numNiveauParcours=models.AutoField(primary_key=True)
+    niveau=models.CharField(max_length=10)
+    numParcours=models.ForeignKey(Parcours, related_name='niveauParcours', on_delete=models.CASCADE, db_column='numParcours')
+
+    class Meta:
+        db_table='niveauparcours'
+    def __str__(self):
+        return f" {self.niveau} {self.numNiveauParcours}"
     
 
 class Utilisateur(AbstractUser):

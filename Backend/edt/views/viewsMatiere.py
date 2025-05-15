@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ..serializer.serializerMatiere import MatiereSerializer
+from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
 from ..models import Matiere
 class MatiereView(APIView):
     def get(self, request):
