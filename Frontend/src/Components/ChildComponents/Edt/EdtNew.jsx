@@ -109,7 +109,7 @@ function EdtNew() {
   };
   const getDataClasse = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/classe/");
+      const response = await axios.get("http://127.0.0.1:8000/api/niveauParcours/");
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -186,13 +186,13 @@ function EdtNew() {
     console.log(dataEdt)
   }, [])
   const optionsClasse = listeClasse
-    .sort((a, b) => a.niveau.localeCompare(b.niveau))
+    // .sort((a, b) => a.niveau.localeCompare(b.niveau))
     .filter((classe, index, self) =>
       index === self.findIndex((c) => c.niveau === classe.niveau)
     )
     .map((Classe) => ({
-      value: Classe.niveau,
-      label: Classe.niveau + Classe.parcours.codeParcours,
+      value: Classe.numNiveauParcours,
+      label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
     }));
   const optionsProfesseur = listeProfesseur
     .sort((a, b) => a.nomProfesseur.localeCompare(b.nomProfesseur))
