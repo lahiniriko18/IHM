@@ -65,7 +65,7 @@ function Edt() {
   const getDataClasse = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/niveauParcours/");
+      const response = await axios.get("http://127.0.0.1:8000/api/niveau-parcours/");
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -139,9 +139,9 @@ function Edt() {
   }, []);
   const optionsClasse = listeClasse
     // .sort((a, b) => a.niveau.localeCompare(b.niveau))
-    .filter((classe, index, self) =>
-      index === self.findIndex((c) => c.niveau === classe.niveau)
-    )
+    // .filter((classe, index, self) =>
+    //   index === self.findIndex((c) => c.niveau === classe.niveau)
+    // )
     .map((Classe) => ({
       value: Classe.numNiveauParcours,
       label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),

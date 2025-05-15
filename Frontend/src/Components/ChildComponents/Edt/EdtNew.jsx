@@ -109,7 +109,7 @@ function EdtNew() {
   };
   const getDataClasse = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/niveauParcours/");
+      const response = await axios.get("http://127.0.0.1:8000/api/niveau-parcours/");
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -240,7 +240,6 @@ function EdtNew() {
                 }}
               />
             </div>
-
 
             <div className="flex flex-col w-full">
               <label className="font-semibold text-sm mb-1">Classe</label>

@@ -17,7 +17,7 @@ function Matiere() {
   const [error, setError] = useState({ status: false, composant: "", message: "" })
   const getDataClasse = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/niveauParcours/");
+      const response = await axios.get("http://127.0.0.1:8000/api/niveau-parcours/");
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -223,20 +223,6 @@ function Matiere() {
                 (error.status && error.composant === "nomMatiere") && (<p className='text-red-600 text-sm'>{error.message}</p>)
               }
             </div>
-
-            <div className="flex flex-col w-full">
-              <label className="font-semibold text-sm mb-1">Code matiere</label>
-              <input
-                type="text"
-                value={dataMatiere.codeMatiere || ""}
-                onChange={(e) => setDataMatiere({ ...dataMatiere, codeMatiere: e.target.value })}
-                className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-              />
-              {
-                (error.status && error.composant === "codeMatiere") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-              }
-            </div>
-
             <div className="flex flex-col w-full">
               <label className="font-semibold text-sm mb-1">Enseigné dans:</label>
               <Creatable
@@ -259,6 +245,20 @@ function Matiere() {
                 className="text-sm"
               />
             </div>
+            <div className="flex flex-col w-full">
+              <label className="font-semibold text-sm mb-1">Code matiere</label>
+              <input
+                type="text"
+                value={dataMatiere.codeMatiere || ""}
+                onChange={(e) => setDataMatiere({ ...dataMatiere, codeMatiere: e.target.value })}
+                className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              />
+              {
+                (error.status && error.composant === "codeMatiere") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+              }
+            </div>
+
+
             <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
             <div className="w-full flex justify-center">
               <button
