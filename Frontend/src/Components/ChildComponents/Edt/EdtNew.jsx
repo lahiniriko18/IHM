@@ -197,8 +197,8 @@ function EdtNew() {
       index === self.findIndex((c) => c.niveau === classe.niveau)
     )
     .map((Classe) => ({
-      value: Classe.numNiveauParcours,
-      label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
+      value: Classe.numClasse,
+      label: Classe.niveau + ' ' + (Classe.groupe ? Classe.groupe : ""),
     }));
   const optionsProfesseur = listeProfesseur
     .sort((a, b) => a.nomProfesseur.localeCompare(b.nomProfesseur))
@@ -216,9 +216,9 @@ function EdtNew() {
     .filter((Salle, index, self) =>
       index === self.findIndex((c) => c.nomSalle === Salle.nomSalle)
     )
-    .map((Classe) => ({
-      value: Classe.numSalle,
-      label: Classe.nomSalle,
+    .map((Salle) => ({
+      value: Salle.numSalle,
+      label: Salle.nomSalle,
     }));
 
   const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere))
