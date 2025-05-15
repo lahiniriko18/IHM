@@ -37,3 +37,13 @@ class NiveauParcoursView(APIView):
             return Response({'message':'Suppression avec succès !'}, status=status.HTTP_200_OK)
         except NiveauParcours.DoesNotExist:
             return Response({'erreur':'Niveau avec parcours introuvable !'}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class NiveauParcoursDetailView(APIView):
+    def get(self, request, numNiveauParcours):
+        niveauParcours=NiveauParcours.objects.filter(pk=numNiveauParcours).first()
+        if niveauParcours:
+            donnee=NiveauParcoursSerializer(niveauParcours).data
+            donnee['numParcours']=ParcoursSerializer(niveauParcours.numParcours).data
+            return Response(donnee, status=status.HTTP_200_OK)
+        return Response({"erreur":"Niveau avec parcours introuvable !"},status=status.HTTP_404_NOT_FOUND)

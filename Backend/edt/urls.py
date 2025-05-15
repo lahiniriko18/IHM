@@ -17,6 +17,6 @@ urlpatterns = [
     path('statistique/', include(urlStatistique)),
     path('utilisateur/', include(urlUtilisateur)),
     path('action/', include(urlAction)),
-    path('niveauParcours/', include(urlNiveauParcours)),
+    path('niveau-parcours/', include(urlNiveauParcours)),
     path('posseder/', include(urlPosseder)),
 ]
