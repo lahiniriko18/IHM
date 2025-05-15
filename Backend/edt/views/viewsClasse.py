@@ -4,6 +4,7 @@ from rest_framework import status
 from ..serializer.serializerClasse import ClasseSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerParcours import ParcoursSerializer
+from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
 from ..models import Classe,Parcours,Constituer
 from django.db.models import Q
 class ClasseView(APIView):
@@ -51,6 +52,13 @@ class ClasseView(APIView):
                 classe=serializer.save()
                 if numParcours :
                     constituer=classe.constituers.filter(numParcours=numParcours).exists()
+                    donneeNp={
+                        "niveau":classe.niveau,
+                        "numParcours":numParcours
+                    }
+                    serializerNp=NiveauParcoursSerializer(data=donneeNp)
+                    if serializerNp.is_valid():
+                        serializerNp.save()
                     if not constituer:
                         donneeConstituer={
                             "numClasse":classe.numClasse,
