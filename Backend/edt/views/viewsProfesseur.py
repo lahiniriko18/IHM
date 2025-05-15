@@ -128,7 +128,6 @@ class ProfesseurView(APIView):
                             "numProfesseur":prof.numProfesseur,
                             "numMatiere":numMatiere
                         })
-                print(matiereEns,numMatieres)
                 if sorted(matiereEns) != sorted(numMatieres):
                     for ens in enseigners:
                         if ens.numMatiere not in numMatieres:
