@@ -478,7 +478,7 @@ function Matiere() {
           <h1 className="font-bold">Liste des Matieres enregistrées</h1>
           <button className="button flex gap-3 hover:scale-105 transition duration-200" onClick={() => {
 
-            if (Object.entries(listeProfesseur).length >0) {
+            if (Object.entries(listeProfesseur).length > 0) {
               setIsclicked(true);
               setisadd(true);
             } else {
