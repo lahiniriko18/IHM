@@ -480,7 +480,9 @@ function Professeur() {
                     onChange={(selectedOption) => {
                       setdataProfesseur((prev) => ({
                         ...prev,
-                        matieres: selectedOption ? selectedOption.map((opt) => opt.value) : []
+                        matieres: Array.isArray(selectedOption)
+                          ? selectedOption.map((opt) => opt.value)
+                          : []
                       }));
                     }}
                     value={optionsMatiere.filter((option) =>
@@ -683,7 +685,7 @@ function Professeur() {
                 <tbody className="text-sm">
                   {currentData.map((Professeur, index) => (
                     <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
-                   
+
                       <td className="px-4 py-2 text-center">{Professeur.numProfesseur}</td>
                       {/* <td className="px-4 py-2 text-center">
                         {Professeur.photos && Professeur.photos !== "" && (
