@@ -5,7 +5,8 @@ from ..serializer.serializerMatiere import MatiereSerializer
 from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
 from ..serializer.serializerPosseder import PossederSerializer
 from ..serializer.serializerEnseigner import EnseignerSerializer
-from ..models import Matiere,NiveauParcours,Enseigner
+from ..serializer.serializerProfesseur import ProfesseurSerializer
+from ..models import Matiere,NiveauParcours,Enseigner,Professeur
 class MatiereView(APIView):
     def get(self, request):
         matieres=Matiere.objects.all()
@@ -127,17 +128,16 @@ class MatiereView(APIView):
         
 class MatiereDetailView(APIView):
     def get(self, request, numMatiere):
-        try:
-            matiere=Matiere.objects.get(pk=numMatiere)
-        except Matiere.DoesNotExist:
-            return Response({"erreur":"Matiere introuvable !"}, status=status.HTTP_404_NOT_FOUND)
-        donnee=MatiereSerializer(matiere).data
-        niveauParcours=[]
-        posseders=matiere.posseders.filter()
-        for possede in posseders:
-            niveauParcours.append(NiveauParcoursSerializer(possede.numNiveauParcours).data)
-        donnee['niveauParcours']=niveauParcours
-        return Response(donnee,status=status.HTTP_200_OK)
+        matiere=Matiere.objects.filter(pk=numMatiere).first()
+        if matiere:
+            donnee=MatiereSerializer(matiere).data
+            niveauParcours=NiveauParcours.objects.filter(posseders__numMatiere__numMatiere=numMatiere)
+            donnee['niveauParcours']=NiveauParcoursSerializer(niveauParcours, many=True).data
+            professeurs=Professeur.objects.filter(enseigners__numMatiere__numMatiere=numMatiere)
+            donnee['professeurs']=ProfesseurSerializer(professeurs, many=True).data
+            return Response(donnee,status=status.HTTP_200_OK)
+        
+        return Response({"erreur":"Matiere introuvable !"}, status=status.HTTP_404_NOT_FOUND)   
 
 
 class MatiereNiveauParcoursView(APIView):
