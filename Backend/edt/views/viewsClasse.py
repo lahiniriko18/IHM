@@ -7,6 +7,7 @@ from ..serializer.serializerParcours import ParcoursSerializer
 from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
 from ..models import Classe,Parcours,Constituer,NiveauParcours
 from django.db.models import Q
+
 class ClasseView(APIView):
     def get(self, request):
         classes=Classe.objects.all()
