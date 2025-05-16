@@ -762,7 +762,9 @@ function EdtNew() {
                                 {ligne[jour].map((creneau, idx) => (
                                   <div
                                     key={idx}
-                                    className="p-2 flex flex-col w-1/2 hover:bg-gray-200 h-full active:bg-gray-300 relative"
+                                    className={`p-2 flex flex-col w-1/2 h-full relative
+                                            ${idx === 0 ? "border-r border-dashed border-gray-300" : ""}
+                                            hover:bg-gray-200 active:bg-gray-300`}
                                     onClick={() => {
                                       setSelectedCell({ ligneIdx: i, jour, creneauIdx: idx });
                                       const creneau = dataNewEdt.donnee.contenu[i][jour][idx];
@@ -770,7 +772,7 @@ function EdtNew() {
                                       setIsNewValue(true);
                                     }}
                                   >
-                                    <span className='flex flex-col w-full'>
+                                    <span className='flex flex-col w-full '>
                                       <span className='flex flex-col w-full'>
                                         <p>{getClasseLabel(creneau.classe)}</p>
                                         <p>{getMatiereLabel(creneau.matiere)}</p>
