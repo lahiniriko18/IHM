@@ -21,37 +21,215 @@ function EdtNew() {
   const [listeClasseSelected, setListeClasseSelected] = useState([]);
   const [listeProfesseur, setlisteProfesseur] = useState([]);
   const navigate = useNavigate();
+  const [horaireError, setHoraireError] = useState("");
+  const [formHoraire, setFormHoraire] = useState({ heureDebut: "", heureFin: "" });
   const { isReduire } = useSidebar();
+  const [formCreneau, setFormCreneau] = useState({
+    classe: null,
+    matiere: null,
+    professeur: null,
+    salle: null,
+  });
+  const [formError, setFormError] = useState("");
+  const [selectedCreneau, setSelectedCreneau] = useState(null);
   const [modele, setModele] = useState(1); // 1 = horaire en ligne ; 2 = horaire en colonne
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
   const [horaires, setHoraires] = useState([{ id: 1, heure_debut: 8, heure_fin: 10 }]);
   const [error, setError] = useState({ status: false, composant: "", message: "" })
   const [dataNewEdt, setDataNewEdt] = useState({
-    date_debut: "",
-    date_fin: "",
-    niveau: "",
-    matiere: "",
-    salle: "",
-    professeur: "",
-    mode_creation: "",
-    parcours: null,
-    excel: null
+    donnee: {
+      titre: [
+        {
+          lundi: "",/*date debut au lundi */
+          mardi: "",/*date debut au lundi +1 */
+          mercredi: "",/*date debut au lundi +3 */
+          jeudi: "",
+          vendredi: "",
+          samedi: "",
+        },
+        {
+          classe: {
+            numClasse: null,
+            niveau: "",
+            groupe: ""
+          },
+          parcours: {
+            numParcours: null,
+            numMention: null,
+            nomParcours: "",
+            codeParcours: ""
+          },
+          constitue: true
+        }
+      ],
+      contenu: [
+        {
+          Horaire: {
+            heureDebut: "",
+            heureFin: ""
+          },
+          Lundi: [
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+          ],
+          Mardi: [
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+          ],
+          Mercredi: [
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+          ],
+          Jeudi: [
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+          ],
+          Vendredi: [
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+          ],
+          Samedi: [
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+            {
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            },
+          ],
+        },
+      ]
+    }
   })
+  useEffect(() => {
+    if (!formCreneau.matiere) {
+      setProfesseursFiltres([]);
+      return;
+    }
+    setProfesseursFiltres(
+      listeProfesseur.filter((prof) =>
+        Array.isArray(prof.matieres) &&
+        prof.matieres.some((m) => m.numMatiere === formCreneau.matiere)
+      )
+    );
+  }, [formCreneau.matiere, listeProfesseur]);
+  const handleClickCreneau = (horaireIdx, jour, creneauIdx) => {
+    setSelectedCreneau({ horaireIdx, jour, creneauIdx });
+    setIsNewValue(true); // Ouvre le modal
+  };
+  const handleValider = (nouvelleValeur) => {
+    if (!selectedCreneau) return;
+    setDataNewEdt((prev) => {
+      const newData = { ...prev };
+      // Copie profonde pour éviter la mutation directe
+      newData.donnee.contenu = newData.donnee.contenu.map((ligne, i) => {
+        if (i !== selectedCreneau.horaireIdx) return ligne;
+        return {
+          ...ligne,
+          [selectedCreneau.jour]: ligne[selectedCreneau.jour].map((cell, idx) =>
+            idx === selectedCreneau.creneauIdx ? { ...cell, ...nouvelleValeur } : cell
+          ),
+        };
+      });
+      return newData;
+    });
+    setIsNewValue(false);
+    setSelectedCreneau(null);
+  };
   const versGeneral = () => navigate('/edt');
   const versCreationEdt = () => navigate('/edt/nouveau-edt');
   const versAFfichage = () => navigate('/edt/affichage-edt');
 
   const ajouterColonne = () => {
-    const last = horaires[horaires.length - 1];
-    const newStart = last.heure_fin;
-    const newEnd = parseFloat((newStart + intervalHoraire).toFixed(2));
-    const nouvelleColonne = {
-      id: horaires.length + 1,
-      heure_debut: newStart,
-      heure_fin: newEnd
+    // Crée un nouvel horaire (tu peux adapter les heures comme tu veux)
+    const lastHoraire = dataNewEdt.donnee.contenu[dataNewEdt.donnee.contenu.length - 1]?.Horaire || { heureDebut: 8, heureFin: 10 };
+    const newHeureDebut = parseInt(lastHoraire.heureFin, 10);
+    const newHeureFin = newHeureDebut + 2;
+
+    // Crée une nouvelle ligne vide pour chaque jour
+    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    const nouvelleLigne = {
+      Horaire: {
+        heureDebut: "",
+        heureFin: ""
+      }
     };
-    setHoraires([...horaires, nouvelleColonne]);
+
+    jours.forEach(jour => {
+      nouvelleLigne[jour] = [
+        { classe: null, matiere: null, professeur: null, salle: null },
+        { classe: null, matiere: null, professeur: null, salle: null }
+      ];
+    });
+
+    setDataNewEdt(prev => ({
+      ...prev,
+      donnee: {
+        ...prev.donnee,
+        contenu: [...prev.donnee.contenu, nouvelleLigne]
+      }
+    }));
   };
+  function formatHeure(heureStr) {
+    if (!heureStr) return "";
+    const [h, m] = heureStr.split(":");
+    return m === "00" ? `${parseInt(h, 10)}h` : `${parseInt(h, 10)}h:${m}`;
+  }
   const handleStartDateChange = (e) => {
     let selected = parseISO(e.target.value);
     const day = getDay(selected);
@@ -192,14 +370,26 @@ function EdtNew() {
     console.log(dataEdt)
   }, [])
   const optionsClasse = listeClasse
-    // .sort((a, b) => a.niveau.localeCompare(b.niveau))
-    .filter((classe, index, self) =>
-      index === self.findIndex((c) => c.niveau === classe.niveau)
-    )
-    .map((Classe) => ({
-      value: Classe.numClasse,
-      label: Classe.niveau + ' ' + (Classe.groupe ? Classe.groupe : ""),
-    }));
+    .map((Classe) => {
+
+      const parcoursLabels = Array.isArray(Classe.parcours)
+        ? Classe.parcours.map(p =>
+          p.codeParcours
+            ? p.codeParcours
+            : p.nomParcours
+              ? `-${p.nomParcours}-`
+              : ""
+        ).join(" / ")
+        : "";
+
+      return {
+        value: Classe.numClasse,
+        label:
+          Classe.niveau +
+          parcoursLabels +
+          (Classe.groupe ? Classe.groupe.toString().split(" ").slice(1).join(" ") : ""),
+      };
+    });
   const optionsProfesseur = listeProfesseur
     .sort((a, b) => a.nomProfesseur.localeCompare(b.nomProfesseur))
     .map((Professeur) => ({
@@ -226,6 +416,41 @@ function EdtNew() {
       value: Matiere.numMatiere,
       label: Matiere.nomMatiere ? Matiere.nomMatiere : (Matiere.codeMatiere ? ` (${Matiere.codeMatiere})` : ""),
     }));
+  const getClasseLabel = (numClasse) => {
+    const found = listeClasse.find(c => c.numClasse === numClasse);
+    if (!found) return "";
+    const parcours = Array.isArray(found.parcours) && found.parcours.length > 0 ? found.parcours[0] : {};
+    return (
+      found.niveau +
+      (parcours.codeParcours
+        ? parcours.codeParcours
+        : parcours.nomParcours
+          ? `-${parcours.nomParcours}-`
+          : ""
+      ) +
+      (found.groupe ? found.groupe.toString().split(" ").slice(1).join(" ") : "")
+    );
+  };
+
+  const getMatiereLabel = (numMatiere) => {
+    const found = listeMatiere.find(m => m.numMatiere === numMatiere);
+    return found ? (found.codeMatiere || found.nomMatiere || "") : "";
+  };
+
+  const getProfLabel = (numProfesseur) => {
+    const found = listeProfesseur.find(p => p.numProfesseur === numProfesseur);
+    if (!found) return "";
+    return (found.nomCourant
+      ? found.nomCourant
+      : found.prenomProfesseur
+        ? found.prenomProfesseur
+        : found.nomProfesseur);
+  };
+
+  const getSalleLabel = (numSalle) => {
+    const found = listeSalle.find(s => s.numSalle === numSalle);
+    return found ? found.nomSalle : "";
+  };
   return (
     <>
       {/* Modal de création */}
@@ -243,6 +468,7 @@ function EdtNew() {
                 onClick={() => {
                   setIsNewValue(false);
                   setSelectedCell(null);
+                  setFormError("");
                 }}
               />
             </div>
@@ -254,16 +480,13 @@ function EdtNew() {
                 isValidNewOption={() => false}
                 placeholder="Choisir le classe"
                 options={optionsClasse}
-                // onChange={(selectedOption) => {
-                //   setDataEdt((prev) => ({
-                //     ...prev,
-                //     niveau: selectedOption ? selectedOption.value : null
-                //   }));
-                // }}
-                value={
-                  optionsClasse.find(
-                    (option) => option.value === dataNewEdt.niveau
-                  ) || null}
+                onChange={(selectedOption) => {
+                  setFormCreneau(prev => ({
+                    ...prev,
+                    classe: selectedOption ? selectedOption.value : null
+                  }));
+                }}
+                value={optionsClasse.find(option => option.value === formCreneau.classe) || null}
                 className="text-sm"
               />
             </div>
@@ -275,28 +498,13 @@ function EdtNew() {
                 placeholder="Choisir le matiere"
                 options={optionsMatiere}
                 onChange={(selectedOption) => {
-                  const numMatiere = selectedOption ? selectedOption.value : null;
-                  setDataNewEdt((prev) => ({
+                  setFormCreneau(prev => ({
                     ...prev,
-                    matiere: numMatiere
+                    matiere: selectedOption ? selectedOption.value : null,
+                    professeur: null // reset le prof si la matière change
                   }));
-                  // Filtrer les professeurs qui enseignent cette matière
-                  if (numMatiere) {
-                    setProfesseursFiltres(
-                      listeProfesseur.filter((prof) =>
-                        Array.isArray(prof.matieres) &&
-                        prof.matieres.some((m) => m.numMatiere === numMatiere)
-                      )
-                    );
-                  } else {
-                    setProfesseursFiltres([]);
-                  }
                 }}
-                value={
-                  optionsMatiere.find(
-                    (option) => option.value === dataNewEdt.matiere
-                  ) || null
-                }
+                value={optionsMatiere.find(option => option.value === formCreneau.matiere) || null}
                 className="text-sm"
               />
             </div>
@@ -317,9 +525,9 @@ function EdtNew() {
                         : Professeur.nomProfesseur)
                 }))}
                 onChange={(selectedOption) => {
-                  setDataNewEdt((prev) => ({
+                  setFormCreneau(prev => ({
                     ...prev,
-                    professeur: selectedOption ? selectedOption.value : ""
+                    professeur: selectedOption ? selectedOption.value : null
                   }));
                 }}
                 value={
@@ -333,7 +541,7 @@ function EdtNew() {
                             ? Professeur.prenomProfesseur
                             : Professeur.nomProfesseur)
                     }))
-                    .find((option) => option.value === dataNewEdt.professeur) || null
+                    .find((option) => option.value === formCreneau.professeur) || null
                 }
                 className="text-sm"
               />
@@ -345,25 +553,42 @@ function EdtNew() {
                 isValidNewOption={() => false}
                 placeholder="Choisir le salle"
                 options={optionsSalle}
-                // onChange={(selectedOption) => {
-                //   setDataEdt((prev) => ({
-                //     ...prev,
-                //     niveau: selectedOption ? selectedOption.value : null
-                //   }));
-                // }}
-                value={
-                  optionsSalle.find(
-                    (option) => option.value === dataNewEdt.salle
-                  ) || null}
+                onChange={(selectedOption) => {
+                  setFormCreneau(prev => ({
+                    ...prev,
+                    salle: selectedOption ? selectedOption.value : null
+                  }));
+                }}
+                value={optionsSalle.find(option => option.value === formCreneau.salle) || null}
                 className="text-sm"
               />
+
             </div>
+            {formError && <div className="text-red-600 text-sm mb-2">{formError}</div>}
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
+                  // Vérification des champs vides
+                  if (!formCreneau.classe || !formCreneau.matiere || !formCreneau.professeur || !formCreneau.salle) {
+                    setFormError("Tous les champs sont obligatoires.");
+                    return;
+                  }
+                  // Vérification des deux créneaux de la même case
+                  const { ligneIdx, jour, creneauIdx } = selectedCell;
+                  const autresCreneaux = dataNewEdt.donnee.contenu[ligneIdx][jour].filter((_, idx) => idx !== creneauIdx);
+                  if (autresCreneaux.some(c => c.classe === formCreneau.classe)) {
+                    setFormError("Les deux créneaux d'un même jour ne peuvent pas avoir la même classe.");
+                    return;
+                  }
+                  setFormError("");
+                  setDataNewEdt(prev => {
+                    const newData = { ...prev };
+                    newData.donnee.contenu[ligneIdx][jour][creneauIdx] = { ...formCreneau };
+                    return newData;
+                  });
                   setIsNewValue(false);
-                  versCreationEdt();
+                  setSelectedCell(null);
                 }}
               >
                 VALIDER
@@ -383,32 +608,49 @@ function EdtNew() {
                 src="/Icons/annuler.png"
                 alt="Quitter"
                 className="w-6 h-6 cursor-pointer"
-                onClick={() => setIsEditHours(false)}
+                onClick={() => {
+                  setIsEditHours(false);
+                  setHoraireError("");
+                }}
               />
             </div>
             <div className="flex flex-col gap-2">
               <label className="font-semibold text-sm mb-1">Heure de début</label>
               <input
-                type="date"
-                className="border p-2 rounded w-full"
-                value={horaires.date_debut}
-                onChange={handleStartDateChange}
+                type="time"
+                className='border p-2'
+                value={formHoraire.heureDebut}
+                onChange={e => setFormHoraire(prev => ({ ...prev, heureDebut: e.target.value }))}
               />
-
               <label className="font-semibold text-sm mb-1" >Heure de fin</label>
               <input
-                type="date"
-                className="border p-2 rounded w-full"
-                value={horaires.date_fin}
-                onChange={handleEndDateChange}
+                type="time"
+                className='border p-2'
+                value={formHoraire.heureFin}
+                onChange={e => setFormHoraire(prev => ({ ...prev, heureFin: e.target.value }))}
               />
-
             </div>
-
+            {horaireError && <div className="text-red-600 text-sm mb-2">{horaireError}</div>}
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700"
-                onClick={() => setIsEditHours(false)}
+                onClick={() => {
+                  if (!formHoraire.heureDebut || !formHoraire.heureFin) {
+                    setHoraireError("Les deux champs sont obligatoires.");
+                    return;
+                  }
+                  if (formHoraire.heureDebut >= formHoraire.heureFin) {
+                    setHoraireError("L'heure de début doit être inférieure à l'heure de fin.");
+                    return;
+                  }
+                  setDataNewEdt(prev => {
+                    const newData = { ...prev };
+                    newData.donnee.contenu[selectedCell.ligneIdx].Horaire = { ...formHoraire };
+                    return newData;
+                  });
+                  setHoraireError("");
+                  setIsEditHours(false);
+                }}
               >
                 VALIDER
               </button>
@@ -469,30 +711,78 @@ function EdtNew() {
           {/* Tableau selon le modèle */}
           <div className="h-[73%]  w-full m-4">
             {modele === 1 ? (
-              <div className="overflow-auto h-full">
-                <table className="table-fixed border w-full text-sm border-black">
+              <div className="w-full border border-white rounded-t-lg overflow-hidden">
+                <table className='table-fixed border w-full text-sm border-black'>
                   <thead className='sticky top-0 z-10'>
                     <tr>
-                      <th className="border border-t-white border-l-white"></th>
-                      {jours.map((jour) => (
-                        <th key={jour} className="border p-2 text-center bg-gray-100">{jour}</th>
-                      ))}
+                      <th className="border-2 border-t-white border-l-white"></th>
+                      {Object.keys(dataNewEdt.donnee.contenu[0])
+                        .filter((key) => key !== "Horaire")
+                        .map((jour) => (
+                          <th key={jour} className="border px-2 py-3 text-center text-white bg-blue-500">
+                            {jour}
+                          </th>
+                        ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {horaires.map((horaire, i) => (
+                    {dataNewEdt.donnee.contenu.map((ligne, i) => (
                       <tr key={i}>
-                        <td className="border p-2 font-semibold relative">
-                          <span className="flex justify-center">{horaire.heure_debut}h - {horaire.heure_fin}h</span>
-                          <img src="/Icons/modifier.png" alt="" className="absolute bottom-2 right-1 w-5 cursor-pointer" onClick={() => setIsEditHours(true)} />
+                        <td className="border-2 p-2 font-semibold relative">
+                          <span className="flex justify-center">
+                            {formatHeure(ligne.Horaire.heureDebut)} - {formatHeure(ligne.Horaire.heureFin)}
+                          </span>
+                          <img src="/Icons/modifier.png" alt="" className="absolute bottom-2 right-1 w-5 cursor-pointer" onClick={() => {
+                            setSelectedCell({ ligneIdx: i });
+                            setFormHoraire({ ...dataNewEdt.donnee.contenu[i].Horaire });
+                            setIsEditHours(true);
+                          }} />
+                          {i > 0 && (
+                            <button
+                              className="absolute top-2  right-16 text-red-600"
+                              onClick={() => {
+                                setDataNewEdt(prev => ({
+                                  ...prev,
+                                  donnee: {
+                                    ...prev.donnee,
+                                    contenu: prev.donnee.contenu.filter((_, idx) => idx !== i)
+                                  }
+                                }));
+                              }}
+                            >
+                              <img src="/Icons/retirer.png" alt="" className="w-5 cursor-pointer" />
+                            </button>
+                          )}
                         </td>
-                        {jours.map((jour) => (
-                          <td key={jour} className="border cursor-pointer h-20 relative" onClick={() => handleClick(jour, horaire)}>
-                            <div className="absolute inset-0 flex items-center justify-center hover:bg-gray-200">
-                              <img src="/Icons/plus.png" alt="" className="w-6 h-6" />
-                            </div>
-                          </td>
-                        ))}
+                        {Object.keys(ligne)
+                          .filter((key) => key !== "Horaire")
+                          .map((jour) => (
+                            <td key={jour} className="border-2 cursor-pointer h-24 relative">
+                              <div className="flex flex-row justify-start items-center w-full h-full">
+                                {ligne[jour].map((creneau, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="p-2 flex flex-col w-1/2 hover:bg-gray-200 h-full active:bg-gray-300 relative"
+                                    onClick={() => {
+                                      setSelectedCell({ ligneIdx: i, jour, creneauIdx: idx });
+                                      const creneau = dataNewEdt.donnee.contenu[i][jour][idx];
+                                      setFormCreneau({ ...creneau });
+                                      setIsNewValue(true);
+                                    }}
+                                  >
+                                    <span className='flex flex-col w-full'>
+                                      <span className='flex flex-col w-full'>
+                                        <p>{getClasseLabel(creneau.classe)}</p>
+                                        <p>{getMatiereLabel(creneau.matiere)}</p>
+                                        <p>{getProfLabel(creneau.professeur)}</p>
+                                        <p>{getSalleLabel(creneau.salle)}</p>
+                                      </span>
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          ))}
                       </tr>
                     ))}
                   </tbody>
