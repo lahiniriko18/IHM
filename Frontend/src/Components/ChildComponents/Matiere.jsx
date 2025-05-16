@@ -48,9 +48,11 @@ function Matiere() {
     }
   };
   const sendData = async () => {
-    const formData = new FormData()
+    const formData = new FormData();
     Object.entries(dataMatiere).forEach(([key, value]) => {
-      formData.append(key, value);
+      if (key !== "niveauParcours" && key !== "professeurs") {
+        formData.append(key, value);
+      }
     });
     if (Array.isArray(dataMatiere.niveauParcours)) {
       dataMatiere.niveauParcours.forEach((val) => {
@@ -58,12 +60,14 @@ function Matiere() {
       });
     }
     if (Array.isArray(dataMatiere.professeurs)) {
-      dataMatiere.niveauParcours.forEach((val) => {
+      dataMatiere.professeurs.forEach((val) => {
         formData.append('professeurs[]', val);
       });
     }
     try {
+      console.log("Donneés envoyer au backend", formData)
       const response = await axios.post("http://127.0.0.1:8000/api/matiere/ajouter/", formData)
+
       if (response.status !== 201) {
         throw new Error('Erreur code : ' + response.status)
       }
@@ -102,9 +106,11 @@ function Matiere() {
   }
 
   const putData = async () => {
-    const formData = new FormData()
+    const formData = new FormData();
     Object.entries(dataMatiere).forEach(([key, value]) => {
-      formData.append(key, value);
+      if (key !== "niveauParcours" && key !== "professeurs") {
+        formData.append(key, value);
+      }
     });
     if (Array.isArray(dataMatiere.niveauParcours)) {
       dataMatiere.niveauParcours.forEach((val) => {
@@ -112,7 +118,7 @@ function Matiere() {
       });
     }
     if (Array.isArray(dataMatiere.professeurs)) {
-      dataMatiere.niveauParcours.forEach((val) => {
+      dataMatiere.professeurs.forEach((val) => {
         formData.append('professeurs[]', val);
       });
     }
@@ -178,8 +184,8 @@ function Matiere() {
               : m
           )
           : [],
-        professeur: Array.isArray(selectedMatiere.professeur) ?
-          selectedMatiere.professeur.map((m) =>
+        professeurs: Array.isArray(selectedMatiere.professeurs) ?
+          selectedMatiere.professeurs.map((m) =>
             typeof m === "object" && m !== null
               ? m.numProfesseur || m.value || ""
               : m
@@ -347,6 +353,7 @@ function Matiere() {
                     setError({ error, status: true, composant: "prof", message: "Selectionner au moins un professeur" })
                   } else {
                     if (isadd) {
+                      // console.log(dataMatiere)
                       sendData()
                       setDataMatiere({ nomMatiere: "", codeMatiere: "" })
                       setIsclicked(false);
