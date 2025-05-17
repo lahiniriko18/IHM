@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from ..models import Edt,Matiere,Parcours,Salle,Classe
+from ..models import Edt,Matiere,Parcours,Salle,Classe,Mention,Professeur,Enseigner
+from datetime import datetime
 
 class EdtSerializer(serializers.ModelSerializer):
     numMatiere = serializers.PrimaryKeyRelatedField(
@@ -101,27 +102,179 @@ class EdtSerializer(serializers.ModelSerializer):
 
             return super().update(instance, validated_data)
 
+class JourSerializer(serializers.Serializer):
+    lundi=serializers.CharField()
+    mardi=serializers.CharField()
+    mercredi=serializers.CharField()
+    jeudi=serializers.CharField()
+    vendredi=serializers.CharField()
+    samedi=serializers.CharField()
 
-# class TitreSerializer(serializers.ListSerializer):
-#     titre=serializers.ListSerializer()
-
-#     def validate(self, data):
-
-#         jours=["lundi","mardi","mercredi","jeudi","vendredi","samedi"]
-#         if len(data) != 2:
-#             raise serializers.ValidationError("Format de la titre invalide !")
-#         for ligne in data:
-#             if not isinstance(ligne, dict):
-#                 raise serializers.ValidationError("Format de la titre invalide !")
+    def validate(self, data):
+        jours=["lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+        donees={}
+        erreurs=[]
+        for jour in jours:
+            dateStr=data.get(jour)
+            try:
+                dateObj=datetime.strptime(dateStr, "%d-%m-%Y").date()
+                donees[jour]=dateObj
+            except ValueError:
+                erreurs.append(f"Format de date {dateStr} invalide !")
+        if erreurs:
+            raise serializers.ValidationError({"erreur":erreurs})
+        return donees
         
-#         dates=data[0]
-#         if not isinstance(dates, dict):
-#             raise serializers.ValidationError("Format de la titre invalide !")
-#         if len(dates) != 6:
-#             raise serializers.ValidationError("L'emploi du temps doit contenir le date de Lundi au Samedi")
+class ClasseSerializer(serializers.Serializer):
+    numClasse=serializers.IntegerField()
+    niveau=serializers.CharField()
+    groupe= serializers.CharField()
+    
+    def validate(self, data):
+        classe=Classe.objects.filter(pk=data['numClasse'],niveau=data['niveau'],groupe=data.get('groupe')).exists()
+        if not classe:
+            raise serializers.ValidationError({"erreur":"Ce classe n'existe pas !"})
+        return data
+
+
+class ParcoursSerializer(serializers.Serializer):
+    numParcours = serializers.IntegerField()
+    numMention=serializers.PrimaryKeyRelatedField(
+        queryset=Mention.objects.all(),
+        error_messages={"does_not_exist":"Ce mention n'existe pas !"}
+    )
+    nomParcours = serializers.CharField()
+    codeParcours = serializers.CharField()
+
+    def validate(self, data):
+        parcours=Parcours.objects.filter(pk=data['numParcours'], nomParcours=data['nomParcours'], codeParcours=data.get('codeParcours'), numMention=data['numMention'].numMention).first()
+        if not parcours:
+            raise serializers.ValidationError({"erreur":"Ce parcours n'existe pas !"})
+        data['numMention']=data['numMention'].numMention
+        return data
+    
+
+class ClasseParcoursSerializer(serializers.Serializer):
+    classe=ClasseSerializer()
+    parcours=ParcoursSerializer()
+
+
+class HoraireSerializer(serializers.Serializer):
+    heureDebut=serializers.TimeField()
+    heureFin=serializers.TimeField()
+
+    def validate(self, data):
+        if data['heureDebut'] >= data['heureFin']:
+            raise serializers.ValidationError({"erreur":"L'heure de début ne doit pas supérieur à heure de fin !"})
+        return data
+
+class SeanceSerializer(serializers.Serializer):
+    classe=serializers.PrimaryKeyRelatedField(
+        queryset=Classe.objects.all(),
+        error_messages={"does_not_exist":"Ce classe n'existe pas !"}
+    )
+    matiere=serializers.PrimaryKeyRelatedField(
+        queryset=Matiere.objects.all(),
+        error_messages={"does_not_exist":"Ce matière n'existe pas !"}
+    )
+    professeur=serializers.PrimaryKeyRelatedField(
+        queryset=Professeur.objects.all(),
+        error_messages={"does_not_exist":"Ce professeur n'existe pas !"}
+    )
+    salle=serializers.PrimaryKeyRelatedField(
+        queryset=Salle.objects.all(),
+        error_messages={"does_not_exist":"Ce salle n'existe pas !"}
+    )
+
+    def validate(self, data):
+        professeur=data.get('professeur')
+        matiere=data.get('matiere')
+        classe=data.get('classe')
+        salle=data.get('salle')
+        enseigner=Enseigner.objects.filter(numProfesseur=professeur.numProfesseur, numMatiere=matiere.numMatiere).exists()
+
+        if not enseigner:
+            raise serializers.ValidationError({"erreur":"Ce professeur ne correspond pas par ce matière !"})
         
-#         return data
+        if not salle.statut:
+            raise serializers.ValidationError({"erreur":"Ce salle n'est pas libre dans ce horaire !"})
+        data['salle']=salle.numSalle
+        data['professeur']=professeur.numProfesseur
+        data['matiere']=matiere.numMatiere
+        data['classe']=classe.numClasse
+        return data
+
+class ContenuSerializer(serializers.Serializer):
+    Horaire=HoraireSerializer()
+    Lundi=serializers.ListField()
+    Mardi=serializers.ListField()
+    Mercredi=serializers.ListField()
+    Jeudi=serializers.ListField()
+    Vendredi=serializers.ListField()
+    Samedi=serializers.ListField()
+
+    def validate(self, data):
+        jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]
+        donnees={
+            "Horaire":data['Horaire']
+        }
+        for jour in jours:
+            if not isinstance(data.get(jour), list):
+                raise serializers.ValidationError({"erreur":f"Le contenu du jour {jour} doit contenir un tableau !"})
+            if len(data.get(jour)) != 2:
+                raise serializers.ValidationError({"erreur":f"Le jour {jour} doit contenir deux séances !"})
+            donnees[jour]=[]
+            for i,seance in enumerate(data.get(jour)):
+                if isinstance(seance, dict) and seance:
+                    serializer=SeanceSerializer(data=seance)
+                    serializer.is_valid(raise_exception=True)
+                    donnees[jour].append(serializer.validated_data)
+                elif seance=={} or seance==[]:
+                    donnees[jour].append({})
+                else:
+                    raise serializers.ValidationError({"erreur":"Format de données par chaque case invalide !"})
+        return donnees
 
 
-# class EdtTableSerializer(serializers.ListSerializer):
-#     titre=serializers.ListField(child=TitreSerializer())
+
+class EdtTableSerializer(serializers.Serializer):
+    titre=serializers.ListField()
+    contenu=serializers.ListField()
+
+    def validate_titre(self, value):
+        jours=["lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+        if len(value) != 2:
+            raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
+        for ligne in value:
+            if not isinstance(ligne, dict):
+                raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
+        
+        dsDonnee=value[0]
+        cpDonnee=value[1]
+        if not isinstance(dsDonnee, dict):
+            raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
+        if len(dsDonnee) != 6:
+            raise serializers.ValidationError({"erreur":"L'emploi du temps doit contenir le date de Lundi au Samedi"})
+        dsJours=list(map(str.lower, list(dsDonnee.keys())))
+        if any(jour not in jours for jour in dsJours):
+            raise serializers.ValidationError({"erreur":"Format de jour invalide !"})
+        if len(cpDonnee) < 2:
+            raise serializers.ValidationError({"erreur":"Le deuxième élément de la titre doit contenir le classe et le parcours !"})
+        
+        dsSerializer=JourSerializer(data=dsDonnee)
+        serializerClasse=ClasseSerializer(data=cpDonnee['classe'])
+        serializerParcours=ParcoursSerializer(data=cpDonnee['parcours'])
+        if not dsSerializer.is_valid():
+            raise serializers.ValidationError(dsSerializer.errors)
+        if not serializerClasse.is_valid():
+            raise serializers.ValidationError(serializerClasse.errors)
+        if not serializerParcours.is_valid():
+            raise serializers.ValidationError(serializerParcours.errors)
+        return value
+    
+    def validate(self, data):
+        serializer=ContenuSerializer(data=data['contenu'], many=True)
+        if serializer.is_valid():
+            data['contenu']=serializer.validated_data
+            return data
+        raise serializers.ValidationError(serializer.errors)

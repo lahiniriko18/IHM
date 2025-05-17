@@ -4,7 +4,7 @@ from rest_framework import status
 from django.conf import settings
 from django.http  import FileResponse
 from datetime import datetime
-from ..serializer.serializerEdt import EdtSerializer
+from ..serializer.serializerEdt import EdtSerializer,EdtTableSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerExcel import ExcelSerializer,DataSerializer
 import pandas as pd
@@ -59,21 +59,55 @@ class EdtTableauView(APIView):
 
 class ListeEdtView(APIView):
     def post(self, request):
-        donnee=request.data
-        dateDebut=donnee.get('dateDebut')
-        dateFin=donnee.get('dateFin')
-        print(dateDebut,dateFin)
-        try:
-            dateDebutObj=datetime.strptime(dateDebut, "%Y-%m-%d").date()
-            dateFinObj=datetime.strptime(dateFin, "%Y-%m-%d").date()
-        except (TypeError, ValueError):
-            return Response({"erreur": "Date invalide !"}, status=status.HTTP_400_BAD_REQUEST)
-        if dateDebutObj > dateFinObj:
-            return Response({"erreur": "Date de début doit être inférieur au date de fin !"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        edts=Edt.objects.filter(date__range=(dateDebutObj,dateFinObj))
-        serializer=EdtSerializer(edts, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
+        data=request.data()
+        serializer=EdtTableSerializer(data=data)
+        if serializer.is_valid():
+            donnee = serializer.validated_data
+            contenu=donnee["contenu"]
+            dates=donnee["titre"][0]
+            classeParcours=donnee["titre"][1]
+            if len(contenu) > 1:
+                heureCourant=contenu[0]["Horaire"]["heureFin"]
+                for i in range(1,len(contenu)):
+                    if heureCourant > contenu[i]["Horaire"]["heureDebut"]:
+                        return Response({"erreur":f"L'heure de fin dans la ligne {i} doit inférieure ou égale à l'heure de début de la ligne {i+1} dans le colonne de horaire !"})
+                    heureCourant=contenu[i]["Horaire"]["heureFin"]
+            if len(contenu) > 0:
+                if classeParcours.get("constitue") is not None and not classeParcours.get("constitue"):
+                    donneeConstituer={
+                        "numParcours":classeParcours["parcours"]['numParcours'],
+                        "numClasse":classeParcours["classe"]['numClasse']
+                    }
+                    serializerConstituer = ConstituerSerializer(data=donneeConstituer)
+                    if serializerConstituer.is_valid():
+                        serializerConstituer.save()
+                donneEdts=[]
+                for ligne in contenu:
+                    horaire=ligne["Horaire"]
+                    for jour in jours:
+                        valeurJour=ligne.get(jour)
+                        for val in valeurJour:
+                            if isinstance(val, dict):
+                                dateObj=datetime.strptime(dates.get(jour.lower()),"%d-%m-%Y")
+                                dateSql=dateObj.strftime("%Y-%m-%d")
+                                donneEdt={
+                                    "numMatiere":val["matiere"],
+                                    "numParcours":classeParcours["parcours"]['numParcours'],
+                                    "numSalle":val["salle"],
+                                    "numClasse":classeParcours["classe"]['numClasse'],
+                                    "date":dateSql,
+                                    "heureDebut":horaire["heureDebut"],
+                                    "heureFin":horaire["heureFin"]
+                                }
+                                donneEdts.append(donneEdt)
+                serializerEdt= EdtSerializer(data=donneEdts, many=True)
+                if serializerEdt.is_valid():
+                    serializerEdt.save()
+                else:
+                    return Response(serializerEdt.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message":"Fichier traité et ajout d'emploi du temps avec succès !"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_401_UNAUTHORIZED)
 
 
 class ModeleExcelView(APIView):
@@ -155,7 +189,7 @@ class EdtExcelView(APIView):
                     for j,jour in enumerate(joursLigne):
                         colUtile.append(jour)
                         colUtile.append(f"Unnamed {j}")
-                    print(colUtile)
+
                     for i,horaire in enumerate(ligneWb[3]):
                         verif = (i<4 and i%2!=0) or (i>5 and i%2==0)
                         if verif and i<9:
@@ -200,50 +234,55 @@ class EdtExcelView(APIView):
                 serializer=DataSerializer(data=data)
                 if serializer.is_valid():
                     donnee = serializer.validated_data
-                    return Response(donnee)
-                    contenu=donnee["contenu"]
-                    dates=donnee["titre"][0]
-                    classeParcours=donnee["titre"][1]
-                    if len(contenu) > 1:
-                        heureCourant=contenu[0]["Horaire"]["heureFin"]
-                        for i in range(1,len(contenu)):
-                            if heureCourant > contenu[i]["Horaire"]["heureDebut"]:
-                                return Response({"erreur":f"L'heure de fin dans la ligne {i} doit inférieure ou égale à l'heure de début de la ligne {i+1} dans le colonne de horaire !"})
-                            heureCourant=contenu[i]["Horaire"]["heureFin"]
-                    if len(contenu) > 0:
-                        if not classeParcours["constitue"]:
-                            donneeConstituer={
-                                "numParcours":classeParcours["parcours"]['numParcours'],
-                                "numClasse":classeParcours["classe"]['numClasse']
-                            }
-                            serializerConstituer = ConstituerSerializer(data=donneeConstituer)
-                            if serializerConstituer.is_valid():
-                                serializerConstituer.save()
-                        donneEdts=[]
-                        for ligne in contenu:
-                            horaire=ligne["Horaire"]
-                            for jour in jours:
-                                valeurJour=ligne.get(jour)
-                                for val in valeurJour:
-                                    if isinstance(val, dict):
-                                        dateObj=datetime.strptime(dates.get(jour.lower()),"%d-%m-%Y")
-                                        dateSql=dateObj.strftime("%Y-%m-%d")
-                                        donneEdt={
-                                            "numMatiere":val["matiere"],
-                                            "numParcours":classeParcours["parcours"]['numParcours'],
-                                            "numSalle":val["salle"],
-                                            "numClasse":classeParcours["classe"]['numClasse'],
-                                            "date":dateSql,
-                                            "heureDebut":horaire["heureDebut"],
-                                            "heureFin":horaire["heureFin"]
-                                        }
-                                        donneEdts.append(donneEdt)
-                        serializerEdt= EdtSerializer(data=donneEdts, many=True)
-                        if serializerEdt.is_valid():
-                            serializerEdt.save()
-                        else:
-                            return Response(serializerEdt.errors, status=status.HTTP_400_BAD_REQUEST)
-                    return Response({"message":"Fichier traité et ajout d'emploi du temps avec succès !"}, status=status.HTTP_200_OK)
+                    
+                    serializerEdtTable=EdtTableSerializer(data=donnee)
+                    if serializerEdtTable.is_valid():
+
+                        donnee=serializerEdtTable.validated_data
+                        contenu=donnee["contenu"]
+                        dates=donnee["titre"][0]
+                        classeParcours=donnee["titre"][1]
+                        if len(contenu) > 1:
+                            heureCourant=contenu[0]["Horaire"]["heureFin"]
+                            for i in range(1,len(contenu)):
+                                if heureCourant > contenu[i]["Horaire"]["heureDebut"]:
+                                    return Response({"erreur":f"L'heure de fin dans la ligne {i} doit inférieure ou égale à l'heure de début de la ligne {i+1} dans le colonne de horaire !"})
+                                heureCourant=contenu[i]["Horaire"]["heureFin"]
+                        if len(contenu) > 0:
+                            if not classeParcours["constitue"]:
+                                donneeConstituer={
+                                    "numParcours":classeParcours["parcours"]['numParcours'],
+                                    "numClasse":classeParcours["classe"]['numClasse']
+                                }
+                                serializerConstituer = ConstituerSerializer(data=donneeConstituer)
+                                if serializerConstituer.is_valid():
+                                    serializerConstituer.save()
+                            donneEdts=[]
+                            for ligne in contenu:
+                                horaire=ligne["Horaire"]
+                                for jour in jours:
+                                    valeurJour=ligne.get(jour)
+                                    for val in valeurJour:
+                                        if isinstance(val, dict) and val:
+                                            dateObj=datetime.strptime(dates.get(jour.lower()),"%d-%m-%Y")
+                                            dateSql=dateObj.strftime("%Y-%m-%d")
+                                            donneEdt={
+                                                "numMatiere":val["matiere"],
+                                                "numParcours":classeParcours["parcours"]['numParcours'],
+                                                "numSalle":val["salle"],
+                                                "numClasse":classeParcours["classe"]['numClasse'],
+                                                "date":dateSql,
+                                                "heureDebut":horaire["heureDebut"],
+                                                "heureFin":horaire["heureFin"]
+                                            }
+                                            donneEdts.append(donneEdt)
+                            serializerEdt= EdtSerializer(data=donneEdts, many=True)
+                            if serializerEdt.is_valid():
+                                serializerEdt.save()
+                            else:
+                                return Response(serializerEdt.errors, status=status.HTTP_400_BAD_REQUEST)
+                        return Response({"message":"Fichier traité et ajout d'emploi du temps avec succès !"}, status=status.HTTP_200_OK)
+                    return Response(serializerEdtTable.errors, status=status.HTTP_400_BAD_REQUEST)
                 return Response(serializer.errors,status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:
                 return Response(str(e), status=status.HTTP_400_BAD_REQUEST)

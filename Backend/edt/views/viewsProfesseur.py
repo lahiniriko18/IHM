@@ -81,7 +81,7 @@ class ProfesseurView(APIView):
         numMatieres=donnees.get('matieres')
         if not isinstance(numMatieres, list):
             numMatieres=donnees.getlist('matieres[]')
-
+        numMatieres=list(map(int, numMatieres))
         if not nouveauPhotos:
             nouveauPhotos=request.data.get('photos')
         if nouveauPhotos:

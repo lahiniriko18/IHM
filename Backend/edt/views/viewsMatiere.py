@@ -67,7 +67,7 @@ class MatiereView(APIView):
         professeurs=donnees.get('professeurs')
         if not isinstance(professeurs, list):
             professeurs=donnees.getlist('professeurs[]')
-
+        professeurs=list(map(int, professeurs))
         serializer=MatiereSerializer(matiere, data=request.data)
         if serializer.is_valid():
             matiere=serializer.save()
@@ -97,22 +97,29 @@ class MatiereView(APIView):
                 return Response({"erreur":"Type de données du matière invalide !"}, status=status.HTTP_401_UNAUTHORIZED)
             
             if isinstance(professeurs, list):
-                numEnseigners=matiere.enseigners.filter().exclude(numProfesseur__in=professeurs)
-                if numEnseigners:
-                    numEnseigners.delete()
-                numProfEnseigner=matiere.enseigners.filter(numProfesseur__in=professeurs).values_list('numProfesseur', flat=True)
+                enseigners=matiere.enseigners.filter()
+                profEns=list(enseigners.values_list('numProfesseur', flat=True))
+                # dataEns=EnseignerSerializer(enseigners, many=True).data
+                # profEns=[ens['numProfesseur'] for ens in dataEns]
+                print(profEns)
+
                 donneeEns=[]
                 for numProfesseur in professeurs:
-                    if numProfesseur not in numProfEnseigner:
+                    if numProfesseur not in profEns:
                         donneeEns.append({
-                            "numProfesseur":numProfesseur,
-                            "numMatiere":matiere.numMatiere
+                            "numMatiere":matiere.numMatiere,
+                            "numProfesseur":numProfesseur
                         })
-                serializerEns=EnseignerSerializer(data=donneeEns, many=True)
-                if serializerEns.is_valid():
-                    serializerEns.save()
-                else:
-                    return Response(serializerEns.errors, status=status.HTTP_401_UNAUTHORIZED)
+                if sorted(profEns) != sorted(professeurs):
+                    for ens in enseigners:
+                        if ens.numProfesseur not in professeurs:
+                            ens.delete()
+                if len(donneeEns) > 0:
+                    serializerEns=EnseignerSerializer(data=donneeEns, many=True)
+                    if serializerEns.is_valid():
+                        serializerEns.save()
+                    else:
+                        return Response(serializerEns.errors, status=status.HTTP_400_BAD_REQUEST)
             else:
                 return Response({"erreur":"Type de données du matière invalide !"}, status=status.HTTP_401_UNAUTHORIZED)
             

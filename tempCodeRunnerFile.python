@@ -1,6 +1,2 @@
-t=[]
-
-if t:
-    print("zah")
-else:
-    print("leka")
+d={}
+print("zah" if d else "leka")
