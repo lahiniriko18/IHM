@@ -90,7 +90,7 @@ function ProfesseurDetails() {
           </div>
           <div className="flex justify-center items-center  w-96 h-96">
             <div className="w-64 h-64 bg-gray-200 rounded-full flex justify-center items-center text-white font-bold">
-              <img src={listeProfesseur.photos} alt="preview" className="w-64 h-64 rounded-full object-cover" />
+              <img src={listeProfesseur.photos ? listeProfesseur.photos : null} alt="preview" className="w-64 h-64 rounded-full object-cover" />
             </div>
           </div>
 
