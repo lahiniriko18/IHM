@@ -1,2 +1,7 @@
-d={}
-print("zah" if d else "leka")
+i=1
+while i<11:
+    if i==5:
+        i+=1
+        continue
+    print(i)
+    i+=2

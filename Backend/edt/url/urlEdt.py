@@ -1,5 +1,6 @@
 from django.urls import path
-from ..views.viewsEdt import EdtView,EdtExcelView,ModeleExcelView,ListeEdtView
+from ..views.viewsEdt import EdtView,EdtExcelView,ListeEdtView
+from ..views.viewsModele import ModeleExcelView
 
 urlpatterns = [
     path('', EdtView.as_view(), name="edt"),
@@ -7,6 +8,6 @@ urlpatterns = [
     path('ajouter/excel/', EdtExcelView.as_view(), name="edt.ajouter.excel"),
     path('modifier/<int:numEdt>', EdtView.as_view(), name="edt.modifier"),
     path('supprimer/<int:numEdt>', EdtView.as_view(), name="edt.supprimer"),
-    path('telecharger/<int:typeFichier>',ModeleExcelView.as_view(),name='edt.telecharger'),
+    path('telecharger/',ModeleExcelView.as_view(),name='edt.telecharger'),
     path('ajouter/liste/', ListeEdtView.as_view(), name='edt.liste.semaine')
 ]
