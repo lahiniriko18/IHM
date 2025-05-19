@@ -358,16 +358,16 @@ function EdtNew() {
     };
 
     console.log(dataToSend);
-    // try {
-    //   const response = await axios.post(`http://127.0.0.1:8000/api/edt/liste/`);
-    //   if (response.status !== 200) {
-    //     throw new Error('Erreur code : ' + response.status);
-    //   }
-    //   setListeClasse(response.data);
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeClasse(response.data);
 
-    // } catch (error) {
-    //   console.error(error.message);
-    // }
+    } catch (error) {
+      console.error(error.message);
+    }
   }
   const getDataClasseSelected = async (id) => {
     try {
