@@ -136,6 +136,13 @@ class ClasseView(APIView):
     def delete(self, request, numClasse):
         try:
             classe=Classe.objects.get(pk=numClasse)
+            parcours=Parcours.objects.filter(constituers__numClasse__numClasse=numClasse).first()
+            if parcours:
+                cp=Classe.objects.filter(constituers__numParcours__numParcours=parcours.numParcours, niveau=classe.niveau).exclude(pk=classe.numClasse).exists()
+                if not cp:
+                    np=NiveauParcours.objects.filter(numParcours=parcours.numParcours, niveau=classe.niveau).first()
+                    if np:
+                        np.delete()
             classeParcours=classe.constituers.all()
             if len(classeParcours)<2:
                 classe.delete()
