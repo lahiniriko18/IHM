@@ -4,7 +4,7 @@ from rest_framework import status
 from ..serializer.serializerSalle import SalleSerializer
 from ..serializer.serializerEdt import EdtSerializer
 from ..models import Salle
-from datetime import date,datetime  
+from datetime import date,datetime,timedelta
 class SalleView(APIView):
     def get(self, request):
         salles=Salle.objects.all()

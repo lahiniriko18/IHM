@@ -6,7 +6,8 @@ from datetime import datetime
 from ..serializer.serializerEdt import EdtSerializer,EdtTableSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerExcel import ExcelSerializer,DataSerializer
-from ..models import Edt
+from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
+from ..models import Edt,Classe,NiveauParcours
 import pandas as pd
 import os
 from openpyxl import load_workbook
@@ -190,11 +191,11 @@ class EdtExcelView(APIView):
                             ligneDonne=[horaire]
                             for lignes in ligneWb[4:]:
                                 for k in range(nbCase):
-                                    ligneDonne.append(lignes[i+k] if lignes[i] else "vide")
+                                    ligneDonne.append(lignes[i+k] if lignes[i+k] else "vide")
                             dataUtile.append(ligneDonne)   
+
                 df=pd.DataFrame(dataUtile, columns=colUtile)
 
-                print(df.to_dict(orient='records'))
                 if not all(col in df.columns for col in colonnes_requis):
                     return Response({"erreur":"Format invalide. Colonne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"}, status=status.HTTP_400_BAD_REQUEST)
                 colonneVerif=[col for col in df.columns if col in colonnes_requis]
@@ -228,30 +229,39 @@ class EdtExcelView(APIView):
                 serializer=DataSerializer(data=data)
                 if serializer.is_valid():
                     donnee = serializer.validated_data
-                    
                     serializerEdtTable=EdtTableSerializer(data=donnee)
                     if serializerEdtTable.is_valid():
-
+                        
                         donnee=serializerEdtTable.validated_data
+                        
                         contenu=donnee["contenu"]
                         dates=donnee["titre"][0]
-                        classeParcours=donnee["titre"][1]
+                        niveauParcours=NiveauParcours.objects.filter(pk=donnee["titre"][1]).first()
+                        npDonnee=NiveauParcoursSerializer(niveauParcours).data
+
                         if len(contenu) > 1:
                             heureCourant=contenu[0]["Horaire"]["heureFin"]
                             for i in range(1,len(contenu)):
                                 if heureCourant > contenu[i]["Horaire"]["heureDebut"]:
                                     return Response({"erreur":f"L'heure de fin dans la ligne {i} doit inférieure ou égale à l'heure de début de la ligne {i+1} dans le colonne de horaire !"})
                                 heureCourant=contenu[i]["Horaire"]["heureFin"]
+
                         if len(contenu) > 0:
-                            if not classeParcours["constitue"]:
-                                donneeConstituer={
-                                    "numParcours":classeParcours["parcours"]['numParcours'],
-                                    "numClasse":classeParcours["classe"]['numClasse']
-                                }
-                                serializerConstituer = ConstituerSerializer(data=donneeConstituer)
+                            classes=Classe.objects.filter(niveau=niveauParcours.niveau)
+                            print("zah")
+                            donneeConstituer=[]
+                            for classe in classes:
+                                constitue=classe.constituers.filter(numParcours=npDonnee['numParcours']).exists()
+                                if not constitue:
+                                    donneeConstituer.append({
+                                        "numParcours":npDonnee['numParcours'],
+                                        "numClasse":classe.numClasse
+                                    })
+                                serializerConstituer = ConstituerSerializer(data=donneeConstituer, many=True)
                                 if serializerConstituer.is_valid():
                                     serializerConstituer.save()
                             donneEdts=[]
+
                             for ligne in contenu:
                                 horaire=ligne["Horaire"]
                                 for jour in jours:
@@ -262,9 +272,9 @@ class EdtExcelView(APIView):
                                             dateSql=dateObj.strftime("%Y-%m-%d")
                                             donneEdt={
                                                 "numMatiere":val["matiere"],
-                                                "numParcours":classeParcours["parcours"]['numParcours'],
+                                                "numParcours":npDonnee['numParcours'],
                                                 "numSalle":val["salle"],
-                                                "numClasse":classeParcours["classe"]['numClasse'],
+                                                "numClasse":val['classe'],
                                                 "date":dateSql,
                                                 "heureDebut":horaire["heureDebut"],
                                                 "heureFin":horaire["heureFin"]

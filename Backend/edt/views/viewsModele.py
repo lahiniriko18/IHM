@@ -45,14 +45,14 @@ class CreerExcel:
                 ws.row_dimensions[i].height = 24
             for i in range(5,10):
                 if i!=7:
-                    ws.row_dimensions[i].height = 70
+                    ws.row_dimensions[i].height = None
 
             for row in ws.iter_rows(min_row=1, max_row=ws.max_row,
                                     min_col=1, max_col=ws.max_column):
                 for cell in row:
                     cell.font = Font(name="Times New Roman", size=12)
                     cell.border = bordure
-                    cell.alignment= Alignment(horizontal='left', vertical='top')
+                    cell.alignment= Alignment(horizontal='left', vertical='top', wrap_text=True)
 
             ligne1= list(ws.iter_rows(min_row=1, max_row=1,
                                    min_col=1, max_col=ws.max_column))[0]
@@ -88,15 +88,22 @@ class CreerExcel:
                     cell.alignment = Alignment(horizontal='center', vertical='center')
                 h+=2
             
-            exempleDonne=['IG gr1','Analyse','Mr Jeremia','S 001']
+            exempleDonne=[
+                ['IG gr1','Analyse','Mme Bénedicte','S 001'],
+                ['IG gr2','Archi','Mr Haja','S 008']
+            ]
             cellHoraire=ws['A4']
             cellHoraire.border = Border()
             cellHoraire.value=""
             cellHoraire.alignment = Alignment(horizontal='center', vertical='center')
             
-            cellExemple = ws['B5']
-            cellExemple.value = "\n".join(exempleDonne)
-            cellExemple.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+            v=False
+            for i in range(5,10):
+                if i!=7:
+                    cellExemple = ws[f'B{i}']
+                    cellExemple.value = "\n".join(exempleDonne[int(v)])
+                    cellExemple.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+                    v= not v
             
         buffer.seek(0)
 
@@ -137,14 +144,14 @@ class CreerExcel:
             for i in range(1,5):
                 ws.row_dimensions[i].height = 24
             for i in range(5,11):
-                ws.row_dimensions[i].height = 70
+                ws.row_dimensions[i].height = None
 
             for row in ws.iter_rows(min_row=1, max_row=ws.max_row,
                                     min_col=1, max_col=ws.max_column):
                 for cell in row:
                     cell.font = Font(name="Times New Roman", size=12)
                     cell.border = bordure
-                    cell.alignment= Alignment(horizontal='left', vertical='top')
+                    cell.alignment= Alignment(horizontal='left', vertical='top', wrap_text=True)
 
             ligne1= list(ws.iter_rows(min_row=1, max_row=1,
                                    min_col=1, max_col=ws.max_column))[0]
@@ -183,16 +190,20 @@ class CreerExcel:
                 cell.value = jours[i-5]
                 cell.alignment = Alignment(horizontal='center', vertical='center')
             
-            exempleDonne=['IG gr1','Analyse','Mr Jeremia','S 001']
+            exempleDonne=[
+                ['IG gr1','Analyse','Mme Bénedicte','S 001'],
+                ['IG gr2','Archi','Mr Haja','S 008']
+            ]
             
             cellHoraire=ws['A4']
             cellHoraire.border = Border()
             cellHoraire.value=""
             cellHoraire.alignment = Alignment(horizontal='center', vertical='center')
             
-            cellExemple = ws['B5']
-            cellExemple.value = "\n".join(exempleDonne)
-            cellExemple.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
+            for i in range(5,11):
+                cellExemple = ws[f'B{i}']
+                cellExemple.value = "\n".join(exempleDonne[(i-1)%2])
+                cellExemple.alignment = Alignment(horizontal='left', vertical='top', wrap_text=True)
 
             m=nbCol//2
             col=get_column_letter(m+1)

@@ -20,8 +20,14 @@ class ConstituerSerializer(serializers.ModelSerializer):
     class Meta:
         model=Constituer
         fields=["numConstituer","numParcours","numClasse"]
+
     def validate(self, data):
         return data
+    
     def create(self, validated_data):
+        if isinstance(validated_data, list):
+            donnees=[Constituer(**valeur) for valeur in validated_data]
+            return Constituer.objects.bulk_create(donnees)
+        
         return Constituer.objects.create(**validated_data)
     
