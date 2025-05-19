@@ -52,6 +52,7 @@ class CreerExcel:
                 for cell in row:
                     cell.font = Font(name="Times New Roman", size=12)
                     cell.border = bordure
+                    cell.alignment= Alignment(horizontal='left', vertical='top')
 
             ligne1= list(ws.iter_rows(min_row=1, max_row=1,
                                    min_col=1, max_col=ws.max_column))[0]
@@ -143,6 +144,7 @@ class CreerExcel:
                 for cell in row:
                     cell.font = Font(name="Times New Roman", size=12)
                     cell.border = bordure
+                    cell.alignment= Alignment(horizontal='left', vertical='top')
 
             ligne1= list(ws.iter_rows(min_row=1, max_row=1,
                                    min_col=1, max_col=ws.max_column))[0]
