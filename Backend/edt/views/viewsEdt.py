@@ -140,14 +140,13 @@ class EdtExcelView(APIView):
                 if typeFichier==1:
                     verif=0
                     for i,col in enumerate(ligneWb[3]):
-                        if i<13:
-                            if i== 0 and col is None:
-                                colUtile.append("Horaire")
-                            elif col is None:
-                                colUtile.append(f"Unnamed: {i}")
-                            else:
-                                colUtile.append(col.strip())
-                                verif+=1
+                        if i== 0 and col is None:
+                            colUtile.append("Horaire")
+                        elif col is None:
+                            colUtile.append(f"Unnamed: {i}")
+                        else:
+                            colUtile.append(col.strip())
+                            verif+=1
                     if verif!=6:
                         return Response(
                             {
@@ -159,14 +158,13 @@ class EdtExcelView(APIView):
                     for i,lignes in enumerate(ligneWb[4:]):
                         ligne = []
                         for j,v in enumerate(lignes):
-                            if j<13:
-                                ligne.append(v.strip() if v else "vide")
+                            ligne.append(v.strip() if v else "vide")
                         dataUtile.append(ligne)
                 
                 else:
                     horairesLigne=[]
                     for i,col in enumerate(ligneWb[3]):
-                        if col and i<13:
+                        if col:
                             horairesLigne.append(col)
                     joursLigne=[]
                     for i,lignes in enumerate(ligneWb[4:]):
@@ -180,21 +178,23 @@ class EdtExcelView(APIView):
                             status=status.HTTP_400_BAD_REQUEST
                         )
                     colUtile=["Horaire"]
+                    nbCol=len(ligneWb[3])
+                    nbCase=(nbCol-2)//4
                     for j,jour in enumerate(joursLigne):
                         colUtile.append(jour)
-                        colUtile.append(f"Unnamed {j}")
-
+                        for k in range(nbCase-1):
+                            colUtile.append(f"Unnamed {j*(nbCase-1)+k}")
                     for i,horaire in enumerate(ligneWb[3]):
-                        verif = (i<4 and i%2!=0) or (i>5 and i%2==0)
-                        if verif and i<9:
+                        verif = (i<(nbCol//2) and (i-1)%nbCase==0) or (i>(nbCol//2) and (i-2)%nbCase==0)
+                        if verif:
                             ligneDonne=[horaire]
                             for lignes in ligneWb[4:]:
-                                ligneDonne.append(lignes[i] if lignes[i] else "vide")
-                                ligneDonne.append(lignes[i+1] if lignes[i+1] else "vide")
+                                for k in range(nbCase):
+                                    ligneDonne.append(lignes[i+k] if lignes[i] else "vide")
                             dataUtile.append(ligneDonne)   
-                        
                 df=pd.DataFrame(dataUtile, columns=colUtile)
 
+                print(df.to_dict(orient='records'))
                 if not all(col in df.columns for col in colonnes_requis):
                     return Response({"erreur":"Format invalide. Colonne requis: 'Horaire','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'"}, status=status.HTTP_400_BAD_REQUEST)
                 colonneVerif=[col for col in df.columns if col in colonnes_requis]

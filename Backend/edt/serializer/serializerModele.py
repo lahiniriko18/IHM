@@ -37,6 +37,7 @@ class ModeleEdtSerializer(serializers.Serializer):
 
         locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
         dateDonnee=date.today()
+        dateDonnee = dateDonnee + timedelta(days=7)
         if data.get('dateDebut') and data.get('dateFin'):
             dateDonnee=data.get('dateDebut')
             if isinstance(data.get('dateDebut'), str):
@@ -44,7 +45,6 @@ class ModeleEdtSerializer(serializers.Serializer):
                     dateDonnee=datetime.strptime(data.get('dateDebut'),"%d-%m-%Y")
                 except ValueError:
                     raise serializers.ValidationError({"erreur":"Format de date invalide !"})
-        dateDonnee = dateDonnee + timedelta(days=7)
         lundi=dateDonnee - timedelta(days=dateDonnee.weekday())
         samedi=lundi+timedelta(days=5)
 
