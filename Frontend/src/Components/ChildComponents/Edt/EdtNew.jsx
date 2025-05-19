@@ -351,23 +351,44 @@ function EdtNew() {
     }
   };
   const sendData = async () => {
+    const contenuNettoye = dataNewEdt.donnee.contenu.map(ligne => {
+      const nouvelleLigne = {
+        Horaire: { ...ligne.Horaire },
+      };
+
+      // Pour chaque jour (Lundi, Mardi, etc.)
+      Object.keys(ligne).forEach(jour => {
+        if (jour === "Horaire") return;
+
+        nouvelleLigne[jour] = ligne[jour].map(creneau => {
+          const estVide = Object.values(creneau).every(val => val === null);
+          return estVide ? {} : creneau;
+        });
+      });
+
+      return nouvelleLigne;
+    });
+
     const dataToSend = {
-      ...dataNewEdt,
+      donnee: {
+        ...dataNewEdt.donnee,
+        contenu: contenuNettoye,
+      },
       date_debut: dataEdtState.date_debut,
       date_fin: dataEdtState.date_fin,
     };
-
     console.log(dataToSend);
-    try {
-      const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status);
-      }
-      setListeClasse(response.data);
 
-    } catch (error) {
-      console.error(error.response.data);
-    }
+    // try {
+    //   const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
+    //   if (response.status !== 200) {
+    //     throw new Error('Erreur code : ' + response.status);
+    //   }
+    //   setListeClasse(response.data);
+
+    // } catch (error) {
+    //   console.error(error.response.data);
+    // }
   }
   const getDataClasseSelected = async (id) => {
     try {
