@@ -93,9 +93,18 @@ function Edt() {
       console.log("Le tache est terminé");
     }
   };
+  function formatDateToDDMMYYYY(dateStr) {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
+  }
   const telechargerFichier = async (numero) => {
+    if (!dataEdt.niveau) {
+      setError({ ...error, status: true, composant: "niveau", message: "Selectionner d'abord le niveau!" })
+      return
+    }
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/edt/telecharger/${numero}`, {
+      const response = await axios.post(`http://127.0.0.1:8000/api/edt/telecharger/`, { niveauParcours: dataEdt.niveau, typeFichier: numero, dateDebut: dataEdt.date_debut ? formatDateToDDMMYYYY(dataEdt.date_debut) : null, dateFin: dataEdt.date_fin ? formatDateToDDMMYYYY(dataEdt.date_debut) : null }, {
         responseType: "blob", // Important pour gérer les fichiers binaires
       });
 
@@ -476,9 +485,7 @@ function Edt() {
                     setError({ status: true, composant: "date_debut", message: "La date ne peut pas vide" });
                   } else if (!dataEdt.niveau) {
                     setError({ status: true, composant: "niveau", message: "Le niveau ne peut pas vide " });
-                  } // else if (!dataEdt.parcours) {
-                  //   setError({ status: true, composant: "parcours", message: "Le parcours ne peut pas vide " });
-                  // }
+                  }
                   else {
                     console.log(dataEdt)
                     setIsclicked(false)
@@ -564,9 +571,7 @@ function Edt() {
             <button className='font-bold hover:scale-105 text-bleu' onClick={versGeneral}>Géneral</button>
             <button className=' hover:scale-105 text-gray-500' onClick={() => {
               const champsRemplis = dataEdt.date_debut && dataEdt.date_fin && dataEdt.niveau && dataEdt.parcours; {/*&& dataEdt.mode_creation*/ }
-              // if (champsRemplis) {
-              //   // Tous les champs importants sont remplis
-              // }
+
               champsRemplis ? versCreationEdt() : setIsclicked(true)
             }}>Creation</button>
             <button className=' hover:scale-105 text-gray-500' onClick={versAFfichage}>Affichage</button>
