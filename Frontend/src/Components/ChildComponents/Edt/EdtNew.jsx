@@ -32,140 +32,84 @@ function EdtNew() {
   });
   const [formError, setFormError] = useState("");
   const [selectedCreneau, setSelectedCreneau] = useState(null);
-  const [modele, setModele] = useState(1);
+  const [modele, setModele] = useState(2);
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-  const [horaires, setHoraires] = useState([{ id: 1, heure_debut: 8, heure_fin: 10 }]);
+  const [horaires, setHoraires] = useState([{ id: 1, heure_debut: "", heure_fin: "" }]);
   const [error, setError] = useState({ status: false, composant: "", message: "" })
   const [dataNewEdt, setDataNewEdt] = useState(() => {
     const saved = localStorage.getItem("dataNewEdt");
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch {
-        // Si erreur de parsing, retourne l’état initial
-      }
+      } catch { }
     }
+    // Génère dynamiquement la première ligne selon le nombre de créneaux
+    const nombreCreneaux = Math.max(2, listeClasse.length || 0);
+    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    const ligneInitiale = {
+      Horaire: { heureDebut: "", heureFin: "" }
+    };
+    jours.forEach(jour => {
+      ligneInitiale[jour] = Array.from({ length: nombreCreneaux }, () => ({
+        classe: null,
+        matiere: null,
+        professeur: null,
+        salle: null
+      }));
+    });
     return {
       donnee: {
         titre: [
+          { lundi: "", mardi: "", mercredi: "", jeudi: "", vendredi: "", samedi: "" },
           {
-            lundi: "",/*date debut au lundi */
-            mardi: "",/*date debut au lundi +1 */
-            mercredi: "",/*date debut au lundi +3 */
-            jeudi: "",
-            vendredi: "",
-            samedi: "",
-          },
-          {
-            classe: {
-              numClasse: null,
-              niveau: "",
-              groupe: ""
-            },
-            parcours: {
-              numParcours: null,
-              numMention: null,
-              nomParcours: "",
-              codeParcours: ""
-            },
+            classe: { numClasse: null, niveau: "", groupe: "" },
+            parcours: { numParcours: null, numMention: null, nomParcours: "", codeParcours: "" },
             constitue: true
           }
         ],
-        contenu: [
-          {
-            Horaire: {
-              heureDebut: "",
-              heureFin: ""
-            },
-            Lundi: [
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-            ],
-            Mardi: [
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-            ],
-            Mercredi: [
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-            ],
-            Jeudi: [
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-            ],
-            Vendredi: [
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-            ],
-            Samedi: [
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-              {
-                classe: null,
-                matiere: null,
-                professeur: null,
-                salle: null
-              },
-            ],
-          },
-        ]
+        contenu: [ligneInitiale]
       }
     };
-  })
+  });
+  useEffect(() => {
+    // Ne fait rien si la liste est vide
+    if (!listeClasse || listeClasse.length === 0) return;
+    const nombreCreneaux = Math.max(2, listeClasse.length);
+    setDataNewEdt(prev => {
+      const newContenu = prev.donnee.contenu.map(ligne => {
+        const newLigne = { ...ligne };
+        Object.keys(newLigne)
+          .filter(key => key !== "Horaire")
+          .forEach(jour => {
+            // Ajuste le nombre de créneaux pour chaque jour
+            const anciens = newLigne[jour] || [];
+            if (anciens.length < nombreCreneaux) {
+              // Ajoute des créneaux vides si besoin
+              newLigne[jour] = [
+                ...anciens,
+                ...Array.from({ length: nombreCreneaux - anciens.length }, () => ({
+                  classe: null,
+                  matiere: null,
+                  professeur: null,
+                  salle: null
+                }))
+              ];
+            } else if (anciens.length > nombreCreneaux) {
+              // Coupe si trop de créneaux
+              newLigne[jour] = anciens.slice(0, nombreCreneaux);
+            }
+          });
+        return newLigne;
+      });
+      return {
+        ...prev,
+        donnee: {
+          ...prev.donnee,
+          contenu: newContenu
+        }
+      };
+    });
+  }, [listeClasse]);
   useEffect(() => {
     if (!dataEdt?.date_debut || !dataEdt?.date_fin) return;
 
@@ -298,12 +242,13 @@ function EdtNew() {
   const versCreationEdt = () => navigate('/edt/nouveau-edt');
 
   const ajouterColonne = () => {
-    // Crée un nouvel horaire (tu peux adapter les heures comme tu veux)
-    const lastHoraire = dataNewEdt.donnee.contenu[dataNewEdt.donnee.contenu.length - 1]?.Horaire || { heureDebut: 8, heureFin: 10 };
-    const newHeureDebut = parseInt(lastHoraire.heureFin, 10);
-    const newHeureFin = newHeureDebut + 2;
-
-    // Crée une nouvelle ligne vide pour chaque jour
+    const horaireVide = dataNewEdt.donnee.contenu.some(
+      l => !l.Horaire.heureDebut || !l.Horaire.heureFin
+    );
+    if (horaireVide) {
+      alert("Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne.");
+      return;
+    }
     const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
     const nouvelleLigne = {
       Horaire: {
@@ -313,10 +258,12 @@ function EdtNew() {
     };
 
     jours.forEach(jour => {
-      nouvelleLigne[jour] = [
-        { classe: null, matiere: null, professeur: null, salle: null },
-        { classe: null, matiere: null, professeur: null, salle: null }
-      ];
+      nouvelleLigne[jour] = Array.from({ length: nombreCreneaux }, () => ({
+        classe: null,
+        matiere: null,
+        professeur: null,
+        salle: null
+      }));
     });
 
     setDataNewEdt(prev => ({
@@ -412,6 +359,19 @@ function EdtNew() {
       console.error(error.message);
     }
   };
+  const sendData = async () => {
+    console.log(dataNewEdt)
+    // try {
+    //   const response = await axios.post(`http://127.0.0.1:8000/api/classe/niveau-parcours/${dataEdt.niveau}`);
+    //   if (response.status !== 200) {
+    //     throw new Error('Erreur code : ' + response.status);
+    //   }
+    //   setListeClasse(response.data);
+
+    // } catch (error) {
+    //   console.error(error.message);
+    // }
+  }
   const getDataClasseSelected = async (id) => {
     try {
       const response = await axios.get(`http://127.0.0.1:8000/api/niveau-parcours/${id}`);
@@ -479,6 +439,8 @@ function EdtNew() {
   useEffect(() => {
     localStorage.setItem("dataNewEdt", JSON.stringify(dataNewEdt));
   }, [dataNewEdt]);
+
+
   const optionsClasse = listeClasse
     .map((Classe) => {
 
@@ -500,7 +462,9 @@ function EdtNew() {
           (Classe.groupe ? Classe.groupe.toString().split(" ").slice(1).join(" ") : ""),
       };
     });
-
+  // ...existing code...
+  const nombreCreneaux = Math.max(2, listeClasse.length);
+  // ...existing code...
   const optionsProfesseur = listeProfesseur
     .sort((a, b) => a.nomProfesseur.localeCompare(b.nomProfesseur))
     .map((Professeur) => ({
@@ -705,7 +669,7 @@ function EdtNew() {
                     return;
                   }
 
-                 
+
                   const autresCreneaux = dataNewEdt.donnee.contenu[idx][jour].filter((_, i) => i !== creneauIdx);
                   if (autresCreneaux.some(c => c.classe === formCreneau.classe)) {
                     setFormError("Les deux créneaux d'un même jour/heure ne peuvent pas avoir la même classe.");
@@ -780,9 +744,40 @@ function EdtNew() {
                     setHoraireError("L'heure de début doit être inférieure à l'heure de fin.");
                     return;
                   }
+
+                  // Vérifie si l'horaire existe déjà (sauf la colonne en cours d'édition)
+                  const idx = modele === 1 ? selectedCell.ligneIdx : selectedCell.colIdx;
+                  const existe = dataNewEdt.donnee.contenu.some(
+                    (l, i) =>
+                      i !== idx &&
+                      l.Horaire.heureDebut === formHoraire.heureDebut &&
+                      l.Horaire.heureFin === formHoraire.heureFin
+                  );
+                  if (existe) {
+                    setHoraireError("Cet horaire existe déjà dans le tableau.");
+                    return;
+                  }
+
+                  // Vérifie si l'horaire ajouté est inférieur à un horaire déjà existant
+                  const debutMinutes = parseInt(formHoraire.heureDebut.split(":")[0], 10) * 60 + parseInt(formHoraire.heureDebut.split(":")[1], 10);
+                  const finMinutes = parseInt(formHoraire.heureFin.split(":")[0], 10) * 60 + parseInt(formHoraire.heureFin.split(":")[1], 10);
+                  const conflit = dataNewEdt.donnee.contenu.some((l, i) => {
+                    if (i === idx) return false;
+                    const d = l.Horaire.heureDebut;
+                    const f = l.Horaire.heureFin;
+                    if (!d || !f) return false;
+                    const dMin = parseInt(d.split(":")[0], 10) * 60 + parseInt(d.split(":")[1], 10);
+                    const fMin = parseInt(f.split(":")[0], 10) * 60 + parseInt(f.split(":")[1], 10);
+                    // Si le nouvel horaire commence avant ou finit avant un existant
+                    return debutMinutes < dMin || finMinutes < fMin;
+                  });
+                  if (conflit) {
+                    setHoraireError("L'horaire ajouté est inférieur à un horaire déjà existant.");
+                    return;
+                  }
+
                   setDataNewEdt(prev => {
                     const newData = { ...prev };
-                    // Correction ici : choisir l'index selon le modèle
                     const idx = modele === 1 ? selectedCell.ligneIdx : selectedCell.colIdx;
                     if (typeof idx === "number" && newData.donnee.contenu[idx]) {
                       newData.donnee.contenu[idx].Horaire = { ...formHoraire };
@@ -826,8 +821,9 @@ function EdtNew() {
                   )
                   : ""
                 }
-              </p></span>
-            <div className="flex gap-2 items-center w-[70%] pe-8">
+              </p>
+            </span>
+            <div className="flex gap-2 items-center">
               <div className='flex items-center'>
                 <p className='w-40'>Date début : </p>
                 <input
@@ -847,13 +843,23 @@ function EdtNew() {
                 />
               </div>
             </div>
+            <button className="button"
+              onClick={() => {
+                if () {
+                  /*Condition qui verifier que aucun horaire n'est pas vide */
+                } else {
+                  sendData()
+                }
+              }}
+
+            >Enregistrer</button>
           </div>
 
           {/* Tableau selon le modèle */}
-          <div className="h-[73%]  w-full m-4">
+          <div className="h-[73%] overflow-x-auto w-full m-4">
             {modele === 1 ? (
-              <div className="w-full border border-white rounded-t-lg overflow-hidden">
-                <table className='table-fixed border w-full text-sm border-black'>
+              <div className="w-full border border-white rounded-t-lg overflow-x-auto">
+                <table className='border w-full text-sm border-black'>
                   <thead className='sticky top-0 z-10'>
                     <tr>
                       <th className="border-2 border-t-white border-l-white"></th>
@@ -869,7 +875,7 @@ function EdtNew() {
                   <tbody>
                     {dataNewEdt.donnee.contenu.map((ligne, i) => (
                       <tr key={i}>
-                        <td className="border-2 p-2 font-semibold relative">
+                        <td className="border-2 p-2 font-semibold relative  min-w-[120px]">
                           <span className="flex justify-center">
                             {formatHeure(ligne.Horaire.heureDebut)} - {formatHeure(ligne.Horaire.heureFin)}
                           </span>
@@ -898,14 +904,15 @@ function EdtNew() {
                         {Object.keys(ligne)
                           .filter((key) => key !== "Horaire")
                           .map((jour) => (
-                            <td key={jour} className="border-2 cursor-pointer h-24 relative">
+                            <td key={jour} className="border-2 cursor-pointer h-24 relative" style={{ minWidth: ligne[jour].length * 120 }}>
                               <div className="flex flex-row justify-start items-center w-full h-full">
                                 {ligne[jour].map((creneau, idx) => (
                                   <div
                                     key={idx}
-                                    className={`p-2 flex flex-col w-1/2 h-full relative
-                                            ${idx === 0 ? "border-r border-dashed border-gray-300" : ""}
-                                            hover:bg-gray-200 active:bg-gray-300`}
+                                    className={`p-2 flex flex-col h-full relative
+       ${idx < ligne[jour].length - 1 ? "border-r border-dashed border-gray-300" : ""}
+      hover:bg-gray-200 active:bg-gray-300`}
+                                    style={{ width: `${100 / ligne[jour].length}%`, minWidth: 120 }}
                                     onClick={() => {
                                       setSelectedCell({ ligneIdx: i, jour, creneauIdx: idx });
                                       const creneau = dataNewEdt.donnee.contenu[i][jour][idx];
@@ -940,46 +947,51 @@ function EdtNew() {
                 </div>
               </div>
             ) : (
-              < div className="overflow-x-auto w-full bg-white shadow rounded-lg">
+              < div className="overflow-x-auto w-full bg-white rounded-lg">
                 <table className="min-w-[750px] w-full text-sm border border-black">
                   <thead className="sticky top-0 z-10">
                     <tr>
-                      <th className="border bg-gray-50 w-32"></th>
-                      {dataNewEdt.donnee.contenu.map((ligne, index) => (
-                        <th key={index} className="border w-32 p-2 text-center bg-blue-500 text-white relative">
-                          <div>
-                            <span>
-                              {formatHeure(ligne.Horaire.heureDebut)} - {formatHeure(ligne.Horaire.heureFin)}
-                            </span>
-                            <img
-                              src="/Icons/modifier.png"
-                              alt="Modifier"
-                              className="absolute top-2 right-2 w-5 cursor-pointer"
+                      <th className="border-2 border-t-white py-6 border-l-white"></th>
+                      {dataNewEdt.donnee.contenu.map((ligne, j) => (
+                        <th key={j} className="border bg-blue-500 text-white text-center relative">
+                          {formatHeure(ligne.Horaire.heureDebut)} - {formatHeure(ligne.Horaire.heureFin)}
+                          <img
+                            src="/Icons/modifier.png"
+                            alt=""
+                            className="absolute bottom-2 right-1 w-5 cursor-pointer"
+                            onClick={() => {
+                              setSelectedCell({ colIdx: j });
+                              setFormHoraire({
+                                heureDebut: typeof ligne.Horaire.heureDebut === "string" && ligne.Horaire.heureDebut.includes(":")
+                                  ? ligne.Horaire.heureDebut
+                                  : ligne.Horaire.heureDebut
+                                    ? String(ligne.Horaire.heureDebut).padStart(2, "0") + ":00"
+                                    : "",
+                                heureFin: typeof ligne.Horaire.heureFin === "string" && ligne.Horaire.heureFin.includes(":")
+                                  ? ligne.Horaire.heureFin
+                                  : ligne.Horaire.heureFin
+                                    ? String(ligne.Horaire.heureFin).padStart(2, "0") + ":00"
+                                    : "",
+                              });
+                              setIsEditHours(true);
+                            }}
+                          />
+                          {j > 0 && (
+                            <button
+                              className="absolute top-2 right-10 text-red-600"
                               onClick={() => {
-                                setSelectedCell({ colIdx: index });
-                                setFormHoraire({
-                                  heureDebut: typeof horaire.heure_debut === "number"
-                                    ? String(horaire.heure_debut).padStart(2, "0") + ":00"
-                                    : horaire.heure_debut || "",
-                                  heureFin: typeof horaire.heure_fin === "number"
-                                    ? String(horaire.heure_fin).padStart(2, "0") + ":00"
-                                    : horaire.heure_fin || "",
-                                });
-                                setIsEditHours(true);
+                                setDataNewEdt(prev => ({
+                                  ...prev,
+                                  donnee: {
+                                    ...prev.donnee,
+                                    contenu: prev.donnee.contenu.filter((_, idx) => idx !== j)
+                                  }
+                                }));
                               }}
-                            />
-                            {index > 0 && (
-                              <button
-                                className="absolute bottom-2 right-2 text-red-600"
-                                onClick={() => {
-                                  setHoraires(horaires.filter((_, idx) => idx !== index));
-                                }}
-                                title="Retirer cette colonne"
-                              >
-                                <img src="/Icons/retirer.png" alt="" className="w-5 cursor-pointer" />
-                              </button>
-                            )}
-                          </div>
+                            >
+                              <img src="/Icons/retirer.png" alt="Retirer" className="w-5 cursor-pointer" />
+                            </button>
+                          )}
                         </th>
                       ))}
                     </tr>
@@ -990,15 +1002,19 @@ function EdtNew() {
                         <td className="border p-2 text-center font-semibold bg-gray-50 w-32 min-w-[20px] max-w-[120px]">
                           {jour}
                         </td>
-                        {horaires.map((horaire, j) => (
-                          <td key={j} className="border cursor-pointer h-20 min-w-[120px] relative">
+                        {dataNewEdt.donnee.contenu.map((ligne, j) => (
+                          <td key={j} className="border cursor-pointer min-h-32 min-w-[120px] relative">
                             <div className="flex flex-row justify-start items-center w-full h-full">
-                              {dataNewEdt.donnee?.contenu?.[j]?.[jour]?.map((creneau, idx) => (
+                              {ligne[jour]?.map((creneau, idx, arr) => (
                                 <div
                                   key={idx}
-                                  className={`p-2 flex flex-col w-1/2 h-full relative
-                                  ${idx === 0 ? "border-r border-dashed border-gray-300" : ""}
-                                  hover:bg-gray-200 active:bg-gray-300`}
+                                  className={`p-2 flex flex-col h-full relative
+            ${idx < arr.length - 1 ? "border-r border-dashed border-gray-300" : ""}
+            hover:bg-gray-200 active:bg-gray-300 min-h-28`}
+                                  style={{
+                                    width: `${100 / arr.length}%`,
+                                    minWidth: 120
+                                  }}
                                   onClick={() => {
                                     setSelectedCell({ jour, colIdx: j, creneauIdx: idx });
                                     setFormCreneau({ ...creneau });
@@ -1026,12 +1042,14 @@ function EdtNew() {
                   <button
                     className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
                     onClick={() => {
-                      // Ajoute une nouvelle colonne (horaire)
-                      const lastHoraire = horaires[horaires.length - 1] || { heure_debut: 8, heure_fin: 10 };
-                      const newHeureDebut = parseInt(lastHoraire.heure_fin, 10);
-                      const newHeureFin = newHeureDebut + 2;
-                      setHoraires([...horaires, { heure_debut: newHeureDebut, heure_fin: newHeureFin }]);
-                      // Mets à jour dataNewEdt.donnee.contenu pour chaque jour
+                      const horaireVide = dataNewEdt.donnee.contenu.some(
+                        l => !l.Horaire.heureDebut || !l.Horaire.heureFin
+                      );
+                      if (horaireVide) {
+                        alert("Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne.");
+                        return;
+                      }
+                      setHoraires([...horaires, { heure_debut: null, heure_fin: null }]);
                       setDataNewEdt(prev => ({
                         ...prev,
                         donnee: {
@@ -1041,7 +1059,13 @@ function EdtNew() {
                             {
                               Horaire: { heureDebut: "", heureFin: "" },
                               ...Object.fromEntries(jours.map(jour => [
-                                jour, [{ classe: null, matiere: null, professeur: null, salle: null }]
+                                jour,
+                                Array.from({ length: Math.max(2, listeClasse.length) }, () => ({
+                                  classe: null,
+                                  matiere: null,
+                                  professeur: null,
+                                  salle: null
+                                }))
                               ]))
                             }
                           ]
