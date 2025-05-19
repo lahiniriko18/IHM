@@ -314,9 +314,9 @@ function Salle() {
 
                         <span
                           className={`px-2 py-1 rounded text-white text-xs font-semibold
-                           ${!Salle.status ? "bg-green-600" : "bg-red-500"}`}
+                           ${Salle.statut ? "bg-green-600" : "bg-red-500"}`}
                         >
-                          {!Salle.status ? "libre" : "Occupé"}
+                          {Salle.statut ? "libre" : "Occupé"}
                         </span>
                       </td>
                       <td className="px-4 py-2 flex justify-center items-center gap-2">

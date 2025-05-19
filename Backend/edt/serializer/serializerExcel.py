@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from datetime import datetime, timedelta,time
-from ..models import Classe,Parcours,Matiere,Professeur,Enseigner,Salle,Constituer
+from ..models import Classe,Parcours,Matiere,Professeur,Enseigner,Salle,NiveauParcours
 from ..serializer.serializerClasse import ClasseSerializer
 from ..serializer.serializerParcours import ParcoursSerializer
-from ..serializer.serializerConstituer import ConstituerSerializer
 from django.db.models import Q
 import pandas as pd
 from openpyxl import load_workbook
@@ -122,14 +121,16 @@ class ContenuSerializer(serializers.Serializer):
             "mme":"Féminin",
             "madame":"Féminin"
         }
+        nbCellule =[]
         for jour in semaine:
             valeurs = data.get(jour, [])
             valideValeur=[]
             erreur = []
-            if len(valeurs) != 2:
+            nbCellule.append(len(valeurs))
+            if len(valeurs) < 2:
                 erreurs[jour]=self.messageErreurSemaine(
                         {
-                        "texte":"Le nombre de colonne ne doit pas différent de 2 !"
+                        "texte":"Le nombre de colonne ne doit pas inférieur de 2 !"
                         },
                         jour
                     )
@@ -187,15 +188,22 @@ class ContenuSerializer(serializers.Serializer):
                     )
                     continue
                 classeInstance=self.context.get('classe')
-                groupe=classeInstance.get('groupe')
+                groupes=[c['groupe'] for c in classeInstance]
                 groupeNum=groupeStr.replace(codeGroupe,'')
-                if groupe != f"Groupe {groupeNum}" and groupe!=groupeStr:
+                if f"Groupe {groupeNum}" not in groupes and groupeStr not in groupes:
                     erreur.append(
                         self.messageErreurSemaine({
                             "texte":"Groupe introuvable !",
                         },jour,i+1)
                     )
                     continue
+                groupe=None
+                for g in groupes:
+                    if not groupe:
+                        if f"Groupe {groupeNum}" in groupes:
+                            groupe=f"Groupe {groupeNum}"
+                        elif groupeStr in groupes:
+                            groupe=groupeStr
                 if groupe in groupeParCase:
                     erreur.append(
                         self.messageErreurSemaine({
@@ -205,7 +213,12 @@ class ContenuSerializer(serializers.Serializer):
                     )
                     continue
                 groupeParCase.append(groupe)
-                caseContenu["classe"]=classeInstance.get('numClasse')
+                
+                classe=None
+                for c in classeInstance:
+                    if not classe and c['groupe']==groupe:
+                        classe=c['numClasse']
+                caseContenu["classe"]=classe
 
                 ##### Traitement du matière #####
                 matiereStr = valeur[1]
@@ -322,6 +335,11 @@ class ContenuSerializer(serializers.Serializer):
                 donnee[jour]=valideValeur
             else:
                 erreurs[jour]=erreur
+        if len(set(nbCellule)) != 1:
+            erreurs["erreur"]={
+                "texte":"Nombre de case de chaque case différent !",
+                "aide":"Télécharger une nouvelle modèle pour éviter la conflit."
+            }
         if erreurs:
             raise serializers.ValidationError(erreurs)
 
@@ -424,13 +442,8 @@ class DataSerializer(serializers.Serializer):
             messageErreur("Niveau introuvable !")
         if not parcours:
             messageErreur("Parcours introuvable !")
-        constitue=Constituer.objects.filter(numParcours=parcours.numParcours, numClasse=classe.numClasse).exists()
-        classeParcours = {
-            "classe":ClasseSerializer(classe).data,
-            "parcours":ParcoursSerializer(parcours).data,
-            "constitue":constitue
-        }
-        titre.append(classeParcours)
+        niveauParcours=NiveauParcours.objects.filter(niveau=classe.niveau,numParcours=parcours.numParcours).first()
+        titre.append(niveauParcours.numNiveauParcours)
         
         return titre
 
@@ -438,14 +451,14 @@ class DataSerializer(serializers.Serializer):
         erreurs = []
         contenuValide = []
         titre=data["titre"]
-        classe=titre[1].get("classe")
-        parcours=titre[1].get("parcours")
+        niveauParcours=NiveauParcours.objects.filter(pk=titre[1]).first()
+        classes=Classe.objects.filter(niveau=niveauParcours.niveau)
         typeFichier=data["typeFichier"]
         for i, ligne in enumerate(data["contenu"]):
             serializer= ContenuSerializer(data=ligne, context={
                 'index': i,
-                'classe':classe,
-                'parcours':parcours,
+                'classe':ClasseSerializer(classes, many=True).data,
+                'parcours':ParcoursSerializer(niveauParcours.numParcours).data,
                 "typeFichier":typeFichier
                 })
             if serializer.is_valid():

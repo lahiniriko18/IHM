@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Edt,Matiere,Parcours,Salle,Classe,Mention,Professeur,Enseigner
+from ..models import Edt,Matiere,Parcours,Salle,Classe,Mention,Professeur,Enseigner,NiveauParcours
 from datetime import datetime
 
 class EdtSerializer(serializers.ModelSerializer):
@@ -191,6 +191,11 @@ class SeanceSerializer(serializers.Serializer):
         matiere=data.get('matiere')
         classe=data.get('classe')
         salle=data.get('salle')
+
+        dateJour=self.context.get("date")
+        print(dateJour)
+        horaire=self.context.get("horaire")
+
         enseigner=Enseigner.objects.filter(numProfesseur=professeur.numProfesseur, numMatiere=matiere.numMatiere).exists()
 
         if not enseigner:
@@ -198,6 +203,9 @@ class SeanceSerializer(serializers.Serializer):
         
         if not salle.statut:
             raise serializers.ValidationError({"erreur":"Ce salle n'est pas libre dans ce horaire !"})
+        edt=salle.edts.filter(date=datetime.strptime(dateJour, "%d-%m-%Y").date(),heureDebut__lte=horaire["heureDebut"],heureFin__gte=horaire["heureFin"]).exists()
+        if edt:
+            raise serializers.ValidationError({"erreur":"Ce salle n'est pas libre dans ce date et horaire !"})
         data['salle']=salle.numSalle
         data['professeur']=professeur.numProfesseur
         data['matiere']=matiere.numMatiere
@@ -218,15 +226,21 @@ class ContenuSerializer(serializers.Serializer):
         donnees={
             "Horaire":data['Horaire']
         }
+        dates=self.context.get("dates")
+        horaire=data['Horaire']
         for jour in jours:
+
             if not isinstance(data.get(jour), list):
                 raise serializers.ValidationError({"erreur":f"Le contenu du jour {jour} doit contenir un tableau !"})
-            if len(data.get(jour)) != 2:
-                raise serializers.ValidationError({"erreur":f"Le jour {jour} doit contenir deux séances !"})
+            if len(data.get(jour)) < 2:
+                raise serializers.ValidationError({"erreur":f"Le jour {jour} doit contenir au moins deux séances !"})
             donnees[jour]=[]
             for i,seance in enumerate(data.get(jour)):
                 if isinstance(seance, dict) and seance:
-                    serializer=SeanceSerializer(data=seance)
+                    serializer=SeanceSerializer(data=seance, context={
+                        "date":dates.get(jour.lower()),
+                        "horaire":horaire
+                    })
                     serializer.is_valid(raise_exception=True)
                     donnees[jour].append(serializer.validated_data)
                 elif seance=={} or seance==[]:
@@ -243,12 +257,14 @@ class EdtTableSerializer(serializers.Serializer):
         jours=["lundi","mardi","mercredi","jeudi","vendredi","samedi"]
         if len(value) != 2:
             raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
-        for ligne in value:
-            if not isinstance(ligne, dict):
-                raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
+        if not isinstance(value[0], dict):
+            raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
+        if not isinstance(value[1], object):
+            raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
         
         dsDonnee=value[0]
-        cpDonnee=value[1]
+        npDonnee=NiveauParcours.objects.filter(pk=value[1]).first()
+
         if not isinstance(dsDonnee, dict):
             raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
         if len(dsDonnee) != 6:
@@ -256,12 +272,13 @@ class EdtTableSerializer(serializers.Serializer):
         dsJours=list(map(str.lower, list(dsDonnee.keys())))
         if any(jour not in jours for jour in dsJours):
             raise serializers.ValidationError({"erreur":"Format de jour invalide !"})
-        if len(cpDonnee) < 2:
-            raise serializers.ValidationError({"erreur":"Le deuxième élément de la titre doit contenir le classe et le parcours !"})
         
         dsSerializer=JourSerializer(data=dsDonnee)
-        serializerClasse=ClasseSerializer(data=cpDonnee['classe'])
-        serializerParcours=ParcoursSerializer(data=cpDonnee['parcours'])
+        classe=ClasseSerializer(Classe.objects.filter(niveau=npDonnee.niveau), many=True).data
+        serializerClasse=ClasseSerializer(data=classe, many=True)
+        parcours=ParcoursSerializer(npDonnee.numParcours).data
+        serializerParcours=ParcoursSerializer(data=parcours)
+
         if not dsSerializer.is_valid():
             raise serializers.ValidationError(dsSerializer.errors)
         if not serializerClasse.is_valid():
@@ -271,7 +288,12 @@ class EdtTableSerializer(serializers.Serializer):
         return value
     
     def validate(self, data):
-        serializer=ContenuSerializer(data=data['contenu'], many=True)
+
+        titre=data["titre"]
+
+        serializer=ContenuSerializer(data=data['contenu'], many=True, context={
+            "dates":titre[0]
+        })
         if serializer.is_valid():
             data['contenu']=serializer.validated_data
             return data
