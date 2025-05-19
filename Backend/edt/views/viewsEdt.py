@@ -2,16 +2,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
-from django.http  import FileResponse
 from datetime import datetime
 from ..serializer.serializerEdt import EdtSerializer,EdtTableSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerExcel import ExcelSerializer,DataSerializer
+from ..models import Edt
 import pandas as pd
 import os
 from openpyxl import load_workbook
-from ..models import Edt
-from datetime import datetime
+
 class EdtView(APIView):
     def get(self, request):
         edts=Edt.objects.all()
@@ -41,6 +40,7 @@ class EdtView(APIView):
             return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
         except Edt.DoesNotExist:
             return Response({'erreur':'Emploi du temps introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
 
 class EdtTableauView(APIView):
     def post(self, request):
@@ -109,13 +109,7 @@ class ListeEdtView(APIView):
             return Response({"message":"Fichier traité et ajout d'emploi du temps avec succès !"}, status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_401_UNAUTHORIZED)
 
-
-class ModeleExcelView(APIView):
-    def get(self, request, typeFichier):
-        chemin=os.path.join(settings.BASE_DIR, 'edt','static','modele_excel',f'modelEdt{typeFichier}.xlsx')
-        if not os.path.exists(chemin):
-            return Response({"erreur":"Fichier modèle introuvable !"})
-        return FileResponse(open(chemin,'rb'), as_attachment=True, filename=f"modelEdt{typeFichier}.xlsx")
+            
 class EdtExcelView(APIView):
     def post(self, request):
         serializer=ExcelSerializer(data=request.data)

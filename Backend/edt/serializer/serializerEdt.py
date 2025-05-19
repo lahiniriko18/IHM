@@ -235,8 +235,6 @@ class ContenuSerializer(serializers.Serializer):
                     raise serializers.ValidationError({"erreur":"Format de données par chaque case invalide !"})
         return donnees
 
-
-
 class EdtTableSerializer(serializers.Serializer):
     titre=serializers.ListField()
     contenu=serializers.ListField()

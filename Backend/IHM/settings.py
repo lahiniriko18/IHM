@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
 ]
+
 import pymysql
 pymysql.install_as_MySQLdb()
 MIDDLEWARE = [
