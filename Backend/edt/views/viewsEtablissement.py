@@ -9,7 +9,7 @@ import os
 
 class EtablissementView(APIView):
     def get(self, request):
-        etablissements=Etablissement.objects.all()
+        etablissements=Etablissement.objects.all().order_by('-numEtablissement')
         serializer=EtablissementSerializer(etablissements, many=True)
         donnees=serializer.data
         for ligne in donnees:

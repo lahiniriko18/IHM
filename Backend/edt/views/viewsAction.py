@@ -5,7 +5,7 @@ from ..serializer.serializerAction import ActionSerializer
 from ..models import Action
 class ActionView(APIView):
     def get(self, request):
-        actions=Action.objects.all()
+        actions=Action.objects.all().order_by('-numAction')
         serializer=ActionSerializer(actions, many=True)
         return Response(serializer.data)
     

@@ -9,7 +9,7 @@ from ..serializer.serializerProfesseur import ProfesseurSerializer
 from ..models import Matiere,NiveauParcours,Enseigner,Professeur
 class MatiereView(APIView):
     def get(self, request):
-        matieres=Matiere.objects.all()
+        matieres=Matiere.objects.all().order_by('-numMatiere')
         serializer=MatiereSerializer(matieres, many=True)
         return Response(serializer.data)
     
@@ -99,9 +99,6 @@ class MatiereView(APIView):
             if isinstance(professeurs, list):
                 enseigners=matiere.enseigners.filter()
                 profEns=list(enseigners.values_list('numProfesseur', flat=True))
-                # dataEns=EnseignerSerializer(enseigners, many=True).data
-                # profEns=[ens['numProfesseur'] for ens in dataEns]
-                print(profEns)
 
                 donneeEns=[]
                 for numProfesseur in professeurs:

@@ -5,7 +5,7 @@ from ..serializer.serializerPosseder import PossederSerializer
 from ..models import Posseder
 class PossederView(APIView):
     def get(self, request):
-        posseders=Posseder.objects.all()
+        posseders=Posseder.objects.all().order_by('-numPosseder')
         serializer=PossederSerializer(posseders, many=True)
         return Response(serializer.data)
     

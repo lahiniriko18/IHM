@@ -103,15 +103,15 @@ class EdtSerializer(serializers.ModelSerializer):
             return super().update(instance, validated_data)
 
 class JourSerializer(serializers.Serializer):
-    lundi=serializers.CharField()
-    mardi=serializers.CharField()
-    mercredi=serializers.CharField()
-    jeudi=serializers.CharField()
-    vendredi=serializers.CharField()
-    samedi=serializers.CharField()
+    Lundi=serializers.CharField()
+    Mardi=serializers.CharField()
+    Mercredi=serializers.CharField()
+    Jeudi=serializers.CharField()
+    Vendredi=serializers.CharField()
+    Samedi=serializers.CharField()
 
     def validate(self, data):
-        jours=["lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+        jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]
         donees={}
         erreurs=[]
         for jour in jours:
@@ -193,7 +193,6 @@ class SeanceSerializer(serializers.Serializer):
         salle=data.get('salle')
 
         dateJour=self.context.get("date")
-        print(dateJour)
         horaire=self.context.get("horaire")
 
         enseigner=Enseigner.objects.filter(numProfesseur=professeur.numProfesseur, numMatiere=matiere.numMatiere).exists()
@@ -238,7 +237,7 @@ class ContenuSerializer(serializers.Serializer):
             for i,seance in enumerate(data.get(jour)):
                 if isinstance(seance, dict) and seance:
                     serializer=SeanceSerializer(data=seance, context={
-                        "date":dates.get(jour.lower()),
+                        "date":dates.get(jour),
                         "horaire":horaire
                     })
                     serializer.is_valid(raise_exception=True)
@@ -254,7 +253,7 @@ class EdtTableSerializer(serializers.Serializer):
     contenu=serializers.ListField()
 
     def validate_titre(self, value):
-        jours=["lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+        jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]
         if len(value) != 2:
             raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
         if not isinstance(value[0], dict):
@@ -269,7 +268,7 @@ class EdtTableSerializer(serializers.Serializer):
             raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
         if len(dsDonnee) != 6:
             raise serializers.ValidationError({"erreur":"L'emploi du temps doit contenir le date de Lundi au Samedi"})
-        dsJours=list(map(str.lower, list(dsDonnee.keys())))
+        dsJours=list(dsDonnee.keys())
         if any(jour not in jours for jour in dsJours):
             raise serializers.ValidationError({"erreur":"Format de jour invalide !"})
         

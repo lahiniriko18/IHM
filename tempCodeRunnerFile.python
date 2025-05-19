@@ -1,2 +1,2 @@
-l=[2,2,2,2]
-print(set(l))
+a=352
+print(f"{a:04d}")

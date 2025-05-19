@@ -10,7 +10,7 @@ from django.db.models import Q
 
 class ClasseView(APIView):
     def get(self, request):
-        classes=Classe.objects.all()
+        classes=Classe.objects.all().order_by('-numClasse')
         donnees=[]
         for i,classe in enumerate(classes):
             constituers=classe.constituers.filter()

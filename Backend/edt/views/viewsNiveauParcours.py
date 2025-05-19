@@ -6,7 +6,7 @@ from ..serializer.serializerParcours import ParcoursSerializer
 from ..models import NiveauParcours
 class NiveauParcoursView(APIView):
     def get(self, request):
-        niveauParcours=NiveauParcours.objects.all()
+        niveauParcours=NiveauParcours.objects.all().order_by('-numNiveauParcours')
         serializer=NiveauParcoursSerializer(niveauParcours, many=True)
         donnees=serializer.data
         for i,niveauParcour in enumerate(niveauParcours):

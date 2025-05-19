@@ -5,7 +5,7 @@ from ..serializer.serializerEnseigner import EnseignerSerializer
 from ..models import Enseigner
 class EnseignerView(APIView):
     def get(self, request):
-        enseigners=Enseigner.objects.all()
+        enseigners=Enseigner.objects.all().order_by('-numEnseigner')
         serializer=EnseignerSerializer(enseigners, many=True)
         return Response(serializer.data)
     

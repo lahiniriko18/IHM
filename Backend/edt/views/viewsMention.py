@@ -5,7 +5,7 @@ from ..serializer.serializerMention import MentionSerializer
 from ..models import Mention
 class MentionView(APIView):
     def get(self, request):
-        mentions=Mention.objects.all()
+        mentions=Mention.objects.all().order_by('-numMention')
         serializer=MentionSerializer(mentions, many=True)
         return Response(serializer.data)
     
