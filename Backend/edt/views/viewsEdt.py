@@ -61,7 +61,7 @@ class EdtTableauView(APIView):
 class ListeEdtView(APIView):
     def post(self, request):
         jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
-        data=request.data()
+        data=request.data
         serializer=EdtTableSerializer(data=data)
         if serializer.is_valid():
             donnee = serializer.validated_data
