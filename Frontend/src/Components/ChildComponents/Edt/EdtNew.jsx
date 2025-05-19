@@ -851,7 +851,7 @@ function EdtNew() {
 
           {/* Tableau selon le modèle */}
           <div className="h-[73%]  w-full m-4">
-            {modele === 2 ? (
+            {modele === 1 ? (
               <div className="w-full border border-white rounded-t-lg overflow-hidden">
                 <table className='table-fixed border w-full text-sm border-black'>
                   <thead className='sticky top-0 z-10'>
