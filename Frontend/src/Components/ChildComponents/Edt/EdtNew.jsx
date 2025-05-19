@@ -366,7 +366,7 @@ function EdtNew() {
       setListeClasse(response.data);
 
     } catch (error) {
-      console.error(error.message);
+      console.error(error.response.data);
     }
   }
   const getDataClasseSelected = async (id) => {
