@@ -690,7 +690,7 @@ function EdtNew() {
                   }
 
                   // Récupère l'index selon le modèle
-                  const idx = modele === 2 ? selectedCell?.ligneIdx : selectedCell?.colIdx;
+                  const idx = modele === 1 ? selectedCell?.ligneIdx : selectedCell?.colIdx;
                   const jour = selectedCell?.jour;
                   const creneauIdx = selectedCell?.creneauIdx ?? 0;
 
@@ -705,7 +705,7 @@ function EdtNew() {
                     return;
                   }
 
-                  // Vérification des deux créneaux de la même case
+                 
                   const autresCreneaux = dataNewEdt.donnee.contenu[idx][jour].filter((_, i) => i !== creneauIdx);
                   if (autresCreneaux.some(c => c.classe === formCreneau.classe)) {
                     setFormError("Les deux créneaux d'un même jour/heure ne peuvent pas avoir la même classe.");
@@ -783,7 +783,7 @@ function EdtNew() {
                   setDataNewEdt(prev => {
                     const newData = { ...prev };
                     // Correction ici : choisir l'index selon le modèle
-                    const idx = modele === 2 ? selectedCell.ligneIdx : selectedCell.colIdx;
+                    const idx = modele === 1 ? selectedCell.ligneIdx : selectedCell.colIdx;
                     if (typeof idx === "number" && newData.donnee.contenu[idx]) {
                       newData.donnee.contenu[idx].Horaire = { ...formHoraire };
                     }
