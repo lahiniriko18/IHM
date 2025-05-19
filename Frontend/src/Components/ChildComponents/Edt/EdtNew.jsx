@@ -184,7 +184,7 @@ function EdtNew() {
             contenu: [
               {
                 Horaire: { heureDebut: "", heureFin: "" },
-                Lundi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Lundi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, 7: null, professeur: null, salle: null }],
                 Mardi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
                 Mercredi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
                 Jeudi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
@@ -377,17 +377,21 @@ function EdtNew() {
       date_debut: dataEdtState.date_debut,
       date_fin: dataEdtState.date_fin,
     };
-    console.log(dataToSend);
+    // console.log(dataToSend);
 
     try {
       const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
-      setListeClasse(response.data);
-
+      getDataClasse()
+      getDataSalle();
+      getDataMatiere();
+      getDataProfesseurs();
+      return true;
     } catch (error) {
       console.error(error.response.data);
+      return false;
     }
   }
   const getDataClasseSelected = async (id) => {
@@ -472,7 +476,6 @@ function EdtNew() {
 
   const optionsClasse = listeClasse
     .map((Classe) => {
-
       const parcoursLabels = Array.isArray(Classe.parcours)
         ? Classe.parcours.map(p =>
           p.codeParcours
@@ -873,14 +876,18 @@ function EdtNew() {
               </div>
             </div>
             <button className="button"
-              onClick={() => {
+              onClick={async () => {
                 const horaireVide = dataNewEdt.donnee.contenu.some(
                   l => !l.Horaire.heureDebut || !l.Horaire.heureFin
                 );
                 if (horaireVide) {
                   alert("Veuillez remplir tous les horaires avant d'enregistrer.");
                 } else {
-                  sendData();
+                  const ok = await sendData();
+                  if (ok) {
+                    localStorage.removeItem("dataNewEdt");
+                    versGeneral();
+                  }
                 }
               }}
 

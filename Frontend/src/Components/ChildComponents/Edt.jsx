@@ -90,7 +90,6 @@ function Edt() {
       console.error(error.message);
     } finally {
       setIsLoading(false);
-      console.log("Le tache est terminé");
     }
   };
   function formatDateToDDMMYYYY(dateStr) {
@@ -480,14 +479,13 @@ function Edt() {
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  console.log(dataEdt)
                   if (dataEdt.date_debut.trim() == "" || dataEdt.date_fin.trim() == "") {
                     setError({ status: true, composant: "date_debut", message: "La date ne peut pas vide" });
                   } else if (!dataEdt.niveau) {
                     setError({ status: true, composant: "niveau", message: "Le niveau ne peut pas vide " });
                   }
                   else {
-                    console.log(dataEdt)
+
                     setIsclicked(false)
                     versCreationEdt();
                     setDataEdt({
