@@ -32,130 +32,167 @@ function EdtNew() {
   });
   const [formError, setFormError] = useState("");
   const [selectedCreneau, setSelectedCreneau] = useState(null);
-  const [modele, setModele] = useState(1); // 1 = horaire en ligne ; 2 = horaire en colonne
+  const [modele, setModele] = useState(1);
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
   const [horaires, setHoraires] = useState([{ id: 1, heure_debut: 8, heure_fin: 10 }]);
   const [error, setError] = useState({ status: false, composant: "", message: "" })
-  const [dataNewEdt, setDataNewEdt] = useState({
-    donnee: {
-      titre: [
-        {
-          lundi: "",/*date debut au lundi */
-          mardi: "",/*date debut au lundi +1 */
-          mercredi: "",/*date debut au lundi +3 */
-          jeudi: "",
-          vendredi: "",
-          samedi: "",
-        },
-        {
-          classe: {
-            numClasse: null,
-            niveau: "",
-            groupe: ""
-          },
-          parcours: {
-            numParcours: null,
-            numMention: null,
-            nomParcours: "",
-            codeParcours: ""
-          },
-          constitue: true
-        }
-      ],
-      contenu: [
-        {
-          Horaire: {
-            heureDebut: "",
-            heureFin: ""
-          },
-          Lundi: [
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-          ],
-          Mardi: [
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-          ],
-          Mercredi: [
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-          ],
-          Jeudi: [
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-          ],
-          Vendredi: [
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-          ],
-          Samedi: [
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-            {
-              classe: null,
-              matiere: null,
-              professeur: null,
-              salle: null
-            },
-          ],
-        },
-      ]
+  const [dataNewEdt, setDataNewEdt] = useState(() => {
+    const saved = localStorage.getItem("dataNewEdt");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // Si erreur de parsing, retourne l’état initial
+      }
     }
+    return {
+      donnee: {
+        titre: [
+          {
+            lundi: "",/*date debut au lundi */
+            mardi: "",/*date debut au lundi +1 */
+            mercredi: "",/*date debut au lundi +3 */
+            jeudi: "",
+            vendredi: "",
+            samedi: "",
+          },
+          {
+            classe: {
+              numClasse: null,
+              niveau: "",
+              groupe: ""
+            },
+            parcours: {
+              numParcours: null,
+              numMention: null,
+              nomParcours: "",
+              codeParcours: ""
+            },
+            constitue: true
+          }
+        ],
+        contenu: [
+          {
+            Horaire: {
+              heureDebut: "",
+              heureFin: ""
+            },
+            Lundi: [
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+            ],
+            Mardi: [
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+            ],
+            Mercredi: [
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+            ],
+            Jeudi: [
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+            ],
+            Vendredi: [
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+            ],
+            Samedi: [
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+              {
+                classe: null,
+                matiere: null,
+                professeur: null,
+                salle: null
+              },
+            ],
+          },
+        ]
+      }
+    };
   })
+  useEffect(() => {
+    if (!dataEdt?.date_debut || !dataEdt?.date_fin) return;
+
+    const jours = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+    const dateDebut = parseISO(dataEdt.date_debut);
+    const dateFin = parseISO(dataEdt.date_fin);
+
+    const titre = {};
+    jours.forEach((jour, idx) => {
+      const currentDate = addDays(dateDebut, idx);
+      // On n'ajoute le jour que si la date ne dépasse pas la date de fin
+      if (currentDate <= dateFin) {
+        titre[jour] = format(currentDate, "dd-MM-yyyy");
+      }
+    });
+
+    setDataNewEdt(prev => ({
+      ...prev,
+      donnee: {
+        ...prev.donnee,
+        titre: [
+          titre,
+          ...(prev.donnee.titre.slice(1) || [])
+        ]
+      }
+    }));
+  }, [dataEdt.date_debut, dataEdt.date_fin]);
   useEffect(() => {
     if (!formCreneau.matiere) {
       setProfesseursFiltres([]);
@@ -191,9 +228,74 @@ function EdtNew() {
     setIsNewValue(false);
     setSelectedCreneau(null);
   };
-  const versGeneral = () => navigate('/edt');
+  const versGeneral = () => {
+    if (localStorage.getItem("dataNewEdt")) {
+      if (window.confirm("Des données non sauvegardées existent. Voulez-vous vraiment quitter ?")) {
+        localStorage.removeItem("dataNewEdt");
+        setDataNewEdt({
+          donnee: {
+            titre: [
+              { lundi: "", mardi: "", mercredi: "", jeudi: "", vendredi: "", samedi: "" },
+              {
+                classe: { numClasse: null, niveau: "", groupe: "" },
+                parcours: { numParcours: null, numMention: null, nomParcours: "", codeParcours: "" },
+                constitue: true
+              }
+            ],
+            contenu: [
+              {
+                Horaire: { heureDebut: "", heureFin: "" },
+                Lundi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Mardi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Mercredi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Jeudi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Vendredi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Samedi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }]
+              }
+            ]
+          }
+        });
+        navigate('/edt');
+      }
+    } else {
+      navigate('/edt');
+    }
+  };
+
+  const versAFfichage = () => {
+    if (localStorage.getItem("dataNewEdt")) {
+      if (window.confirm("Des données non sauvegardées existent. Voulez-vous vraiment quitter ?")) {
+        localStorage.removeItem("dataNewEdt");
+        setDataNewEdt({
+          donnee: {
+            titre: [
+              { lundi: "", mardi: "", mercredi: "", jeudi: "", vendredi: "", samedi: "" },
+              {
+                classe: { numClasse: null, niveau: "", groupe: "" },
+                parcours: { numParcours: null, numMention: null, nomParcours: "", codeParcours: "" },
+                constitue: true
+              }
+            ],
+            contenu: [
+              {
+                Horaire: { heureDebut: "", heureFin: "" },
+                Lundi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Mardi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Mercredi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Jeudi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Vendredi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }],
+                Samedi: [{ classe: null, matiere: null, professeur: null, salle: null }, { classe: null, matiere: null, professeur: null, salle: null }]
+              }
+            ]
+          }
+        });
+        navigate('/edt/affichage-edt');
+      }
+    } else {
+      navigate('/edt/affichage-edt');
+    }
+  };
   const versCreationEdt = () => navigate('/edt/nouveau-edt');
-  const versAFfichage = () => navigate('/edt/affichage-edt');
 
   const ajouterColonne = () => {
     // Crée un nouvel horaire (tu peux adapter les heures comme tu veux)
@@ -226,9 +328,16 @@ function EdtNew() {
     }));
   };
   function formatHeure(heureStr) {
-    if (!heureStr) return "";
-    const [h, m] = heureStr.split(":");
-    return m === "00" ? `${parseInt(h, 10)}h` : `${parseInt(h, 10)}h:${m}`;
+    if (!heureStr && heureStr !== 0) return "";
+    // Si c'est un nombre, on le convertit en string format "08:00"
+    if (typeof heureStr === "number") {
+      return `${heureStr}h`;
+    }
+    if (typeof heureStr === "string") {
+      const [h, m] = heureStr.split(":");
+      return m === "00" ? `${parseInt(h, 10)}h` : `${parseInt(h, 10)}h:${m}`;
+    }
+    return "";
   }
   const handleStartDateChange = (e) => {
     let selected = parseISO(e.target.value);
@@ -356,8 +465,6 @@ function EdtNew() {
   };
   useEffect(() => {
     getDataClasse()
-    // getDataParcours();
-
     getDataSalle();
     getDataMatiere();
     getDataProfesseurs();
@@ -369,6 +476,9 @@ function EdtNew() {
     }
     console.log(dataEdt)
   }, [])
+  useEffect(() => {
+    localStorage.setItem("dataNewEdt", JSON.stringify(dataNewEdt));
+  }, [dataNewEdt]);
   const optionsClasse = listeClasse
     .map((Classe) => {
 
@@ -390,6 +500,7 @@ function EdtNew() {
           (Classe.groupe ? Classe.groupe.toString().split(" ").slice(1).join(" ") : ""),
       };
     });
+
   const optionsProfesseur = listeProfesseur
     .sort((a, b) => a.nomProfesseur.localeCompare(b.nomProfesseur))
     .map((Professeur) => ({
@@ -402,7 +513,7 @@ function EdtNew() {
             : Professeur.nomProfesseur)
     }));
   const optionsSalle = listeSalle
-    // .sort((a, b) => a.niveau.localeCompare(b.niveau))
+    .filter(Salle => Salle.status = true)
     .filter((Salle, index, self) =>
       index === self.findIndex((c) => c.nomSalle === Salle.nomSalle)
     )
@@ -459,7 +570,10 @@ function EdtNew() {
           <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[95%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
             <div className="flex justify-between items-center w-full">
               <h1 className="text-blue-600 text-xl font-bold">
-                {selectedCell?.jour} {selectedCell?.horaire?.heure_debut}h-{selectedCell?.horaire?.heure_fin}h
+                {selectedCell?.jour}{" "}
+                {selectedCell
+                  ? `${formatHeure(dataNewEdt.donnee.contenu[selectedCell.ligneIdx]?.Horaire.heureDebut)} - ${formatHeure(dataNewEdt.donnee.contenu[selectedCell.ligneIdx]?.Horaire.heureFin)}`
+                  : ""}
               </h1>
               <img
                 src="/Icons/annuler.png"
@@ -574,17 +688,40 @@ function EdtNew() {
                     setFormError("Tous les champs sont obligatoires.");
                     return;
                   }
-                  // Vérification des deux créneaux de la même case
-                  const { ligneIdx, jour, creneauIdx } = selectedCell;
-                  const autresCreneaux = dataNewEdt.donnee.contenu[ligneIdx][jour].filter((_, idx) => idx !== creneauIdx);
-                  if (autresCreneaux.some(c => c.classe === formCreneau.classe)) {
-                    setFormError("Les deux créneaux d'un même jour ne peuvent pas avoir la même classe.");
+
+                  // Récupère l'index selon le modèle
+                  const idx = modele === 1 ? selectedCell?.ligneIdx : selectedCell?.colIdx;
+                  const jour = selectedCell?.jour;
+                  const creneauIdx = selectedCell?.creneauIdx ?? 0;
+
+                  // Sécurité : vérifie que tout existe
+                  if (
+                    typeof idx !== "number" ||
+                    !jour ||
+                    !dataNewEdt.donnee.contenu[idx] ||
+                    !Array.isArray(dataNewEdt.donnee.contenu[idx][jour])
+                  ) {
+                    setFormError("Erreur interne : impossible de trouver la case à modifier.");
                     return;
                   }
+
+                 
+                  const autresCreneaux = dataNewEdt.donnee.contenu[idx][jour].filter((_, i) => i !== creneauIdx);
+                  if (autresCreneaux.some(c => c.classe === formCreneau.classe)) {
+                    setFormError("Les deux créneaux d'un même jour/heure ne peuvent pas avoir la même classe.");
+                    return;
+                  } else if (autresCreneaux.some(c => c.salle === formCreneau.salle)) {
+                    setFormError("Les deux créneaux d'un même jour/heure ne peuvent pas avoir la même salle.");
+                    return;
+                  } else if (autresCreneaux.some(c => c.professeur === formCreneau.professeur)) {
+                    setFormError("Les deux créneaux d'un même jour/heure ne peuvent pas avoir le même professeur.");
+                    return;
+                  }
+
                   setFormError("");
                   setDataNewEdt(prev => {
                     const newData = { ...prev };
-                    newData.donnee.contenu[ligneIdx][jour][creneauIdx] = { ...formCreneau };
+                    newData.donnee.contenu[idx][jour][creneauIdx] = { ...formCreneau };
                     return newData;
                   });
                   setIsNewValue(false);
@@ -645,7 +782,11 @@ function EdtNew() {
                   }
                   setDataNewEdt(prev => {
                     const newData = { ...prev };
-                    newData.donnee.contenu[selectedCell.ligneIdx].Horaire = { ...formHoraire };
+                    // Correction ici : choisir l'index selon le modèle
+                    const idx = modele === 1 ? selectedCell.ligneIdx : selectedCell.colIdx;
+                    if (typeof idx === "number" && newData.donnee.contenu[idx]) {
+                      newData.donnee.contenu[idx].Horaire = { ...formHoraire };
+                    }
                     return newData;
                   });
                   setHoraireError("");
@@ -664,7 +805,7 @@ function EdtNew() {
         <div className="flex flex-col gap-1 h-full">
           <div className='flex gap-3'>
             <button className='hover:scale-105 text-gray-500' onClick={versGeneral}>Géneral</button>
-            <button className='font-bold hover:scale-105 text-blue-600' onClick={versCreationEdt}>Creation</button>
+            <button className='font-bold hover:scale-105 text-blue-600'>Creation</button>
             <button className='hover:scale-105 text-gray-500' onClick={versAFfichage}>Affichage</button>
           </div>
 
@@ -799,29 +940,81 @@ function EdtNew() {
                 </div>
               </div>
             ) : (
-              <div className="overflow-auto  h-full">
-                <table className="table-fixed border w-full text-sm border-black">
-                  <thead className='sticky top-0 z-10'>
+              < div className="overflow-x-auto w-full bg-white shadow rounded-lg">
+                <table className="min-w-[750px] w-full text-sm border border-black">
+                  <thead className="sticky top-0 z-10">
                     <tr>
-                      <th className="border  border-t-white border-l-white"></th>
-                      {horaires.map((horaire, index) => (
-                        <th key={index} className="border p-2 text-center bg-gray-100">
-                          <p>{horaire.heure_debut}h - {horaire.heure_fin}h</p>
-                          <img src="/Icons/modifier.png" alt="" className="absolute bottom-2 right-1 w-5 cursor-pointer" onClick={() => setIsEditHours(true)} />
+                      <th className="border bg-gray-50 w-32"></th>
+                      {dataNewEdt.donnee.contenu.map((ligne, index) => (
+                        <th key={index} className="border w-32 p-2 text-center bg-blue-500 text-white relative">
+                          <div>
+                            <span>
+                              {formatHeure(ligne.Horaire.heureDebut)} - {formatHeure(ligne.Horaire.heureFin)}
+                            </span>
+                            <img
+                              src="/Icons/modifier.png"
+                              alt="Modifier"
+                              className="absolute top-2 right-2 w-5 cursor-pointer"
+                              onClick={() => {
+                                setSelectedCell({ colIdx: index });
+                                setFormHoraire({
+                                  heureDebut: typeof horaire.heure_debut === "number"
+                                    ? String(horaire.heure_debut).padStart(2, "0") + ":00"
+                                    : horaire.heure_debut || "",
+                                  heureFin: typeof horaire.heure_fin === "number"
+                                    ? String(horaire.heure_fin).padStart(2, "0") + ":00"
+                                    : horaire.heure_fin || "",
+                                });
+                                setIsEditHours(true);
+                              }}
+                            />
+                            {index > 0 && (
+                              <button
+                                className="absolute bottom-2 right-2 text-red-600"
+                                onClick={() => {
+                                  setHoraires(horaires.filter((_, idx) => idx !== index));
+                                }}
+                                title="Retirer cette colonne"
+                              >
+                                <img src="/Icons/retirer.png" alt="" className="w-5 cursor-pointer" />
+                              </button>
+                            )}
+                          </div>
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {jours.map((jour, i) => (
-                      <tr key={i}>
-                        <td className="border p-2 text-center font-semibold">{jour}
-
+                      <tr key={i} className="transition">
+                        <td className="border p-2 text-center font-semibold bg-gray-50 w-32 min-w-[20px] max-w-[120px]">
+                          {jour}
                         </td>
                         {horaires.map((horaire, j) => (
-                          <td key={j} className="border cursor-pointer h-20 relative" onClick={() => handleClick(jour, horaire)}>
-                            <div className="absolute inset-0 flex items-center justify-center hover:bg-gray-200">
-                              <img src="/Icons/plus.png" alt="" className="w-6 h-6" />
+                          <td key={j} className="border cursor-pointer h-20 min-w-[120px] relative">
+                            <div className="flex flex-row justify-start items-center w-full h-full">
+                              {dataNewEdt.donnee?.contenu?.[j]?.[jour]?.map((creneau, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`p-2 flex flex-col w-1/2 h-full relative
+                                  ${idx === 0 ? "border-r border-dashed border-gray-300" : ""}
+                                  hover:bg-gray-200 active:bg-gray-300`}
+                                  onClick={() => {
+                                    setSelectedCell({ jour, colIdx: j, creneauIdx: idx });
+                                    setFormCreneau({ ...creneau });
+                                    setIsNewValue(true);
+                                  }}
+                                >
+                                  <span className="flex flex-col w-full">
+                                    <span className="flex flex-col w-full">
+                                      <p>{getClasseLabel(creneau.classe)}</p>
+                                      <p>{getMatiereLabel(creneau.matiere)}</p>
+                                      <p>{getProfLabel(creneau.professeur)}</p>
+                                      <p>{getSalleLabel(creneau.salle)}</p>
+                                    </span>
+                                  </span>
+                                </div>
+                              ))}
                             </div>
                           </td>
                         ))}
@@ -830,18 +1023,41 @@ function EdtNew() {
                   </tbody>
                 </table>
                 <div className="flex justify-end mt-2">
-                  <img
-                    src="/Icons/plus.png"
-                    alt="Ajouter une colonne"
-                    className='w-8 cursor-pointer'
-                    onClick={ajouterColonne}
-                  />
+                  <button
+                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
+                    onClick={() => {
+                      // Ajoute une nouvelle colonne (horaire)
+                      const lastHoraire = horaires[horaires.length - 1] || { heure_debut: 8, heure_fin: 10 };
+                      const newHeureDebut = parseInt(lastHoraire.heure_fin, 10);
+                      const newHeureFin = newHeureDebut + 2;
+                      setHoraires([...horaires, { heure_debut: newHeureDebut, heure_fin: newHeureFin }]);
+                      // Mets à jour dataNewEdt.donnee.contenu pour chaque jour
+                      setDataNewEdt(prev => ({
+                        ...prev,
+                        donnee: {
+                          ...prev.donnee,
+                          contenu: [
+                            ...prev.donnee.contenu,
+                            {
+                              Horaire: { heureDebut: "", heureFin: "" },
+                              ...Object.fromEntries(jours.map(jour => [
+                                jour, [{ classe: null, matiere: null, professeur: null, salle: null }]
+                              ]))
+                            }
+                          ]
+                        }
+                      }));
+                    }}
+                  >
+                    <img src="/Icons/plus.png" alt="Ajouter une colonne" className="w-5" />
+                    Ajouter une colonne
+                  </button>
                 </div>
               </div>
             )}
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 }
