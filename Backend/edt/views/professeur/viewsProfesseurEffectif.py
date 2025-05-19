@@ -26,3 +26,4 @@ class ProfesseurEffectifView(APIView):
                 return Response(f"{int(heures):02d}h {int(minutes):02d}min",status=status.HTTP_200_OK)
             return Response({"erreur":"Professeur introuvable !"}, status=status.HTTP_404_NOT_FOUND)
         return Response({"erreur":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+
