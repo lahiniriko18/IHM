@@ -9,7 +9,8 @@ import Professeur from '../Professeur';
 
 function EdtNew() {
   const location = useLocation();
-  const { dataEdt } = location.state || {};
+  const initialEdt = location.state?.dataEdt || {};
+  const [dataEdtState, setDataEdtState] = useState(initialEdt);
   const [isNewValue, setIsNewValue] = useState(false);
   const [isEditHours, setIsEditHours] = useState(false);
   const [intervalHoraire, setIntervalHoraire] = useState(2);
@@ -32,7 +33,7 @@ function EdtNew() {
   });
   const [formError, setFormError] = useState("");
   const [selectedCreneau, setSelectedCreneau] = useState(null);
-  const [modele, setModele] = useState(2);
+  const [modele, setModele] = useState(1);
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
   const [horaires, setHoraires] = useState([{ id: 1, heure_debut: "", heure_fin: "" }]);
   const [error, setError] = useState({ status: false, composant: "", message: "" })
@@ -60,13 +61,10 @@ function EdtNew() {
     return {
       donnee: {
         titre: [
-          { lundi: "", mardi: "", mercredi: "", jeudi: "", vendredi: "", samedi: "" },
-          {
-            classe: { numClasse: null, niveau: "", groupe: "" },
-            parcours: { numParcours: null, numMention: null, nomParcours: "", codeParcours: "" },
-            constitue: true
-          }
+          { Lundi: "", Mardi: "", Mercredi: "", Jeudi: "", Vendredi: "", Samedi: "" },
+          dataEdtState.niveau,
         ],
+
         contenu: [ligneInitiale]
       }
     };
@@ -110,20 +108,19 @@ function EdtNew() {
       };
     });
   }, [listeClasse]);
+
+
   useEffect(() => {
-    if (!dataEdt?.date_debut || !dataEdt?.date_fin) return;
+    if (!dataEdtState.date_debut || !dataEdtState.date_fin) return;
 
-    const jours = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
-    const dateDebut = parseISO(dataEdt.date_debut);
-    const dateFin = parseISO(dataEdt.date_fin);
+    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    const dateDebut = parseISO(dataEdtState.date_debut);
+    const dateFin = parseISO(dataEdtState.date_fin);
 
-    const titre = {};
+    const titreDates = {};
     jours.forEach((jour, idx) => {
       const currentDate = addDays(dateDebut, idx);
-      // On n'ajoute le jour que si la date ne dépasse pas la date de fin
-      if (currentDate <= dateFin) {
-        titre[jour] = format(currentDate, "dd-MM-yyyy");
-      }
+      titreDates[jour] = currentDate <= dateFin ? format(currentDate, "dd-MM-yyyy") : "";
     });
 
     setDataNewEdt(prev => ({
@@ -131,12 +128,14 @@ function EdtNew() {
       donnee: {
         ...prev.donnee,
         titre: [
-          titre,
-          ...(prev.donnee.titre.slice(1) || [])
+          titreDates,
+          prev.donnee.titre?.[1] ?? dataEdtState.niveau
         ]
       }
     }));
-  }, [dataEdt.date_debut, dataEdt.date_fin]);
+  }, [dataEdtState.date_debut, dataEdtState.date_fin]);
+
+
   useEffect(() => {
     if (!formCreneau.matiere) {
       setProfesseursFiltres([]);
@@ -179,12 +178,8 @@ function EdtNew() {
         setDataNewEdt({
           donnee: {
             titre: [
-              { lundi: "", mardi: "", mercredi: "", jeudi: "", vendredi: "", samedi: "" },
-              {
-                classe: { numClasse: null, niveau: "", groupe: "" },
-                parcours: { numParcours: null, numMention: null, nomParcours: "", codeParcours: "" },
-                constitue: true
-              }
+              { Lundi: "", Mardi: "", Mercredi: "", Jeudi: "", Vendredi: "", Samedi: "" },
+              dataEdtState.niveau,
             ],
             contenu: [
               {
@@ -213,12 +208,8 @@ function EdtNew() {
         setDataNewEdt({
           donnee: {
             titre: [
-              { lundi: "", mardi: "", mercredi: "", jeudi: "", vendredi: "", samedi: "" },
-              {
-                classe: { numClasse: null, niveau: "", groupe: "" },
-                parcours: { numParcours: null, numMention: null, nomParcours: "", codeParcours: "" },
-                constitue: true
-              }
+              { Lundi: "", Mardi: "", Mercredi: "", Jeudi: "", Vendredi: "", Samedi: "" },
+              dataEdtState.niveau,
             ],
             contenu: [
               {
@@ -286,6 +277,7 @@ function EdtNew() {
     }
     return "";
   }
+
   const handleStartDateChange = (e) => {
     let selected = parseISO(e.target.value);
     const day = getDay(selected);
@@ -305,8 +297,8 @@ function EdtNew() {
     const suggestedEnd = addDays(selected, daysUntilSaturday);
     const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
 
-    setDataNewEdt({
-      ...dataEdt,
+    setDataEdtState({
+      ...dataEdtState,
       date_debut: correctedStart,
       date_fin: correctedEnd,
     });
@@ -318,15 +310,12 @@ function EdtNew() {
     }
   };
 
-  const handleChangeMatiere = (e) => {
-    const value = e.target.value;
-    setDataNewEdt({ ...dataEdt, matiere: value })
-    listeProfesseur.filter((p) => p.matieres.numMatiere == value)
 
-  }
+
+
   const handleEndDateChange = (e) => {
     const chosenEnd = parseISO(e.target.value);
-    const start = parseISO(dataEdt.date_debut);
+    const start = parseISO(dataEdtState.date_debut);
 
     const dayOfWeek = getDay(start);
     const maxEnd = addDays(start, 6 - dayOfWeek);
@@ -339,9 +328,11 @@ function EdtNew() {
       });
       return;
     }
-    setDataNewEdt({ ...dataEdt, date_fin: e.target.value });
+
+    setDataEdtState({ ...dataEdtState, date_fin: e.target.value });
     setError({ ...error, status: false });
   };
+
   const handleClick = (jour, horaire) => {
     setSelectedCell({ jour, horaire });
     setIsNewValue(true);
@@ -349,7 +340,7 @@ function EdtNew() {
   };
   const getDataClasse = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/classe/niveau-parcours/${dataEdt.niveau}`);
+      const response = await axios.get(`http://127.0.0.1:8000/api/classe/niveau-parcours/${dataEdtState.niveau}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -360,9 +351,15 @@ function EdtNew() {
     }
   };
   const sendData = async () => {
-    console.log(dataNewEdt)
+    const dataToSend = {
+      ...dataNewEdt,
+      date_debut: dataEdtState.date_debut,
+      date_fin: dataEdtState.date_fin,
+    };
+
+    console.log(dataToSend);
     // try {
-    //   const response = await axios.post(`http://127.0.0.1:8000/api/classe/niveau-parcours/${dataEdt.niveau}`);
+    //   const response = await axios.post(`http://127.0.0.1:8000/api/edt/liste/`);
     //   if (response.status !== 200) {
     //     throw new Error('Erreur code : ' + response.status);
     //   }
@@ -399,7 +396,7 @@ function EdtNew() {
   };
   const getDataMatiere = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/matiere/niveau-parcours/${dataEdt.niveau}`);
+      const response = await axios.get(`http://127.0.0.1:8000/api/matiere/niveau-parcours/${dataEdtState.niveau}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -410,7 +407,7 @@ function EdtNew() {
   };
   const getDataProfesseurs = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/professeur/niveau-parcours/${dataEdt.niveau}`);
+      const response = await axios.get(`http://127.0.0.1:8000/api/professeur/niveau-parcours/${dataEdtState.niveau}`);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
@@ -429,17 +426,28 @@ function EdtNew() {
     getDataMatiere();
     getDataProfesseurs();
   }, [])
+
+
   useEffect(() => {
-    if (dataEdt) {
-      getDataClasseSelected(dataEdt.niveau)
-      setDataNewEdt({ ...dataNewEdt, date_debut: dataEdt.date_debut, date_fin: dataEdt.date_fin })
-    }
-    console.log(dataEdt)
-  }, [])
+    getDataClasseSelected(dataEdtState.niveau);
+  }, [dataEdtState.niveau]);
+
   useEffect(() => {
-    localStorage.setItem("dataNewEdt", JSON.stringify(dataNewEdt));
+    const { date_debut, date_fin, ...cleaned } = dataNewEdt;
+    localStorage.setItem("dataNewEdt", JSON.stringify(cleaned));
   }, [dataNewEdt]);
 
+
+  useEffect(() => {
+    const saved = localStorage.getItem("dataNewEdt");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const { date_debut, date_fin, ...cleaned } = parsed;
+        localStorage.setItem("dataNewEdt", JSON.stringify(cleaned));
+      } catch { }
+    }
+  }, []);
 
   const optionsClasse = listeClasse
     .map((Classe) => {
@@ -829,7 +837,7 @@ function EdtNew() {
                 <input
                   type="date"
                   onChange={handleStartDateChange}
-                  value={dataNewEdt.date_debut || ""}
+                  value={dataEdtState.date_debut || ""}
                   className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </div>
@@ -838,17 +846,20 @@ function EdtNew() {
                 <input
                   type="date"
                   onChange={handleEndDateChange}
-                  value={dataNewEdt.date_fin || ""} // Toujours une string
+                  value={dataEdtState.date_fin || ""} // Toujours une string
                   className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </div>
             </div>
             <button className="button"
               onClick={() => {
-                if () {
-                  /*Condition qui verifier que aucun horaire n'est pas vide */
+                const horaireVide = dataNewEdt.donnee.contenu.some(
+                  l => !l.Horaire.heureDebut || !l.Horaire.heureFin
+                );
+                if (horaireVide) {
+                  alert("Veuillez remplir tous les horaires avant d'enregistrer.");
                 } else {
-                  sendData()
+                  sendData();
                 }
               }}
 
