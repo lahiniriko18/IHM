@@ -14,7 +14,7 @@ from openpyxl import load_workbook
 
 class EdtView(APIView):
     def get(self, request):
-        edts=Edt.objects.all()
+        edts=Edt.objects.all().order_by('-numEdt')
         serializer=EdtSerializer(edts, many=True)
         return Response(serializer.data)
     
@@ -90,7 +90,7 @@ class ListeEdtView(APIView):
                         valeurJour=ligne.get(jour)
                         for val in valeurJour:
                             if isinstance(val, dict):
-                                dateObj=datetime.strptime(dates.get(jour.lower()),"%d-%m-%Y")
+                                dateObj=datetime.strptime(dates.get(jour),"%d-%m-%Y")
                                 dateSql=dateObj.strftime("%Y-%m-%d")
                                 donneEdt={
                                     "numMatiere":val["matiere"],
@@ -233,7 +233,6 @@ class EdtExcelView(APIView):
                     if serializerEdtTable.is_valid():
                         
                         donnee=serializerEdtTable.validated_data
-                        
                         contenu=donnee["contenu"]
                         dates=donnee["titre"][0]
                         niveauParcours=NiveauParcours.objects.filter(pk=donnee["titre"][1]).first()
@@ -248,7 +247,6 @@ class EdtExcelView(APIView):
 
                         if len(contenu) > 0:
                             classes=Classe.objects.filter(niveau=niveauParcours.niveau)
-                            print("zah")
                             donneeConstituer=[]
                             for classe in classes:
                                 constitue=classe.constituers.filter(numParcours=npDonnee['numParcours']).exists()
@@ -268,7 +266,7 @@ class EdtExcelView(APIView):
                                     valeurJour=ligne.get(jour)
                                     for val in valeurJour:
                                         if isinstance(val, dict) and val:
-                                            dateObj=datetime.strptime(dates.get(jour.lower()),"%d-%m-%Y")
+                                            dateObj=datetime.strptime(dates.get(jour),"%d-%m-%Y")
                                             dateSql=dateObj.strftime("%Y-%m-%d")
                                             donneEdt={
                                                 "numMatiere":val["matiere"],

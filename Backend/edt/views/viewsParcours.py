@@ -5,7 +5,7 @@ from ..serializer.serializerParcours import ParcoursSerializer
 from ..models import Parcours
 class ParcoursView(APIView):
     def get(self, request):
-        parcours=Parcours.objects.all()
+        parcours=Parcours.objects.all().order_by('-numParcours')
         serializer=ParcoursSerializer(parcours, many=True)
         return Response(serializer.data)
     

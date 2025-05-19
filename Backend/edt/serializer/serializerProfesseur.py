@@ -2,6 +2,7 @@ from rest_framework import serializers
 from ..models import Professeur,Etablissement
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from datetime import date,datetime
 import re
 
 class ProfesseurSerializer(serializers.ModelSerializer):
@@ -49,3 +50,20 @@ class ProfesseurSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         return Professeur.objects.create(**validated_data)
+    
+class ProfesseurEffectifSerializer(serializers.Serializer):
+    numProfesseur=serializers.IntegerField()
+    dateDebut=serializers.CharField()
+    dateFin=serializers.CharField()
+
+    def validate(self, data):
+        if data['dateDebut'] and data['dateFin']:
+            try:
+                data['dateDebut']=datetime.strptime(data['dateDebut'], "%d-%m-%Y").date()
+                data['dateFin']=datetime.strptime(data['dateFin'], "%d-%m-%Y").date()
+            except ValueError:
+                raise serializers.ValidationError("Format de date invalide !")
+            if data['dateDebut'] >= data['dateFin']:
+                raise serializers.ValidationError("Le date de début ne doit pas supérieur que la date de fin !")
+            return data
+        raise serializers.ValidationError("Format de date invalide !")

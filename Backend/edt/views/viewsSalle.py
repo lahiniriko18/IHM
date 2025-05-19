@@ -7,7 +7,7 @@ from ..models import Salle
 from datetime import date,datetime,timedelta
 class SalleView(APIView):
     def get(self, request):
-        salles=Salle.objects.all()
+        salles=Salle.objects.all().order_by('-numSalle')
         serializer=SalleSerializer(salles, many=True)
         donnees=serializer.data
         dateActuel=date.today()

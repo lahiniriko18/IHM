@@ -355,7 +355,7 @@ class DataSerializer(serializers.Serializer):
         def messageErreur(erreur):
             raise serializers.ValidationError({"erreur":erreur})
 
-        jours = ["lundi","mardi","mercredi","jeudi","vendredi","samedi"]
+        jours = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]
         mois={"janvier":1,
               "février":2,
               "mars":3,

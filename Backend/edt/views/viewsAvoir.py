@@ -5,7 +5,7 @@ from ..serializer.serializerAvoir import AvoirSerializer
 from ..models import Avoir
 class AvoirView(APIView):
     def get(self, request):
-        avoirs=Avoir.objects.all()
+        avoirs=Avoir.objects.all().order_by('-numAvoir')
         serializer=AvoirSerializer(avoirs, many=True)
         return Response(serializer.data)
     

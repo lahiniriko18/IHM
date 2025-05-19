@@ -5,7 +5,7 @@ from ..serializer.serializerConstituer import ConstituerSerializer
 from ..models import Constituer
 class ConstituerView(APIView):
     def get(self, request):
-        constituers=Constituer.objects.all()
+        constituers=Constituer.objects.all().order_by('-numConstituer')
         serializer=ConstituerSerializer(constituers, many=True)
         return Response(serializer.data)
     
