@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ...serializer.serializerProfesseur import ProfesseurEffectifSerializer
+from ...serializer.serializerProfesseur import ProfesseurStatSerializer
 from ...models import Professeur,Edt
 from datetime import datetime,timedelta
 
-class ProfesseurEffectifView(APIView):
-    def post(self, request):
-        serializer=ProfesseurEffectifSerializer(data=request.data)
+class ProfesseurStatView(APIView):
+    def get(self, request):
+        serializer=ProfesseurStatSerializer(data=request.data)
         if serializer.is_valid():
             donnee=serializer.validated_data
             professeur=Professeur.objects.filter(pk=donnee['numProfesseur']).first()

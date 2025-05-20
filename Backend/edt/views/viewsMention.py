@@ -32,3 +32,20 @@ class MentionView(APIView):
             return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
         except Mention.DoesNotExist:
             return Response({'erreur':'Mention introuvable'}, status=status.HTTP_404_NOT_FOUND)
+    
+
+class MentionDetailView(APIView):
+    def delete(self, request):
+        numMentions=request.data.get('numMentions',[])
+        if not isinstance(numMentions, list):
+            numMentions=request.data.getlist('numMentions[]')
+
+        if any(isinstance(numMention, str) for numMention in numMentions):
+            return Response({"erreur":"Type de données invalide !"})
+
+        mentions=Mention.objects.filter(numMention__in=numMentions)
+        if mentions:
+            for mention in mentions:
+                mention.delete()
+            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
+        return Response({"erreur":"Mentions introuvables !"}, status=status.HTTP_404_NOT_FOUND)

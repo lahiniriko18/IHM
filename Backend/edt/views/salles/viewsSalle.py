@@ -1,10 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ..serializer.serializerSalle import SalleSerializer
-from ..serializer.serializerEdt import EdtSerializer
-from ..models import Salle
-from datetime import date,datetime,timedelta
+from ...serializer.serializerSalle import SalleSerializer
+from ...models import Salle
+from datetime import date,datetime
 class SalleView(APIView):
     def get(self, request):
         salles=Salle.objects.all().order_by('-numSalle')
@@ -48,3 +47,19 @@ class SalleView(APIView):
             return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
         except Salle.DoesNotExist:
             return Response({'erreur':'Salle introuvable'}, status=status.HTTP_404_NOT_FOUND)
+
+class SalleDetailView(APIView):
+    def delete(self, request):
+        numSalles=request.data.get('numSalles',[])
+        if not isinstance(numSalles, list):
+            numSalles=request.data.getlist('numSalles[]')
+
+        if any(isinstance(numSalle, str) for numSalle in numSalles):
+            return Response({"erreur":"Type de données invalide !"})
+
+        salles=Salle.objects.filter(numSalle__in=numSalles)
+        if salles:
+            for salle in salles:
+                salle.delete()
+            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
+        return Response({"erreur":"Salles introuvables !"}, status=status.HTTP_404_NOT_FOUND)

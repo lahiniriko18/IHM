@@ -67,22 +67,7 @@ class EdtView(APIView):
         except Edt.DoesNotExist:
             return Response({'erreur':'Emploi du temps introuvable'}, status=status.HTTP_404_NOT_FOUND)
 
-
-class EdtTableauView(APIView):
-    def post(self, request):
-        donnees=request.data
-        donneeAjout = []
-        if isinstance(donnees, list):
-            return Response({"erreur":"Format de données invalide"})
-        for donnee in donnees:
-            serializer=EdtSerializer(data=donnee)
-            if serializer.is_valid():
-                edt=serializer.save()
-                donneeAjout.append(EdtSerializer(edt).data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(donneeAjout,status=status.HTTP_201_CREATED)
     
-
 class ListeEdtView(APIView):
     def post(self, request):
         jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
@@ -141,5 +126,36 @@ class ListeEdtView(APIView):
                 else:
                     return Response(serializerEdt.errors, status=status.HTTP_400_BAD_REQUEST)
                 
-            return Response({"message":"Fichier traité et ajout d'emploi du temps avec succès !"}, status=status.HTTP_200_OK)
+            return Response({"message":"Ajout d'emploi du temps avec succès !"}, status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_401_UNAUTHORIZED)
+    
+    def put(self, request):
+        data=request.data
+        numEdts=data.get('numEdts',[])
+        if not isinstance(numEdts, list):
+            numEdts=data.getlist('numEdts[]')
+
+        if any(isinstance(numEdt, str) for numEdt in numEdts):
+            return Response({"erreur":"Type de données invalide !"})
+        
+        for numEdt in numEdts:
+            edt=Edt.objects.filter(pk=numEdt).first()
+            if edt:
+                edt.delete()
+        
+        self.post(request)
+
+    def delete(self, request):
+        numEdts=request.data.get('numEdts',[])
+        if not isinstance(numEdts, list):
+            numEdts=request.data.getlist('numEdts[]')
+
+        if any(isinstance(numEdt, str) for numEdt in numEdts):
+            return Response({"erreur":"Type de données invalide !"})
+
+        edts=Edt.objects.filter(numEdt__in=numEdts)
+        if edts:
+            for edt in edts:
+                edt.delete()
+            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
+        return Response({"erreur":"Emploi du temps introuvable !"}, status=status.HTTP_404_NOT_FOUND)

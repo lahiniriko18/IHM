@@ -10,7 +10,9 @@ urlpatterns = [
     path('ajouter/excel/', EdtExcelView.as_view(), name="edt.ajouter.excel"),
     path('modifier/<int:numEdt>', EdtView.as_view(), name="edt.modifier"),
     path('supprimer/<int:numEdt>', EdtView.as_view(), name="edt.supprimer"),
+    path('supprimer/liste/', ListeEdtView.as_view(), name='edt.supprimer.liste'),
     path('telecharger/',ModeleExcelView.as_view(),name='edt.telecharger'),
-    path('ajouter/liste/', ListeEdtView.as_view(), name='edt.liste.semaine'),
-    path('modifier/donnee/', EdtDetailView.as_view(), name='edt.modifier')
+    path('ajouter/liste/', ListeEdtView.as_view(), name='edt.ajouter.liste'),
+    path('modifier/liste/', ListeEdtView.as_view(), name='edt.modifier.liste'),
+    path('modifier/donnee/', EdtDetailView.as_view(), name='edt.modifier.donnee')
 ]

@@ -32,3 +32,19 @@ class ParcoursView(APIView):
             return Response({'message':'Suppression avec succès'}, status=status.HTTP_200_OK)
         except Parcours.DoesNotExist:
             return Response({'erreur':'Parcours introuvable'}, status=status.HTTP_404_NOT_FOUND)
+        
+class ParcourDetailView(APIView):
+    def delete(self, request):
+        numParcours=request.data.get('numParcours',[])
+        if not isinstance(numParcours, list):
+            numParcours=request.data.getlist('numParcours[]')
+
+        if any(isinstance(numeroP, str) for numeroP in numParcours):
+            return Response({"erreur":"Type de données invalide !"})
+
+        parcours=Parcours.objects.filter(numParcour__in=numParcours)
+        if parcours:
+            for p in parcours:
+                p.delete()
+            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
+        return Response({"erreur":"Parcours introuvables !"}, status=status.HTTP_404_NOT_FOUND)

@@ -25,6 +25,21 @@ class ProfesseurDetailView(APIView):
         
         return Response(donnee,status=status.HTTP_200_OK)
     
+    def delete(self, request):
+        numProfesseurs=request.data.get('numProfesseurs',[])
+        if not isinstance(numProfesseurs, list):
+            numProfesseurs=request.data.getlist('numProfesseurs[]')
+
+        if any(isinstance(numProfesseur, str) for numProfesseur in numProfesseurs):
+            return Response({"erreur":"Type de données invalide !"})
+
+        professeurs=Professeur.objects.filter(numProfesseur__in=numProfesseurs)
+        if professeurs:
+            for professeur in professeurs:
+                professeur.delete()
+            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
+        return Response({"erreur":"Professeurs introuvables !"}, status=status.HTTP_404_NOT_FOUND)
+
 
 class ProfesseurNiveauParcoursView(APIView):
     def get(self, request, numNiveauParcours):

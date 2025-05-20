@@ -2,7 +2,7 @@ from rest_framework import serializers
 from ..models import Professeur,Etablissement
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from datetime import date,datetime
+from datetime import datetime
 import re
 
 class ProfesseurSerializer(serializers.ModelSerializer):
@@ -51,7 +51,7 @@ class ProfesseurSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return Professeur.objects.create(**validated_data)
     
-class ProfesseurEffectifSerializer(serializers.Serializer):
+class ProfesseurStatSerializer(serializers.Serializer):
     numProfesseur=serializers.IntegerField()
     dateDebut=serializers.CharField()
     dateFin=serializers.CharField()
