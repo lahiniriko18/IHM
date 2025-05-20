@@ -109,6 +109,43 @@ function EdtNew() {
     });
   }, [listeClasse]);
 
+  useEffect(() => {
+    // Gestion de la fermeture / rechargement de l’onglet
+    const handleBeforeUnload = (e) => {
+      if (localStorage.getItem("dataNewEdt")) {
+        e.preventDefault();
+        e.returnValue = ''; // Obligatoire pour certains navigateurs
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+  useEffect(() => {
+    // Gestion de la navigation arrière (bouton précédent ou changement d’URL)
+    const handleBeforeRouteLeave = (event) => {
+      if (localStorage.getItem("dataNewEdt")) {
+        const confirmed = window.confirm("Des données non sauvegardées existent. Voulez-vous vraiment quitter ?");
+        if (!confirmed) {
+          event.preventDefault();
+          window.history.pushState(null, null, window.location.pathname); // Forcer à rester
+        } else {
+          localStorage.removeItem("dataNewEdt");
+          setDataNewEdt(null);
+          setDataEdtState({});
+        }
+      }
+    };
+    window.addEventListener("popstate", handleBeforeRouteLeave);
+
+    return () => {
+      window.removeEventListener("popstate", handleBeforeRouteLeave);
+    };
+  }, []);
+
 
   useEffect(() => {
     if (!dataEdtState.date_debut || !dataEdtState.date_fin) return;
