@@ -1,7 +1,7 @@
 from django.urls import path
-from ..views.professeur.viewsProfesseur import ProfesseurView
-from ..views.professeur.viewsProfesseurDetail import ProfesseurDetailView,ProfesseurNiveauParcoursView
-from ..views.professeur.viewsProfesseurEffectif import ProfesseurEffectifView
+from ..views.professeurs.viewsProfesseur import ProfesseurView
+from ..views.professeurs.viewsProfesseurDetail import ProfesseurDetailView,ProfesseurNiveauParcoursView
+from ..views.professeurs.viewsProfesseurEffectif import ProfesseurEffectifView
 
 urlpatterns = [
     path('',ProfesseurView.as_view(), name="professeur"),
