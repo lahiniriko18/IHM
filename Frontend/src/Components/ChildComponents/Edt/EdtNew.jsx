@@ -6,14 +6,16 @@ import { useLocation } from 'react-router-dom';
 import { parseISO, getDay, format, addDays, isAfter } from 'date-fns';
 import axios from 'axios';
 import Professeur from '../Professeur';
+import NavigationPrompt from '../../Layout/NavigationPrompt';
 
 function EdtNew() {
   const location = useLocation();
   const initialEdt = location.state?.dataEdt || {};
   const [dataEdtState, setDataEdtState] = useState(initialEdt);
   const [isNewValue, setIsNewValue] = useState(false);
+
   const [isEditHours, setIsEditHours] = useState(false);
-  const [intervalHoraire, setIntervalHoraire] = useState(2);
+
   const [selectedCell, setSelectedCell] = useState(null);
   const [listeMatiere, setListeMatiere] = useState([]);
   const [listeSalle, setListeSalle] = useState([]);
@@ -171,6 +173,15 @@ function EdtNew() {
       }
     }));
   }, [dataEdtState.date_debut, dataEdtState.date_fin]);
+  // usePrompt(
+  //   "Des données non sauvegardées existent. Voulez-vous vraiment quitter ?",
+  // {!!localStorage.getItem("dataNewEdt"),}
+  //   () => {
+  //     localStorage.removeItem("dataNewEdt");
+  //     setDataNewEdt(null);
+  //     setDataEdtState({});
+  //   }
+  // );
 
 
   useEffect(() => {
@@ -597,6 +608,16 @@ function EdtNew() {
   };
   return (
     <>
+      {/* <NavigationPrompt
+        when={!!localStorage.getItem("dataNewEdt")}
+        message="Des données non sauvegardées existent. Voulez-vous vraiment quitter ?"
+        onConfirm={() => {
+          localStorage.removeItem("dataNewEdt");
+          setDataNewEdt(null);
+          setDataEdtState({});
+        }}
+      /> */}
+
       {/* Modal de création */}
       {(isNewValue) && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center">

@@ -624,7 +624,7 @@ function Edt() {
                     <tbody className="text-sm">
                       {currentData.map((EDT, index) => (
                         <tr key={index} className="border-b transition-all duration-300 hover:bg-gray-100">
-                          <td className="px-4 py-2 text-center">{EDT.numEdt[0]}</td>
+                          <td className="px-4 py-2 text-center">{EDT.numEdts[0]}</td>
                           <td className="px-4 py-2 text-center">{EDT.niveauParcours}</td>
                           <td className="px-4 py-2 text-center">{EDT.dateDebut}</td>
                           <td className="px-4 py-2 text-center">{EDT.dateFin}</td>
