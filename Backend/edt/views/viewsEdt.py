@@ -2,7 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
-from datetime import datetime
+from django.db.models.functions import TruncWeek
+from django.db.models import Min,Max
+from datetime import datetime,timedelta
 from ..serializer.serializerEdt import EdtSerializer,EdtTableSerializer
 from ..serializer.serializerConstituer import ConstituerSerializer
 from ..serializer.serializerExcel import ExcelSerializer,DataSerializer
@@ -14,9 +16,20 @@ from openpyxl import load_workbook
 
 class EdtView(APIView):
     def get(self, request):
-        edts=Edt.objects.all().order_by('-numEdt')
-        serializer=EdtSerializer(edts, many=True)
-        return Response(serializer.data)
+        edts=(
+            Edt.objects.annotate(week=TruncWeek('date'))
+            .values('week','numClasse__niveau','numParcours__nomParcours')
+            .annotate(
+                dateDebut=Min('date'),
+                dateFin=Max('date')
+            )
+            .order_by('week')
+        )
+        return Response(edts)
+    
+        # edts=Edt.objects.all().order_by('-numEdt')
+        # serializer=EdtSerializer(edts, many=True)
+        # return Response(serializer.data)
     
     def post(self, request):
         serializer=EdtSerializer(data=request.data)
