@@ -12,7 +12,7 @@ function Edt() {
   const [isadd, setisadd] = useState(true)
   const [isOpen, setIsOpen] = useState(false);
   const [hover, setHover] = useState(false)
-  const [listeEDT, setliseEdt] = useState([]);
+  const [listeEDT, setListeEdt] = useState([]);
   const [listeParcours, setListeParcours] = useState([]);
   const [modeleDownload, setModeleDownload] = useState(null)
   const [listeClasse, setListeClasse] = useState([]);
@@ -33,7 +33,22 @@ function Edt() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const fileTypes = ["XLS", "XLSX"];
-
+  const getData = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/edt/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeEdt(response.data);
+      setOriginalList(response.data)
+    } catch (error) {
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
+    }
+  };
   const handleChange = (file) => {
     setFile(file);
 
@@ -124,6 +139,7 @@ function Edt() {
   useEffect(() => {
     getDataClasse()
     getDataParcours()
+    getData()
   }, [])
 
   useEffect(() => {
@@ -599,7 +615,7 @@ function Edt() {
                     <thead>
                       <tr className="bg-blue-500 text-white text-sm">
                         <th className="px-4 py-4">#</th>
-                        <th className="px-4 py-4">EDT</th>
+                        <th className="px-4 py-4">Classe</th>
                         <th className="px-4 py-4">Date de debut</th>
                         <th className="px-4 py-4">Date de fin</th>
                         <th className="px-4 py-4">Actions</th>
@@ -608,10 +624,10 @@ function Edt() {
                     <tbody className="text-sm">
                       {currentData.map((EDT, index) => (
                         <tr key={index} className="border-b transition-all duration-300 hover:bg-gray-100">
-                          <td className="px-4 py-2 text-center">{ }</td>
-                          <td className="px-4 py-2 text-center">{ }</td>
-                          <td className="px-4 py-2 text-center">{ }</td>
-                          <td className="px-4 py-2 text-center">{ }</td>
+                          <td className="px-4 py-2 text-center">{EDT.numEdts[0]}</td>
+                          <td className="px-4 py-2 text-center">{EDT.niveauParcours}</td>
+                          <td className="px-4 py-2 text-center">{EDT.dateDebut}</td>
+                          <td className="px-4 py-2 text-center">{EDT.dateFin}</td>
                           <td className="px-4 py-2 flex justify-center items-center gap-2">
                             <button className="p-1 rounded hover:bg-gray-200">
                               <img src="/Icons/modifier.png" alt="Modifier" className="w-5" />
