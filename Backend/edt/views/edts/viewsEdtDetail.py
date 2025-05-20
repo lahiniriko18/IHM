@@ -1,15 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from ...models import Edt
+from datetime import timedelta,datetime
 from ...serializer.serializerEdt import EdtSerializer
-from ...serializer.serializerMatiere import MatiereSerializer
-from ...serializer.serializerClasse import ClasseSerializer
-from ...serializer.serializerParcours import ParcoursSerializer
-from ...serializer.serializerSalle import SalleSerializer
+from ...serializer.serializerNiveauParcours import NiveauParcoursSerializer
+from ...models import Edt,Classe
+from collections import defaultdict
 
 
 class EdtDetailView(APIView):
+    
     def post(self, request):
         donnee=request.data
         numEdts=donnee.get('numEdts',[])
@@ -19,31 +19,55 @@ class EdtDetailView(APIView):
         if any(isinstance(numEdt, str) for numEdt in numEdts):
             return Response({"erreur":"Type de données invalide !"})
         
-        edts=Edt.objects.filter(numEdt__in=numEdts)
-        donnees=[]
+        edts=Edt.objects.filter(numEdt__in=numEdts).order_by('heureDebut')
+        if edts:
+            titre=[]
+            premierEdt=Edt.objects.filter(numEdt__in=numEdts).first()
+            lundi=premierEdt.date - timedelta(days=premierEdt.date.weekday())
 
-        for edt in edts:
-            # donnee={
-            #     "numEdt":edt.numEdt,
-            #     "matiere":edt.numMatiere.nomMatiere,
-            #     "parcours":edt.numParcours.codeParcours,
-            #     "salle":edt.numSalle.nomSalle,
-            #     "classe":f"{edt.numClasse.niveau} {edt.numClasse.groupe}",
-            #     "date":edt.date,
-            #     "heureDebut":edt.heureDebut,
-            #     "heureFin":edt.heureFin
-            # }
+            jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]
+            dates={}
+            for i,jour in enumerate(jours):
+                dates[jour]=datetime.strftime(lundi+timedelta(days=i), "%d-%m-%Y")
+            titre.append(dates)
 
-            donnee={
-                "numEdt":edt.numEdt,
-                "matiere":MatiereSerializer(edt.numMatiere).data,
-                "parcours":ParcoursSerializer(edt.numParcours).data,
-                "salle":SalleSerializer(edt.numSalle).data,
-                "classe":ClasseSerializer(edt.numClasse).data,
-                "date":edt.date,
-                "heureDebut":edt.heureDebut,
-                "heureFin":edt.heureFin
-            }
-            donnees.append(donnee)
+            niveauParcours=premierEdt.numParcours.niveauParcours.filter(niveau=premierEdt.numClasse.niveau).first()
+            npDonnee=NiveauParcoursSerializer(niveauParcours).data
+            titre.append(niveauParcours.numNiveauParcours)
 
-        return Response(donnees)
+            donnees={"titre":titre}
+            contenu=[]
+            nbGroupe=Classe.objects.filter(niveau=niveauParcours.niveau, constituers__numParcours__numParcours=npDonnee['numParcours']).count()
+
+            edtGroupe=defaultdict(list)
+            for edt in edts:
+                edtGroupe[f"{edt.heureDebut}-{edt.heureFin}"].append(edt)
+            print(dates)
+            for horaire,groupeEdt in edtGroupe.items():
+                donnee={
+                    "Horaire":{
+                        "heureDebut":horaire.split("-")[0],
+                        "heureFin":horaire.split("-")[1]
+                    }
+                }
+                edtJour=defaultdict(list)
+                for edt in groupeEdt:
+                    edtDonnee=EdtSerializer(edt).data
+                    d={
+                        "numEdt":edt.numEdt,
+                        "numMatiere":edtDonnee['numMatiere'],
+                        "numParcours":edtDonnee['numParcours'],
+                        "numSalle":edtDonnee['numSalle'],
+                        "numClasse":edtDonnee['numClasse']
+                    }
+                    jourCle=next((k for k,v in dates.items() if v==datetime.strftime(edt.date, "%d-%m-%Y")), None)
+                    edtJour[jourCle].append(d)
+
+                for jour in jours:
+                    edtJour[jour]+=[{}]*(nbGroupe-len(edtJour[jour]))
+                donnee=donnee|edtJour
+                contenu.append(donnee)
+
+            donnees["contenu"]=contenu
+            return Response(donnees)
+        return Response(EdtSerializer(edts, many=True).data)

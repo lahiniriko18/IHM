@@ -8,7 +8,7 @@ from datetime import datetime
 from ...serializer.serializerEdt import EdtSerializer,EdtTableSerializer
 from ...serializer.serializerConstituer import ConstituerSerializer
 from ...serializer.serializerNiveauParcours import NiveauParcoursSerializer
-from ...models import Classe,NiveauParcours
+from ...models import Constituer,NiveauParcours
 
 
 class EdtExcelView(APIView):
@@ -146,20 +146,9 @@ class EdtExcelView(APIView):
                                 heureCourant=contenu[i]["Horaire"]["heureFin"]
 
                         if len(contenu) > 0:
-                            classes=Classe.objects.filter(niveau=niveauParcours.niveau)
-                            donneeConstituer=[]
-                            for classe in classes:
-                                constitue=classe.constituers.filter(numParcours=npDonnee['numParcours']).exists()
-                                if not constitue:
-                                    donneeConstituer.append({
-                                        "numParcours":npDonnee['numParcours'],
-                                        "numClasse":classe.numClasse
-                                    })
-                                serializerConstituer = ConstituerSerializer(data=donneeConstituer, many=True)
-                                if serializerConstituer.is_valid():
-                                    serializerConstituer.save()
-                            donneEdts=[]
 
+                            donneEdts=[]
+                            donneeConstituer=[]
                             for ligne in contenu:
                                 horaire=ligne["Horaire"]
                                 for jour in jours:
@@ -168,6 +157,13 @@ class EdtExcelView(APIView):
                                         if isinstance(val, dict) and val:
                                             dateObj=datetime.strptime(dates.get(jour),"%d-%m-%Y")
                                             dateSql=dateObj.strftime("%Y-%m-%d")
+
+                                            constiuer=Constituer.objects.filter(numClasse=val['classe'], numParcours=npDonnee['numParcours']).exists()
+                                            if not constiuer:
+                                                donneeConstituer.append({
+                                                    "numParcours":npDonnee['numParcours'],
+                                                    "numClasse":val['classe']
+                                                })
                                             donneEdt={
                                                 "numMatiere":val["matiere"],
                                                 "numParcours":npDonnee['numParcours'],
@@ -178,6 +174,10 @@ class EdtExcelView(APIView):
                                                 "heureFin":horaire["heureFin"]
                                             }
                                             donneEdts.append(donneEdt)
+                                            
+                            serializerConstituer = ConstituerSerializer(data=donneeConstituer, many=True)
+                            if serializerConstituer.is_valid():
+                                serializerConstituer.save()
                             serializerEdt= EdtSerializer(data=donneEdts, many=True)
                             if serializerEdt.is_valid():
                                 serializerEdt.save()

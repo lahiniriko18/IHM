@@ -1,2 +1,6 @@
-a=352
-print(f"{a:04d}")
+d={
+    "a":1,
+    "b":2,
+    "c":3
+}
+print(next((k for k,v in d.items() if v==2), None))

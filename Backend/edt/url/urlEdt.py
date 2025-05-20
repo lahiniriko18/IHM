@@ -1,7 +1,7 @@
 from django.urls import path
 from ..views.edts.viewsEdt import EdtView,ListeEdtView
 from ..views.edts.viewsEdtExcel import EdtExcelView
-from ..views.viewsModele import ModeleExcelView
+from ..views.edts.viewsModele import ModeleExcelView
 from ..views.edts.viewsEdtDetail import EdtDetailView
 
 urlpatterns = [
