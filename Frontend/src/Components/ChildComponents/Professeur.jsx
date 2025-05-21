@@ -171,12 +171,12 @@ function Professeur() {
     const formData = new FormData();
     if (Array.isArray(checkedRows)) {
       checkedRows.forEach((val) => {
-        formData.append('numProfesseurs[]', val);
+        formData.append('numProfesseurs[]', parseInt(val));
       });
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/professeur/supprimer/liste/",formData);
+      const response = await axios.post("http://127.0.0.1:8000/api/professeur/supprimer/liste/", formData);
 
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Erreur lors de la suppression : Code ${response.status}`);
