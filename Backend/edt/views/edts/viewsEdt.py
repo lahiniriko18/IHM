@@ -92,9 +92,10 @@ class ListeEdtView(APIView):
 
         response=edtCrudInstance.ajoutEdtListeDonnee(data['donnee'],jours)
         return Response(response['context'], status=response['status'])
-        
 
-    def delete(self, request):
+
+class EdtTableauView(APIView):
+    def post(self, request):
         serviceCrud=ServiceModelCrud(Edt)
         response=serviceCrud.suppressionMutlipe(request.data, "numEdts","Emploi du temps")
         return Response(response['context'], status=response['status'])
