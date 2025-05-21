@@ -168,9 +168,14 @@ function Professeur() {
     }
   }
   const removeProfesseurByCkeckBox = async () => {
-    console.log("Voici le numprof enregitrer :", checkedRows, " et le type de ce deonnées c'est :  ", typeof checkedRows)
+    const formData = new FormData();
+    if (Array.isArray(checkedRows)) {
+      checkedRows.forEach((val) => {
+        formData.append('numProfesseurs[]', val);
+      });
+    }
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/professeur/supprimer/liste/`, { numProfesseurs: checkedRows })
+      const response = await axios.delete(`http://127.0.0.1:8000/api/professeur/supprimer/liste/`, formData)
       if (response.status !== 200 && response.status !== 204) {
         throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
       }
