@@ -4,7 +4,7 @@ from rest_framework import status
 from ...serializer.serializerExcel import ExcelSerializer,DataSerializer
 import pandas as pd
 from openpyxl import load_workbook
-from .viewsEdtUtile import EdtCrud
+from ...services.serviceEdt import EdtCrud
 
 
 class EdtExcelView(APIView):

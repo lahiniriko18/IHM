@@ -1,14 +1,14 @@
 from datetime import timedelta,datetime
 from rest_framework import status
-from ...serializer.serializerEdt import EdtSerializer
-from ...serializer.serializerNiveauParcours import NiveauParcoursSerializer
-from ...models import Edt,Classe
+from ..serializer.serializerEdt import EdtSerializer
+from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
+from ..models import Edt,Classe
 from collections import defaultdict
 from datetime import datetime
-from ...serializer.serializerEdt import EdtSerializer,EdtTableSerializer
-from ...serializer.serializerConstituer import ConstituerSerializer
-from ...serializer.serializerNiveauParcours import NiveauParcoursSerializer
-from ...models import Edt,Constituer,NiveauParcours
+from ..serializer.serializerEdt import EdtSerializer,EdtTableSerializer
+from ..serializer.serializerConstituer import ConstituerSerializer
+from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
+from ..models import Edt,Constituer,NiveauParcours
 
 
 class EdtListage:

@@ -5,7 +5,8 @@ from django.db.models.functions import TruncWeek
 from django.db.models import Min,Max
 from ...serializer.serializerEdt import EdtSerializer
 from ...models import Edt,NiveauParcours
-from .viewsEdtUtile import EdtCrud
+from ...services.serviceEdt import EdtCrud
+from datetime import datetime,timedelta
 
 
 class EdtView(APIView):
@@ -25,10 +26,12 @@ class EdtView(APIView):
             niveauParcours=NiveauParcours.objects.filter(
                 niveau=edtSemaine['numClasse__niveau'],
                 numParcours=edtSemaine['numParcours']).values('numNiveauParcours','niveau','numParcours__codeParcours').first()
+            lundi = edtSemaine['dateDebut'] - timedelta(days=edtSemaine['dateDebut'].weekday())
+            samedi = lundi + timedelta(days=5)
             donnee={
                 'niveauParcours':f"{niveauParcours['niveau']} {niveauParcours['numParcours__codeParcours']}",
-                'dateDebut':edtSemaine['dateDebut'],
-                'dateFin':edtSemaine['dateFin']
+                'dateDebut':datetime.strftime(lundi, "%d-%m-%Y"),
+                'dateFin':datetime.strftime(samedi, "%d-%m-%Y")
             }
             numEdts=Edt.objects.filter(
                 numClasse__niveau=edtSemaine['numClasse__niveau'],
@@ -36,9 +39,10 @@ class EdtView(APIView):
                 date__range=(edtSemaine['dateDebut'],edtSemaine['dateFin'])
                 ).values_list('numEdt',flat=True)
             donnee['numEdts']=list(numEdts)
-            
+
             donnees.append(donnee)
 
+        donnees=sorted(donnees, key=lambda d:sum(d['numEdts']), reverse=True)
         return Response(donnees)
     
     def post(self, request):
