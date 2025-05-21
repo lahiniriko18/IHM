@@ -5,7 +5,8 @@ from django.db.models.functions import TruncWeek
 from django.db.models import Min,Max
 from ...serializer.serializerEdt import EdtSerializer
 from ...models import Edt,NiveauParcours
-from ...services.serviceEdt import EdtCrud
+from ...services.serviceEdt import ServiceEdtCrud
+from ...services.serviceModel import ServiceModelCrud
 from datetime import datetime,timedelta
 
 
@@ -74,7 +75,7 @@ class ListeEdtView(APIView):
 
     def post(self, request):
         jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
-        edtCrudInstance=EdtCrud()
+        edtCrudInstance=ServiceEdtCrud()
         response=edtCrudInstance.ajoutEdtListeDonnee(request.data['donnee'],jours)
         return Response(response['context'], status=response['status'])
     
@@ -82,8 +83,10 @@ class ListeEdtView(APIView):
         data=request.data
         jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
 
-        edtCrudInstance=EdtCrud()
-        responseSup=edtCrudInstance.supprimerEdtListe(data)
+        edtCrudInstance=ServiceEdtCrud()
+        serviceCrud=ServiceModelCrud(Edt)
+        
+        responseSup=serviceCrud.suppressionMutlipe(request.data, "numEdts","Emploi du temps")
         if responseSup['status']==status.HTTP_401_UNAUTHORIZED:
             return Response(responseSup['context'], status=responseSup['status'])
 
@@ -92,6 +95,6 @@ class ListeEdtView(APIView):
         
 
     def delete(self, request):
-        edtCrudInstance=EdtCrud()
-        responseSup=edtCrudInstance.supprimerEdtListe(request.data)
-        return Response(responseSup['context'], responseSup['status'])
+        serviceCrud=ServiceModelCrud(Edt)
+        response=serviceCrud.suppressionMutlipe(request.data, "numEdts","Emploi du temps")
+        return Response(response['context'], status=response['status'])

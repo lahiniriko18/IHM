@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..serializer.serializerParcours import ParcoursSerializer
 from ..models import Parcours
+from ..services.serviceModel import ServiceModelCrud
 class ParcoursView(APIView):
     def get(self, request):
         parcours=Parcours.objects.all().order_by('-numParcours')
@@ -35,16 +36,6 @@ class ParcoursView(APIView):
         
 class ParcourDetailView(APIView):
     def delete(self, request):
-        numParcours=request.data.get('numParcours',[])
-        if not isinstance(numParcours, list):
-            numParcours=request.data.getlist('numParcours[]')
-
-        if any(isinstance(numeroP, str) for numeroP in numParcours):
-            return Response({"erreur":"Type de données invalide !"})
-
-        parcours=Parcours.objects.filter(numParcour__in=numParcours)
-        if parcours:
-            for p in parcours:
-                p.delete()
-            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
-        return Response({"erreur":"Parcours introuvables !"}, status=status.HTTP_404_NOT_FOUND)
+        serviceCrud=ServiceModelCrud(Parcours)
+        response=serviceCrud.suppressionMutlipe(request.data, "numParcours","Parcours")
+        return Response(response['context'], status=response['status'])

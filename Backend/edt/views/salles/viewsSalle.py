@@ -4,6 +4,7 @@ from rest_framework import status
 from ...serializer.serializerSalle import SalleSerializer
 from ...models import Salle
 from datetime import date,datetime,timedelta
+from ...services.serviceModel import ServiceModelCrud
 class SalleView(APIView):
     def get(self, request):
         salles=Salle.objects.all().order_by('-numSalle')
@@ -55,16 +56,6 @@ class SalleView(APIView):
 
 class SalleDetailView(APIView):
     def delete(self, request):
-        numSalles=request.data.get('numSalles',[])
-        if not isinstance(numSalles, list):
-            numSalles=request.data.getlist('numSalles[]')
-
-        if any(isinstance(numSalle, str) for numSalle in numSalles):
-            return Response({"erreur":"Type de données invalide !"})
-
-        salles=Salle.objects.filter(numSalle__in=numSalles)
-        if salles:
-            for salle in salles:
-                salle.delete()
-            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
-        return Response({"erreur":"Salles introuvables !"}, status=status.HTTP_404_NOT_FOUND)
+        serviceCrud=ServiceModelCrud(Salle)
+        response=serviceCrud.suppressionMutlipe(request.data, "numSalles","Salles")
+        return Response(response['context'], status=response['status'])

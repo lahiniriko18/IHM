@@ -5,6 +5,7 @@ from ...serializer.serializerMatiere import MatiereSerializer
 from ...serializer.serializerNiveauParcours import NiveauParcoursSerializer
 from ...serializer.serializerProfesseur import ProfesseurSerializer
 from ...models import Matiere,NiveauParcours,Professeur
+from ...services.serviceModel import ServiceModelCrud
 
 class MatiereDetailView(APIView):
     def get(self, request, numMatiere):
@@ -20,19 +21,9 @@ class MatiereDetailView(APIView):
         return Response({"erreur":"Matiere introuvable !"}, status=status.HTTP_404_NOT_FOUND)   
 
     def delete(self, request):
-        numMatieres=request.data.get('numMatieres',[])
-        if not isinstance(numMatieres, list):
-            numMatieres=request.data.getlist('numMatieres[]')
-
-        if any(isinstance(numMatiere, str) for numMatiere in numMatieres):
-            return Response({"erreur":"Type de données invalide !"})
-
-        matieres=Matiere.objects.filter(numMatiere__in=numMatieres)
-        if matieres:
-            for matiere in matieres:
-                matiere.delete()
-            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
-        return Response({"erreur":"Matières introuvables !"}, status=status.HTTP_404_NOT_FOUND)
+        serviceCrud=ServiceModelCrud(Matiere)
+        response=serviceCrud.suppressionMutlipe(request.data, "numMatieres","Matières")
+        return Response(response['context'], status=response['status'])
 
 
 class MatiereNiveauParcoursView(APIView):

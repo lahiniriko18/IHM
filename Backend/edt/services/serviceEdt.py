@@ -11,7 +11,7 @@ from ..serializer.serializerNiveauParcours import NiveauParcoursSerializer
 from ..models import Edt,Constituer,NiveauParcours
 
 
-class EdtListage:
+class ServiceEdtListage:
     def listeEdtParNumEdts(self, numEdts):
         edts=Edt.objects.filter(numEdt__in=numEdts).order_by('heureDebut')
         if edts:
@@ -74,7 +74,7 @@ class EdtListage:
             }
     
 
-class EdtCrud:
+class ServiceEdtCrud:
     def ajoutEdtListeDonnee(self,data,jours):
         serializer=EdtTableSerializer(data=data)
         
@@ -144,28 +144,4 @@ class EdtCrud:
         return {
             "context":serializer.errors,
             "status":status.HTTP_401_UNAUTHORIZED
-        }
-    
-    def supprimerEdtListe(self, data):
-        numEdts=data.get('numEdts',[])
-        if not isinstance(numEdts, list):
-            numEdts=data.getlist('numEdts[]')
-
-        if any(isinstance(numEdt, str) for numEdt in numEdts):
-            return {
-                "context":{"erreur":"Type de données invalide !"},
-                "status":status.HTTP_401_UNAUTHORIZED
-            }
-
-        edts=Edt.objects.filter(numEdt__in=numEdts)
-        if edts:
-            for edt in edts:
-                edt.delete()
-            return {
-                "context":{"Suppression avec succès !"},
-                "status":status.HTTP_200_OK
-            }
-        return {
-            "context":{"erreur":"Emploi du temps introuvable !"},
-            "status":status.HTTP_404_NOT_FOUND
         }

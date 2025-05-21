@@ -4,7 +4,7 @@ from rest_framework import status
 from ...serializer.serializerExcel import ExcelSerializer,DataSerializer
 import pandas as pd
 from openpyxl import load_workbook
-from ...services.serviceEdt import EdtCrud
+from ...services.serviceEdt import ServiceEdtCrud
 
 
 class EdtExcelView(APIView):
@@ -126,7 +126,7 @@ class EdtExcelView(APIView):
                 serializer=DataSerializer(data=data)
                 if serializer.is_valid():
                     donnee = serializer.validated_data
-                    edtCrudInstance=EdtCrud()
+                    edtCrudInstance=ServiceEdtCrud()
                     response = edtCrudInstance.ajoutEdtListeDonnee(donnee,jours)
 
                     return Response(response['context'], status=response['status'])

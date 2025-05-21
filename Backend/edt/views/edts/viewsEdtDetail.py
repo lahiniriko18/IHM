@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from datetime import timedelta,datetime
 from ...models import Edt
-from ...services.serviceEdt import EdtListage
+from ...services.serviceEdt import ServiceEdtListage
 
 class EdtDetailView(APIView):
     
@@ -16,7 +16,7 @@ class EdtDetailView(APIView):
         if any(isinstance(numEdt, str) for numEdt in numEdts):
             return Response({"erreur":"Type de données invalide !"})
         
-        eg=EdtListage()
+        eg=ServiceEdtListage()
         response = eg.listeEdtParNumEdts(numEdts)
 
         return Response(response['context'], status=response['status'])

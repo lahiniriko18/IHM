@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from ..serializer.serializerMention import MentionSerializer
 from ..models import Mention
+from ..services.serviceModel import ServiceModelCrud
 class MentionView(APIView):
     def get(self, request):
         mentions=Mention.objects.all().order_by('-numMention')
@@ -36,16 +37,6 @@ class MentionView(APIView):
 
 class MentionDetailView(APIView):
     def delete(self, request):
-        numMentions=request.data.get('numMentions',[])
-        if not isinstance(numMentions, list):
-            numMentions=request.data.getlist('numMentions[]')
-
-        if any(isinstance(numMention, str) for numMention in numMentions):
-            return Response({"erreur":"Type de données invalide !"})
-
-        mentions=Mention.objects.filter(numMention__in=numMentions)
-        if mentions:
-            for mention in mentions:
-                mention.delete()
-            return Response({"Suppression avec succès !"},status=status.HTTP_200_OK)
-        return Response({"erreur":"Mentions introuvables !"}, status=status.HTTP_404_NOT_FOUND)
+        serviceCrud=ServiceModelCrud(Mention)
+        response=serviceCrud.suppressionMutlipe(request.data, "numMentions","Mentions")
+        return Response(response['context'], status=response['status'])
