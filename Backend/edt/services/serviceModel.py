@@ -10,13 +10,13 @@ class ServiceModelCrud:
         if not isinstance(ids, list):
             ids=data.getlist(f'{nomIds}[]')
 
-        if any(isinstance(id, str) for id in ids):
-            print(ids)
+        if any(not id.isdigit() for id in ids):
+    
             return {
                 "context":{"erreur":"Type de données invalide !"},
                 "status":status.HTTP_401_UNAUTHORIZED
             }
-        print(ids)
+        ids=list(map(int, ids))
         tables=self.model.objects.filter(pk__in=ids)
         if tables:
             for table in tables:
