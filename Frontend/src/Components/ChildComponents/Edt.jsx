@@ -34,6 +34,7 @@ function Edt() {
   const [file, setFile] = useState(null);
   const fileTypes = ["XLS", "XLSX"];
   const getData = async () => {
+    setIsLoading(true);
     try {
       const response = await axios.get("http://127.0.0.1:8000/api/edt/");
       if (response.status !== 200) {
@@ -41,6 +42,7 @@ function Edt() {
       }
       setListeEdt(response.data);
       setOriginalList(response.data)
+      setIsLoading(false);
     } catch (error) {
       if (error.response) {
         console.error("Erreur du serveur :", error.response.data)
@@ -624,7 +626,7 @@ function Edt() {
                     <tbody className="text-sm">
                       {currentData.map((EDT, index) => (
                         <tr key={index} className="border-b transition-all duration-300 hover:bg-gray-100">
-                          <td className="px-4 py-2 text-center">{EDT.numEdts[0]}</td>
+                          <td className="px-4 py-2 text-center">{index+1}</td>
                           <td className="px-4 py-2 text-center">{EDT.niveauParcours}</td>
                           <td className="px-4 py-2 text-center">{EDT.dateDebut}</td>
                           <td className="px-4 py-2 text-center">{EDT.dateFin}</td>

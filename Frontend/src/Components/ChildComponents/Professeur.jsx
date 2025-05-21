@@ -13,6 +13,7 @@ function Professeur() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [originalList, setOriginalList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
   const [id, setId] = useState()
   const [listeMatiere, setListeMatiere] = useState([]);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -31,6 +32,23 @@ function Professeur() {
     numEtablissement: null,
     matieres: []
   })
+  const [isDeleteByCheckBox, setDeleteByChekbox] = useState(true);
+  const [checkedRows, setCheckedRows] = useState([]);
+  const allChecked = checkedRows.length === listeProfesseur.length && listeProfesseur.length > 0;
+
+  const handleCheck = (id) => {
+    setCheckedRows((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleCheckAll = () => {
+    if (allChecked) {
+      setCheckedRows([]);
+    } else {
+      setCheckedRows(listeProfesseur.map((item) => item.numProfesseur));
+    }
+  };
   const handleDeletephotos = () => {
     setSelectedFile(null);
 
@@ -147,6 +165,19 @@ function Professeur() {
       getData()
     } catch (error) {
       console.log("Erreur:", error.message)
+    }
+  }
+  const removeProfesseurByCkeckBox = async () => {
+    console.log("Voici le numprof enregitrer :", checkedRows, " et le type de ce deonnées c'est :  ", typeof checkedRows)
+    try {
+      const response = await axios.delete(`http://127.0.0.1:8000/api/professeur/supprimer/liste/`, { numProfesseurs: checkedRows })
+      if (response.status !== 200 && response.status !== 204) {
+        throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
+      }
+      console.log(`professeur ${id} supprimé avec succès`);
+      getData()
+    } catch (error) {
+      console.error("Erreur:", error.response)
     }
   }
   const putData = async (dataProfesseur) => {
@@ -613,16 +644,23 @@ function Professeur() {
               </div>
               <div className="flex flex-row gap-2">
                 <img src="/Icons/attention.png" alt="Attention" />
-                <p>Etes vous sur de vouloir supprimer cette professeur ?</p>
+                <p>Etes vous sur de vouloir supprimer le(s) professeur(s) selectionée ?</p>
               </div>
               <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
               <div className="w-full flex justify-center">
                 <button
                   className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                   onClick={() => {
-                    if (id !== "") {
-                      removeProfesseur(id)
+                    if (isDeleteByCheckBox) {
+                      if (checkedRows.length !== 0) {
+                        removeProfesseurByCkeckBox()
+                      }
+                    } else {
+                      if (id !== "") {
+                        removeProfesseur(id)
+                      }
                     }
+
                     setIsConfirmModalOpen(false);
                   }}
                 >
@@ -668,7 +706,23 @@ function Professeur() {
             <div className="w-full border rounded-t-lg overflow-x-auto">
               <table className="table-auto overflow-y w-full border-collapse">
                 <thead>
-                  <tr className="bg-blue-500 text-white text-sm">
+                  <tr className="bg-blue-500 text-white text-sm ">
+                    <th className="px-4 py-4 cursor-pointer relative">
+                      <input
+                        className='cursor-pointer'
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={handleCheckAll}
+                      />
+                      {
+                        checkedRows.length > 0 && <button className="absolute right-[-6px] rounded hover:bg-opacity-80" onClick={() => {
+                          confirmerSuppression(1)
+                          setDeleteByChekbox(true)
+                        }}>
+                          <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
+                        </button>
+                      }
+                    </th>
                     <th className="px-4 py-4">#</th>
                     {/* <th className="px-4 py-4">PDP</th> */}
                     <th className="px-4 py-4">Nom</th>
@@ -685,7 +739,12 @@ function Professeur() {
                 <tbody className="text-sm">
                   {currentData.map((Professeur, index) => (
                     <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
-
+                      <td className="px-4 py-2 text-center cursor-pointer"> <input
+                        type="checkbox"
+                        className='cursor-pointer'
+                        checked={checkedRows.includes(Professeur.numProfesseur)}
+                        onChange={() => handleCheck(Professeur.numProfesseur)}
+                      /></td>
                       <td className="px-4 py-2 text-center">{Professeur.numProfesseur}</td>
                       {/* <td className="px-4 py-2 text-center">
                         {Professeur.photos && Professeur.photos !== "" && (

@@ -3,9 +3,9 @@ import { useSidebar } from '../Context/SidebarContext';
 import Calendar from 'react-calendar'
 import axios from "axios"
 function Dashboard() {
-
+  const [listeEDT, setListeEdt] = useState([]);
   const [stats, setStats] = useState({});
-  const [lastEdt, setLastEdt] = useState({})
+  const [isLoading, setIsLoading] = useState(true);
   const getStats = async () => {
     try {
       const response = await axios.get("http://127.0.0.1:8000/api/statistique/effectif")
@@ -21,11 +21,34 @@ function Dashboard() {
       console.log('La tâche est terminée')
     }
   }
+  const getData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/edt/dernier");
+      // console.log("Données brutes reçues :", response.data); // 👈 Ajoute ceci
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeEdt([response.data]);
+      setIsLoading(false);
+    } catch (error) {
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
+    }
+  };
+
   useEffect(() => {
     getStats()
-
+    getData();
   }, [])
-
+  function formatDateToDDMMYYYY(dateStr) {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
+  }
 
   const { isReduire } = useSidebar();
   return (
@@ -111,44 +134,49 @@ function Dashboard() {
         <p className="text-bleu font-bold">Liste de derniere emploi du temps creé</p>
 
         {
-          (Object.keys(lastEdt).length ===0) ? (
-          <div className="w-full h-40  flex flex-col items-center justify-center">
-            <img src="/Icons/vide.png" alt="Vide" className='w-14'/>
-            <p className='text-gray-400'>Aucun données trouvé</p>
-          </div>) : (
-            
-            <div className='overflow-hidden rounded-t-lg mt-4 bg-white shadow border w-full'>
-            <table className="table-auto w-full rounded-xl border-collapse ">
-              <thead>
-                <tr className="bg-blue-500 text-white text-sm">
-                  <th className="px-4 py-3 ">#</th>
-                  <th className="px-4 py-3 ">Classe</th>
-                  <th className="px-4 py-3 ">Date de début</th>
-                  <th className="px-4 py-3 ">Date de fin</th>
-                  <th className="px-4 py-3 ">Utilisateur</th>
-                  <th className="px-4 py-3 ">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {[...Array(2)].map((_, index) => (
-                  <tr key={index} className="hover:bg-gray-100 -t">
-                    <td className="px-4 py-2  text-center">{index + 1}</td>
-                    <td className="px-4 py-2  text-center">L3</td>
-                    <td className="px-4 py-2  text-center">06/05/25</td>
-                    <td className="px-4 py-2  text-center">11/05/21</td>
-                    <td className="px-4 py-2  text-center">Avotra</td>
+          isLoading ? (
+            <div className="w-full h-40 flex flex-col items-center  justify-center </div>mt-[10%]">
+              <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+              <p className="text-gray-400 mt-2">Chargement des données...</p>
+            </div>
+          ) :
+            (Object.entries(listeEDT).length === 0) ? (
+              <div className="w-full h-40  flex flex-col items-center justify-center">
+                <img src="/Icons/vide.png" alt="Vide" className='w-14' />
+                <p className='text-gray-400'>Aucun données trouvé</p>
+              </div>) : (
 
-                    <td className="px-4 py-2  text-center">
-                      <button className="p-1 rounded hover:bg-gray-200">
-                        <img src="/Icons/afficher.png" alt="actions" className="w-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          )
+              <div className='overflow-hidden rounded-t-lg mt-4 bg-white shadow border w-full'>
+                <table className="table-auto w-full rounded-xl border-collapse ">
+                  <thead>
+                    <tr className="bg-blue-500 text-white text-sm">
+                      <th className="px-4 py-3 ">#</th>
+                      <th className="px-4 py-3 ">Classe</th>
+                      <th className="px-4 py-3 ">Date de début</th>
+                      <th className="px-4 py-3 ">Date de fin</th>
+                      <th className="px-4 py-3 ">Utilisateur</th>
+                      <th className="px-4 py-3 ">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm">
+                    {(listeEDT).map((EDT, index) => (
+                      <tr key={index} className="hover:bg-gray-100 -t">
+                        <td className="px-4 py-2  text-center">{index + 1}</td>
+                        <td className="px-4 py-2  text-center">{EDT.niveauParcours}</td>
+                        <td className="px-4 py-2  text-center">{EDT.dateDebut}</td>
+                        <td className="px-4 py-2  text-center">{EDT.dateFin}</td>
+                        <td className="px-4 py-2  text-center">Avotra</td>
+                        <td className="px-4 py-2  text-center">
+                          <button className="p-1 rounded hover:bg-gray-200">
+                            <img src="/Icons/afficher.png" alt="actions" className="w-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
         }
       </div>
     </div>
