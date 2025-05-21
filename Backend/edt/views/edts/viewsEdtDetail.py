@@ -34,6 +34,7 @@ class EdtDetailView(APIView):
             niveauParcours=premierEdt.numParcours.niveauParcours.filter(niveau=premierEdt.numClasse.niveau).first()
             npDonnee=NiveauParcoursSerializer(niveauParcours).data
             titre.append(niveauParcours.numNiveauParcours)
+            titre.append(list(edts.values_list("numEdt",flat=True)))
 
             donnees={"titre":titre}
             contenu=[]
@@ -42,7 +43,7 @@ class EdtDetailView(APIView):
             edtGroupe=defaultdict(list)
             for edt in edts:
                 edtGroupe[f"{edt.heureDebut}-{edt.heureFin}"].append(edt)
-            print(dates)
+
             for horaire,groupeEdt in edtGroupe.items():
                 donnee={
                     "Horaire":{
