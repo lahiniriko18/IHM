@@ -29,7 +29,7 @@ class ClasseDetailView(APIView):
         else:
             return Response({"erreur":"Classe introuvable !"}, status=status.HTTP_404_NOT_FOUND)
     
-    def delete(self, request):
+    def post(self, request):
         numClasses=request.data.get('numClasses',[])
         if not isinstance(numClasses, list):
             numClasses=request.data.getlist('numClasses[]')

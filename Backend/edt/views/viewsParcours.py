@@ -35,7 +35,7 @@ class ParcoursView(APIView):
             return Response({'erreur':'Parcours introuvable'}, status=status.HTTP_404_NOT_FOUND)
         
 class ParcourDetailView(APIView):
-    def delete(self, request):
+    def post(self, request):
         serviceCrud=ServiceModelCrud(Parcours)
         response=serviceCrud.suppressionMutlipe(request.data, "numParcours","Parcours")
         return Response(response['context'], status=response['status'])

@@ -36,7 +36,7 @@ class MentionView(APIView):
     
 
 class MentionDetailView(APIView):
-    def delete(self, request):
+    def post(self, request):
         serviceCrud=ServiceModelCrud(Mention)
         response=serviceCrud.suppressionMutlipe(request.data, "numMentions","Mentions")
         return Response(response['context'], status=response['status'])

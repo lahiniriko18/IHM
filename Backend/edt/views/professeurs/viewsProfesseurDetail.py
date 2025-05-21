@@ -26,7 +26,7 @@ class ProfesseurDetailView(APIView):
         
         return Response(donnee,status=status.HTTP_200_OK)
     
-    def delete(self, request):
+    def post(self, request):
         serviceCrud=ServiceModelCrud(Professeur)
         response=serviceCrud.suppressionMutlipe(request.data, "numProfesseurs","Professeurs")
         return Response(response['context'], status=response['status'])

@@ -1,11 +1,7 @@
-personnes = [
-    {"nom": "Alice", "age": 30},
-    {"nom": "Bob", "age": 25},
-    {"nom": "Charlie", "age": 35}
-]
+n=int(input("Saisir:"))
 
-# Trier du plus âgé au moins âgé
-personnes_triees = sorted(personnes, key=lambda p: p["age"], reverse=True)
-
-for p in personnes_triees:
-    print(p)
+def fibonnacci(n):
+    if n<2:
+        return n
+    return fibonnacci(n-1) - fibonnacci(n-2)
+print(fibonnacci(n))

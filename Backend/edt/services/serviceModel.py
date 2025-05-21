@@ -6,16 +6,17 @@ class ServiceModelCrud:
     
     def suppressionMutlipe(self, data, nomIds, nomTable):
 
-        ids=data.get(nomIds,[])
+        ids=data.get(nomIds)
         if not isinstance(ids, list):
             ids=data.getlist(f'{nomIds}[]')
 
         if any(isinstance(id, str) for id in ids):
+            print(ids)
             return {
                 "context":{"erreur":"Type de données invalide !"},
                 "status":status.HTTP_401_UNAUTHORIZED
             }
-
+        print(ids)
         tables=self.model.objects.filter(pk__in=ids)
         if tables:
             for table in tables:

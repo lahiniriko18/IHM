@@ -20,7 +20,7 @@ class MatiereDetailView(APIView):
         
         return Response({"erreur":"Matiere introuvable !"}, status=status.HTTP_404_NOT_FOUND)   
 
-    def delete(self, request):
+    def post(self, request):
         serviceCrud=ServiceModelCrud(Matiere)
         response=serviceCrud.suppressionMutlipe(request.data, "numMatieres","Matières")
         return Response(response['context'], status=response['status'])
