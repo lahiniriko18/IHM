@@ -174,17 +174,21 @@ function Professeur() {
         formData.append('numProfesseurs[]', val);
       });
     }
+
     try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/professeur/supprimer/liste/`, formData)
+      const response = await axios.post("http://127.0.0.1:8000/api/professeur/supprimer/liste/",formData);
+
       if (response.status !== 200 && response.status !== 204) {
-        throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
+        throw new Error(`Erreur lors de la suppression : Code ${response.status}`);
       }
-      console.log(`professeur ${id} supprimé avec succès`);
-      getData()
+
+      console.log(`Professeurs supprimés avec succès`);
+      getData(); // Recharge la liste après suppression
     } catch (error) {
-      console.error("Erreur:", error.response)
+      console.error("Erreur:", error.response?.status || error.message);
     }
-  }
+  };
+
   const putData = async (dataProfesseur) => {
     const formData = new FormData();
 
