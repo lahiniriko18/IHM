@@ -3,12 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from ...serializer.serializerSalle import SalleSerializer
 from ...models import Salle
-from datetime import date,datetime
+from datetime import date,datetime,timedelta
 class SalleView(APIView):
     def get(self, request):
         salles=Salle.objects.all().order_by('-numSalle')
-        serializer=SalleSerializer(salles, many=True)
-        donnees=serializer.data
+        donnees=SalleSerializer(salles, many=True).data
         dateActuel=date.today()
         heureActuel=datetime.now().time()
         for i,salle in enumerate(salles):
@@ -20,7 +19,13 @@ class SalleView(APIView):
                     serializerModif.save()
                 else:
                     return Response(serializerModif.errors,status=status.HTTP_400_BAD_REQUEST)
-
+            edts=salle.edts.all()
+            heureTotal=timedelta()
+            for edt in edts:
+                debut=datetime.combine(datetime.today(), edt.heureDebut)
+                fin=datetime.combine(datetime.today(), edt.heureFin)
+                heureTotal += (fin - debut)
+            donnees[i]["heureTotal"]=heureTotal.total_seconds()
         return Response(donnees)
     
     

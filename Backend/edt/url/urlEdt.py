@@ -14,5 +14,6 @@ urlpatterns = [
     path('telecharger/',ModeleExcelView.as_view(),name='edt.telecharger'),
     path('ajouter/liste/', ListeEdtView.as_view(), name='edt.ajouter.liste'),
     path('modifier/liste/', ListeEdtView.as_view(), name='edt.modifier.liste'),
-    path('modifier/donnee/', EdtDetailView.as_view(), name='edt.modifier.donnee')
+    path('modifier/donnee/', EdtDetailView.as_view(), name='edt.modifier.donnee'),
+    path('dernier/', EdtDetailView.as_view(), name='edt.dernier')
 ]
