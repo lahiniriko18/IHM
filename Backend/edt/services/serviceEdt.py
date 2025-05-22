@@ -116,6 +116,7 @@ class ServiceEdtCrud:
                                     })
                                 donneEdt={
                                     "numMatiere":val["matiere"],
+                                    "numProfesseur":val['professeur'],
                                     "numParcours":npDonnee['numParcours'],
                                     "numSalle":val["salle"],
                                     "numClasse":val['classe'],

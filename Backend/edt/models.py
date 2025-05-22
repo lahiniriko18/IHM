@@ -96,9 +96,10 @@ class Salle(models.Model):
 class Edt(models.Model):
     numEdt=models.AutoField(primary_key=True)
     numMatiere=models.ForeignKey(Matiere, related_name='edts', on_delete=models.CASCADE, db_column='numMatiere')
-    numParcours=models.ForeignKey(Parcours, related_name='edts', on_delete=models.SET_NULL, null=True, db_column='numParcours')
-    numSalle=models.ForeignKey(Salle, related_name='edts', on_delete=models.SET_NULL, null=True, db_column='numSalle')
-    numClasse=models.ForeignKey(Classe, related_name='edts', on_delete=models.SET_NULL, null=True, db_column='numClasse')
+    numProfesseur=models.ForeignKey(Professeur, related_name='edts', on_delete=models.CASCADE, db_column='numProfesseur', null=True)
+    numParcours=models.ForeignKey(Parcours, related_name='edts', on_delete=models.CASCADE, null=True, db_column='numParcours')
+    numSalle=models.ForeignKey(Salle, related_name='edts', on_delete=models.CASCADE, null=True, db_column='numSalle')
+    numClasse=models.ForeignKey(Classe, related_name='edts', on_delete=models.CASCADE, null=True, db_column='numClasse')
     date=models.DateField()
     heureDebut=models.TimeField()
     heureFin=models.TimeField()

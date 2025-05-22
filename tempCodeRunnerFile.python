@@ -1,7 +1,2 @@
-n=int(input("Saisir:"))
-
-def fibonnacci(n):
-    if n<2:
-        return n
-    return fibonnacci(n-1) - fibonnacci(n-2)
-print(fibonnacci(n))
+l=[1,2,3,5]
+print(l[0].isdigit())

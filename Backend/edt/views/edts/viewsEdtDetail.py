@@ -4,6 +4,7 @@ from rest_framework import status
 from datetime import timedelta,datetime
 from ...models import Edt
 from ...services.serviceEdt import ServiceEdtListage
+from ...services.serviceMail import ServiceMailEdtProfesseur
 
 class EdtDetailView(APIView):
     
@@ -34,3 +35,18 @@ class EdtDetailView(APIView):
             'numEdts':list(numEdts)
         }
         return Response(donnee, status=status.HTTP_200_OK)
+
+
+class EdtProfesseurView(APIView):
+    def post(self, request):
+        numEdts=request.data.get('numEdts')
+        if not isinstance(numEdts, list):
+            numEdts = request.data.getlist('numEdts[]')
+
+        if any(not numEdt.isdigit() for numEdt in numEdts):
+            return Response({"erreur":"Format de données invalide !"}, status=status.HTTP_401_UNAUTHORIZED)
+        numEdts=list(map(int, numEdts))
+        
+        serviceEdtProf=ServiceMailEdtProfesseur()
+        professeurs=serviceEdtProf.distriubuerMail(numEdts)
+        return Response(professeurs)

@@ -10,6 +10,13 @@ class EdtSerializer(serializers.ModelSerializer):
             'incorrect_type': "Le format de l'ID de la matière est invalide !",
         }
     )
+    numProfesseur = serializers.PrimaryKeyRelatedField(
+        queryset=Professeur.objects.all(),
+        error_messages={
+            'does_not_exist': "La professeur spécifié n'existe pas !",
+            'incorrect_type': "Le format de l'ID du professeur est invalide !",
+        }
+    )
     numParcours = serializers.PrimaryKeyRelatedField(
         queryset=Parcours.objects.all(),
         error_messages={
@@ -31,6 +38,7 @@ class EdtSerializer(serializers.ModelSerializer):
             'incorrect_type': "Le format de l'ID de la classe est invalide !",
         }
     )
+
     class Meta:
         model=Edt
         fields=["numEdt","numMatiere","numParcours","numSalle","numClasse",
