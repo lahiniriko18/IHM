@@ -10,11 +10,11 @@ class EdtDetailView(APIView):
     
     def post(self, request):
         donnee=request.data
-        numEdts=donnee.get('numEdts',[])
+        numEdts=donnee.get('numEdts')
         if not isinstance(numEdts, list):
             numEdts=donnee.getlist('numEdts[]')
 
-        if any(isinstance(numEdt, str) for numEdt in numEdts):
+        if any(str(numEdt).isdigit() for numEdt in numEdts):
             return Response({"erreur":"Type de données invalide !"})
         
         eg=ServiceEdtListage()
@@ -43,10 +43,10 @@ class EdtProfesseurView(APIView):
         if not isinstance(numEdts, list):
             numEdts = request.data.getlist('numEdts[]')
 
-        if any(not numEdt.isdigit() for numEdt in numEdts):
+        if any(not str(numEdt).isdigit() for numEdt in numEdts):
             return Response({"erreur":"Format de données invalide !"}, status=status.HTTP_401_UNAUTHORIZED)
         numEdts=list(map(int, numEdts))
-        
+
         serviceEdtProf=ServiceMailEdtProfesseur()
         professeurs=serviceEdtProf.distriubuerMail(numEdts)
         return Response(professeurs)

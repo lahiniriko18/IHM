@@ -10,10 +10,9 @@ class ProfesseurStatView(APIView):
         serializer=ProfesseurStatSerializer(data=request.data)
         if serializer.is_valid():
             donnee=serializer.validated_data
-            professeur=Professeur.objects.filter(pk=donnee['numProfesseur']).first()
+            professeur=Professeur.objects.filter(pk=donnee['numProfesseur']).exists()
             if professeur:
-                numMatieres=professeur.enseigners.values_list('numMatiere', flat=True)
-                edts=Edt.objects.filter(date__range=(donnee['dateDebut'],donnee['dateFin']), numMatiere__in=numMatieres)
+                edts=Edt.objects.filter(date__range=(donnee['dateDebut'],donnee['dateFin']), numProfesseur=donnee['numProfesseur'])
                 heureTotal=timedelta()
 
                 for edt in edts:

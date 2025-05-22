@@ -41,7 +41,7 @@ class EdtSerializer(serializers.ModelSerializer):
 
     class Meta:
         model=Edt
-        fields=["numEdt","numMatiere","numParcours","numSalle","numClasse",
+        fields=["numEdt","numMatiere","numProfesseur","numParcours","numSalle","numClasse",
                     "date","heureDebut","heureFin"]
         
 

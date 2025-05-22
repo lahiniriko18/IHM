@@ -5,5 +5,6 @@ from ..models import Edt
 
 class ServiceMailEdtProfesseur:
     def distriubuerMail(self, numEdts):
-        professeurs=Edt.objects.filter(pk__in=numEdts).values_list('numProfesseur', flat=True).distinct()
-        return list(professeurs)
+        professeurs=Edt.objects.filter(pk__in=numEdts).values_list('numProfesseur').distinct()
+        print(professeurs)
+        return "zah"
