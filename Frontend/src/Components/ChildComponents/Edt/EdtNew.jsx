@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { data, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSidebar } from '../../Context/SidebarContext';
 import Creatable from 'react-select/creatable';
 import { useLocation } from 'react-router-dom';
 import { parseISO, getDay, format, addDays, isAfter } from 'date-fns';
 import axios from 'axios';
-import Professeur from '../Professeur';
-import NavigationPrompt from '../../Layout/NavigationPrompt';
 
 function EdtNew() {
   const location = useLocation();
@@ -23,16 +21,17 @@ function EdtNew() {
   const [professeursFiltres, setProfesseursFiltres] = useState([]);
   const [listeClasseSelected, setListeClasseSelected] = useState([]);
   const [listeProfesseur, setlisteProfesseur] = useState([]);
-  const navigate = useNavigate();
   const [horaireError, setHoraireError] = useState("");
   const [formHoraire, setFormHoraire] = useState({ heureDebut: "", heureFin: "" });
   const { isReduire } = useSidebar();
+
   const [formCreneau, setFormCreneau] = useState({
     classe: null,
     matiere: null,
     professeur: null,
     salle: null,
   });
+  const navigate = useNavigate();
   const [formError, setFormError] = useState("");
   const [selectedCreneau, setSelectedCreneau] = useState(null);
   const [modele, setModele] = useState(1);
@@ -112,41 +111,20 @@ function EdtNew() {
   }, [listeClasse]);
 
   useEffect(() => {
-    // Gestion de la fermeture / rechargement de l’onglet
+
     const handleBeforeUnload = (e) => {
       if (localStorage.getItem("dataNewEdt")) {
         e.preventDefault();
-        e.returnValue = ''; // Obligatoire pour certains navigateurs
+        e.returnValue = '';
       }
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
-
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
-  useEffect(() => {
-    // Gestion de la navigation arrière (bouton précédent ou changement d’URL)
-    const handleBeforeRouteLeave = (event) => {
-      if (localStorage.getItem("dataNewEdt")) {
-        const confirmed = window.confirm("Des données non sauvegardées existent. Voulez-vous vraiment quitter ?");
-        if (!confirmed) {
-          event.preventDefault();
-          window.history.pushState(null, null, window.location.pathname); // Forcer à rester
-        } else {
-          localStorage.removeItem("dataNewEdt");
-          setDataNewEdt(null);
-          setDataEdtState({});
-        }
-      }
-    };
-    window.addEventListener("popstate", handleBeforeRouteLeave);
 
-    return () => {
-      window.removeEventListener("popstate", handleBeforeRouteLeave);
-    };
-  }, []);
+
 
 
   useEffect(() => {
@@ -173,16 +151,6 @@ function EdtNew() {
       }
     }));
   }, [dataEdtState.date_debut, dataEdtState.date_fin]);
-  // usePrompt(
-  //   "Des données non sauvegardées existent. Voulez-vous vraiment quitter ?",
-  // {!!localStorage.getItem("dataNewEdt"),}
-  //   () => {
-  //     localStorage.removeItem("dataNewEdt");
-  //     setDataNewEdt(null);
-  //     setDataEdtState({});
-  //   }
-  // );
-
 
   useEffect(() => {
     if (!formCreneau.matiere) {
@@ -199,25 +167,6 @@ function EdtNew() {
   const handleClickCreneau = (horaireIdx, jour, creneauIdx) => {
     setSelectedCreneau({ horaireIdx, jour, creneauIdx });
     setIsNewValue(true); // Ouvre le modal
-  };
-  const handleValider = (nouvelleValeur) => {
-    if (!selectedCreneau) return;
-    setDataNewEdt((prev) => {
-      const newData = { ...prev };
-      // Copie profonde pour éviter la mutation directe
-      newData.donnee.contenu = newData.donnee.contenu.map((ligne, i) => {
-        if (i !== selectedCreneau.horaireIdx) return ligne;
-        return {
-          ...ligne,
-          [selectedCreneau.jour]: ligne[selectedCreneau.jour].map((cell, idx) =>
-            idx === selectedCreneau.creneauIdx ? { ...cell, ...nouvelleValeur } : cell
-          ),
-        };
-      });
-      return newData;
-    });
-    setIsNewValue(false);
-    setSelectedCreneau(null);
   };
   const versGeneral = () => {
     if (localStorage.getItem("dataNewEdt")) {
@@ -357,10 +306,6 @@ function EdtNew() {
       setError({ ...error, status: false });
     }
   };
-
-
-
-
   const handleEndDateChange = (e) => {
     const chosenEnd = parseISO(e.target.value);
     const start = parseISO(dataEdtState.date_debut);
@@ -493,14 +438,46 @@ function EdtNew() {
       }
     }
   };
+  const getDataEdit = async () => {
+    const formdata = new FormData();
+    if (Array.isArray(dataEdtState.numEdtUpdate)) {
+      dataEdtState.numEdtUpdate.forEach((val) => {
+        formdata.append('numEdts[]', parseInt(val));
+      });
+    }
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/edt/modifier/donnee/`, formdata);
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setlisteProfesseur(response.data);
+    } catch (error) {
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
+    }
+  }
   useEffect(() => {
-    getDataClasse()
-    getDataSalle();
-    getDataMatiere();
-    getDataProfesseurs();
+    if (dataEdtState.niveau) {
+      getDataClasse()
+      getDataSalle();
+      getDataMatiere();
+      getDataProfesseurs();
+    }
+  }, [dataEdtState.niveau])
+  useEffect(() => {
+    if (dataEdtState.action === "edit") {
+      // setDataEdtState({ ...dataEdtState})
+      getDataEdit();
+    }
   }, [])
-
-
+  useEffect(() => {
+    console.log("dataEdtState", dataEdtState);
+    console.log("listeClasse", listeClasse);
+    console.log("dataNewEdt", dataNewEdt);
+  }, [dataEdtState]);
   useEffect(() => {
     getDataClasseSelected(dataEdtState.niveau);
   }, [dataEdtState.niveau]);

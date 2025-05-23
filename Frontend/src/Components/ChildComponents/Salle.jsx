@@ -15,6 +15,23 @@ function Salle() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [search, setSearch] = useState('')
   const [error, setError] = useState({ status: false, composant: "", message: "" })
+  const [isDeleteByCheckBox, setDeleteByChekbox] = useState(true);
+  const [checkedRows, setCheckedRows] = useState([]);
+  const allChecked = checkedRows.length === listeSalle.length && listeSalle.length > 0;
+
+  const handleCheck = (id) => {
+    setCheckedRows((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleCheckAll = () => {
+    if (allChecked) {
+      setCheckedRows([]);
+    } else {
+      setCheckedRows(listeSalle.map((item) => item.numSalle));
+    }
+  };
   const sendData = async () => {
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/salle/ajouter/", dataSalle)
@@ -72,6 +89,28 @@ function Salle() {
     } finally {
       setIsLoading(false);
       console.log("Le tache est terminé");
+    }
+  };
+  const removeSalleByCkeckBox = async () => {
+    const formData = new FormData();
+    if (Array.isArray(checkedRows)) {
+      checkedRows.forEach((val) => {
+        formData.append('numSalles[]', parseInt(val));
+      });
+    }
+
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/salle/supprimer/liste/", formData);
+
+      if (response.status !== 200 && response.status !== 204) {
+        throw new Error(`Erreur lors de la suppression : Code ${response.status}`);
+      }
+
+      console.log(`salles supprimés avec succès`);
+      getData();
+      setCheckedRows([]) // Recharge la liste après suppression
+    } catch (error) {
+      console.error("Erreur:", error.response.data?.status || error.message);
     }
   };
   const editSalle = (numSalle) => {
