@@ -55,7 +55,7 @@ class SalleView(APIView):
             return Response({'erreur':'Salle introuvable'}, status=status.HTTP_404_NOT_FOUND)
 
 class SalleDetailView(APIView):
-    def delete(self, request):
+    def post(self, request):
         serviceCrud=ServiceModelCrud(Salle)
         response=serviceCrud.suppressionMutlipe(request.data, "numSalles","Salles")
         return Response(response['context'], status=response['status'])

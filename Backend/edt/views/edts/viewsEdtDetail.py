@@ -22,7 +22,7 @@ class EdtDetailView(APIView):
         eg=ServiceEdtListage()
         response = eg.listeEdtParNumEdts(numEdts)
 
-        return Response(response['context'], status=response['status'])
+        return Response({"donnee":response['context']}, status=response['status'])
     
     def get(self, request):
         dernierEdt = Edt.objects.latest('numEdt')
