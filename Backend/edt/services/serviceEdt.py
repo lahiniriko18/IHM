@@ -50,10 +50,11 @@ class ServiceEdtListage:
                     edtDonnee=EdtSerializer(edt).data
                     d={
                         "numEdt":edt.numEdt,
-                        "numMatiere":edtDonnee['numMatiere'],
-                        "numParcours":edtDonnee['numParcours'],
-                        "numSalle":edtDonnee['numSalle'],
-                        "numClasse":edtDonnee['numClasse']
+                        "matiere":edtDonnee['numMatiere'],
+                        "professeur":edtDonnee['numProfesseur'],
+                        "parcours":edtDonnee['numParcours'],
+                        "salle":edtDonnee['numSalle'],
+                        "classe":edtDonnee['numClasse']
                     }
                     jourCle=next((k for k,v in dates.items() if v==datetime.strftime(edt.date, "%d-%m-%Y")), None)
                     edtJour[jourCle].append(d)
