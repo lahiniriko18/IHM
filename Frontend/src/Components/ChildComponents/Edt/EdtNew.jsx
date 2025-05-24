@@ -1,21 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { data, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSidebar } from '../../Context/SidebarContext';
 import Creatable from 'react-select/creatable';
 import { useLocation } from 'react-router-dom';
 import { parseISO, getDay, format, addDays, isAfter } from 'date-fns';
 import axios from 'axios';
-import Professeur from '../Professeur';
-import NavigationPrompt from '../../Layout/NavigationPrompt';
 
 function EdtNew() {
   const location = useLocation();
   const initialEdt = location.state?.dataEdt || {};
   const [dataEdtState, setDataEdtState] = useState(initialEdt);
   const [isNewValue, setIsNewValue] = useState(false);
-
   const [isEditHours, setIsEditHours] = useState(false);
-
   const [selectedCell, setSelectedCell] = useState(null);
   const [listeMatiere, setListeMatiere] = useState([]);
   const [listeSalle, setListeSalle] = useState([]);
@@ -23,7 +19,6 @@ function EdtNew() {
   const [professeursFiltres, setProfesseursFiltres] = useState([]);
   const [listeClasseSelected, setListeClasseSelected] = useState([]);
   const [listeProfesseur, setlisteProfesseur] = useState([]);
-  const navigate = useNavigate();
   const [horaireError, setHoraireError] = useState("");
   const [formHoraire, setFormHoraire] = useState({ heureDebut: "", heureFin: "" });
   const { isReduire } = useSidebar();
@@ -33,6 +28,7 @@ function EdtNew() {
     professeur: null,
     salle: null,
   });
+  const navigate = useNavigate();
   const [formError, setFormError] = useState("");
   const [selectedCreneau, setSelectedCreneau] = useState(null);
   const [modele, setModele] = useState(1);
@@ -112,41 +108,20 @@ function EdtNew() {
   }, [listeClasse]);
 
   useEffect(() => {
-    // Gestion de la fermeture / rechargement de l’onglet
+
     const handleBeforeUnload = (e) => {
       if (localStorage.getItem("dataNewEdt")) {
         e.preventDefault();
-        e.returnValue = ''; // Obligatoire pour certains navigateurs
+        e.returnValue = '';
       }
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
-
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
-  useEffect(() => {
-    // Gestion de la navigation arrière (bouton précédent ou changement d’URL)
-    const handleBeforeRouteLeave = (event) => {
-      if (localStorage.getItem("dataNewEdt")) {
-        const confirmed = window.confirm("Des données non sauvegardées existent. Voulez-vous vraiment quitter ?");
-        if (!confirmed) {
-          event.preventDefault();
-          window.history.pushState(null, null, window.location.pathname); // Forcer à rester
-        } else {
-          localStorage.removeItem("dataNewEdt");
-          setDataNewEdt(null);
-          setDataEdtState({});
-        }
-      }
-    };
-    window.addEventListener("popstate", handleBeforeRouteLeave);
 
-    return () => {
-      window.removeEventListener("popstate", handleBeforeRouteLeave);
-    };
-  }, []);
+
 
 
   useEffect(() => {
@@ -173,16 +148,6 @@ function EdtNew() {
       }
     }));
   }, [dataEdtState.date_debut, dataEdtState.date_fin]);
-  // usePrompt(
-  //   "Des données non sauvegardées existent. Voulez-vous vraiment quitter ?",
-  // {!!localStorage.getItem("dataNewEdt"),}
-  //   () => {
-  //     localStorage.removeItem("dataNewEdt");
-  //     setDataNewEdt(null);
-  //     setDataEdtState({});
-  //   }
-  // );
-
 
   useEffect(() => {
     if (!formCreneau.matiere) {
@@ -199,25 +164,6 @@ function EdtNew() {
   const handleClickCreneau = (horaireIdx, jour, creneauIdx) => {
     setSelectedCreneau({ horaireIdx, jour, creneauIdx });
     setIsNewValue(true); // Ouvre le modal
-  };
-  const handleValider = (nouvelleValeur) => {
-    if (!selectedCreneau) return;
-    setDataNewEdt((prev) => {
-      const newData = { ...prev };
-      // Copie profonde pour éviter la mutation directe
-      newData.donnee.contenu = newData.donnee.contenu.map((ligne, i) => {
-        if (i !== selectedCreneau.horaireIdx) return ligne;
-        return {
-          ...ligne,
-          [selectedCreneau.jour]: ligne[selectedCreneau.jour].map((cell, idx) =>
-            idx === selectedCreneau.creneauIdx ? { ...cell, ...nouvelleValeur } : cell
-          ),
-        };
-      });
-      return newData;
-    });
-    setIsNewValue(false);
-    setSelectedCreneau(null);
   };
   const versGeneral = () => {
     if (localStorage.getItem("dataNewEdt")) {
@@ -327,40 +273,36 @@ function EdtNew() {
   }
 
   const handleStartDateChange = (e) => {
-    let selected = parseISO(e.target.value);
-    const day = getDay(selected);
-    let errorMessage = "";
+    // let selected = parseISO(e.target.value);
+    // const day = getDay(selected);
+    // let errorMessage = "";
 
-    if (day === 6) {
-      selected = addDays(selected, 2);
-      errorMessage = "Le samedi n’est pas autorisé. La date a été ajustée au lundi suivant.";
-    } else if (day === 0) {
-      selected = addDays(selected, 1);
-      errorMessage = "Le dimanche n’est pas autorisé. La date a été ajustée au lundi suivant.";
-    }
+    // if (day === 6) {
+    //   selected = addDays(selected, 2);
+    //   errorMessage = "Le samedi n’est pas autorisé. La date a été ajustée au lundi suivant.";
+    // } else if (day === 0) {
+    //   selected = addDays(selected, 1);
+    //   errorMessage = "Le dimanche n’est pas autorisé. La date a été ajustée au lundi suivant.";
+    // }
 
-    const correctedStart = format(selected, "yyyy-MM-dd");
-    const dayOfWeek = getDay(selected);
-    const daysUntilSaturday = 6 - dayOfWeek;
-    const suggestedEnd = addDays(selected, daysUntilSaturday);
-    const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
+    // const correctedStart = format(selected, "yyyy-MM-dd");
+    // const dayOfWeek = getDay(selected);
+    // const daysUntilSaturday = 6 - dayOfWeek;
+    // const suggestedEnd = addDays(selected, daysUntilSaturday);
+    // const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
 
-    setDataEdtState({
-      ...dataEdtState,
-      date_debut: correctedStart,
-      date_fin: correctedEnd,
-    });
+    // setDataEdtState({
+    //   ...dataEdtState,
+    //   date_debut: correctedStart,
+    //   date_fin: correctedEnd,
+    // });
 
-    if (errorMessage) {
-      setError({ status: true, composant: "date_debut", message: errorMessage });
-    } else {
-      setError({ ...error, status: false });
-    }
+    // if (errorMessage) {
+    //   setError({ status: true, composant: "date_debut", message: errorMessage });
+    // } else {
+    //   setError({ ...error, status: false });
+    // }
   };
-
-
-
-
   const handleEndDateChange = (e) => {
     const chosenEnd = parseISO(e.target.value);
     const start = parseISO(dataEdtState.date_debut);
@@ -451,7 +393,7 @@ function EdtNew() {
       setListeClasseSelected(response.data);
 
     } catch (error) {
-      console.error(error.message);
+      console.error(error.response.data);
     }
   };
   const getDataSalle = async () => {
@@ -493,16 +435,51 @@ function EdtNew() {
       }
     }
   };
+  const getDataEdit = async () => {
+    const formdata = new FormData();
+    if (Array.isArray(dataEdtState.numEdtUpdate)) {
+      dataEdtState.numEdtUpdate.forEach((val) => {
+        formdata.append('numEdts[]', parseInt(val));
+      });
+    }
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/edt/modifier/donnee/`, formdata);
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setDataNewEdt(response.data);
+      // console.log(response.data)
+    } catch (error) {
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
+    }
+  }
   useEffect(() => {
-    getDataClasse()
-    getDataSalle();
-    getDataMatiere();
-    getDataProfesseurs();
+    if (dataEdtState.niveau) {
+      getDataClasse()
+      getDataSalle();
+      getDataMatiere();
+      getDataProfesseurs();
+    }
+  }, [dataEdtState.niveau])
+  useEffect(() => {
+    if (dataEdtState.action === "edit") {
+      // setDataEdtState({ ...dataEdtState})
+      getDataEdit();
+
+    }
   }, [])
-
-
   useEffect(() => {
-    getDataClasseSelected(dataEdtState.niveau);
+    if (dataEdtState.action === "edit") {
+      setDataEdtState({ ...dataEdtState, niveau: dataNewEdt.donnee.titre[1], date_debut: dataNewEdt.donnee.titre[0].Lundi, date_fin: dataNewEdt.donnee.titre[0].Samedi })
+      console.log("le voici ", dataEdtState.date_debut)
+    }
+  }, [dataNewEdt])
+  useEffect(() => {
+    getDataClasseSelected(dataEdtState.action != "edit" ? dataEdtState.niveau : dataNewEdt.donnee.titre[1]);
   }, [dataEdtState.niveau]);
 
   useEffect(() => {
@@ -919,7 +896,16 @@ function EdtNew() {
                 <input
                   type="date"
                   onChange={handleStartDateChange}
-                  value={dataEdtState.date_debut || ""}
+                  value={
+                    dataEdtState.action === "edit"
+                      ? (
+                        dataNewEdt.donnee?.titre?.[0]?.Lundi &&
+                          /^\d{2}-\d{2}-\d{4}$/.test(dataNewEdt.donnee.titre[0].Lundi)
+                          ? format(parseISO(dataNewEdt.donnee.titre[0].Lundi.split('-').reverse().join('-')), "yyyy-MM-dd")
+                          : ""
+                      )
+                      : (dataEdtState.date_debut || "")
+                  }
                   className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </div>
@@ -928,7 +914,16 @@ function EdtNew() {
                 <input
                   type="date"
                   onChange={handleEndDateChange}
-                  value={dataEdtState.date_fin || ""} // Toujours une string
+                  value={
+                    dataEdtState.action === "edit"
+                      ? (
+                        dataNewEdt.donnee?.titre?.[0]?.Samedi &&
+                          !isNaN(Date.parse(dataNewEdt.donnee.titre[0].Samedi))
+                          ? format(parseISO(dataNewEdt.donnee.titre[0].Samedi), "yyyy-MM-dd")
+                          : ""
+                      )
+                      : (dataEdtState.date_fin || "")
+                  }
                   className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </div>
@@ -1007,8 +1002,8 @@ function EdtNew() {
                                   <div
                                     key={idx}
                                     className={`p-2 flex flex-col h-full relative
-       ${idx < ligne[jour].length - 1 ? "border-r border-dashed border-gray-300" : ""}
-      hover:bg-gray-200 active:bg-gray-300`}
+                                    ${idx < ligne[jour].length - 1 ? "border-r border-dashed border-gray-300" : ""}
+                                    hover:bg-gray-200 active:bg-gray-300`}
                                     style={{ width: `${100 / ligne[jour].length}%`, minWidth: 120 }}
                                     onClick={() => {
                                       setSelectedCell({ ligneIdx: i, jour, creneauIdx: idx });
@@ -1019,10 +1014,10 @@ function EdtNew() {
                                   >
                                     <span className='flex flex-col w-full '>
                                       <span className='flex flex-col w-full'>
-                                        <p>{getClasseLabel(creneau.classe)}</p>
-                                        <p>{getMatiereLabel(creneau.matiere)}</p>
-                                        <p>{getProfLabel(creneau.professeur)}</p>
-                                        <p>{getSalleLabel(creneau.salle)}</p>
+                                        <p>{getClasseLabel(creneau.classe ? creneau.classe : creneau.numClasse)}</p>
+                                        <p>{getMatiereLabel(creneau.matiere ? creneau.matiere : creneau.numMatiere)}</p>
+                                        <p>{getProfLabel(creneau.professeur ? creneau.professeur : "")}</p>
+                                        <p>{getSalleLabel(creneau.salle ? creneau.salle : creneau.numSalle)}</p>
                                       </span>
                                     </span>
                                   </div>

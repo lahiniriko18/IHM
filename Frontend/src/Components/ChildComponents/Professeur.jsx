@@ -183,9 +183,10 @@ function Professeur() {
       }
 
       console.log(`Professeurs supprimés avec succès`);
-      getData(); // Recharge la liste après suppression
+      getData();
+      setCheckedRows([]) // Recharge la liste après suppression
     } catch (error) {
-      console.error("Erreur:", error.response?.status || error.message);
+      console.error("Erreur:", error.response.data?.status || error.message);
     }
   };
 

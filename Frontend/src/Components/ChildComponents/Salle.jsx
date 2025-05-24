@@ -15,6 +15,23 @@ function Salle() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [search, setSearch] = useState('')
   const [error, setError] = useState({ status: false, composant: "", message: "" })
+  const [isDeleteByCheckBox, setDeleteByChekbox] = useState(true);
+  const [checkedRows, setCheckedRows] = useState([]);
+  const allChecked = checkedRows.length === listeSalle.length && listeSalle.length > 0;
+
+  const handleCheck = (id) => {
+    setCheckedRows((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleCheckAll = () => {
+    if (allChecked) {
+      setCheckedRows([]);
+    } else {
+      setCheckedRows(listeSalle.map((item) => item.numSalle));
+    }
+  };
   const sendData = async () => {
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/salle/ajouter/", dataSalle)
@@ -72,6 +89,28 @@ function Salle() {
     } finally {
       setIsLoading(false);
       console.log("Le tache est terminé");
+    }
+  };
+  const removeSalleByCkeckBox = async () => {
+    const formData = new FormData();
+    if (Array.isArray(checkedRows)) {
+      checkedRows.forEach((val) => {
+        formData.append('numSalles[]', parseInt(val));
+      });
+    }
+
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/salle/supprimer/liste/", formData);
+
+      if (response.status !== 200 && response.status !== 204) {
+        throw new Error(`Erreur lors de la suppression : Code ${response.status}`);
+      }
+
+      console.log(`salles supprimés avec succès`);
+      getData();
+      setCheckedRows([]) // Recharge la liste après suppression
+    } catch (error) {
+      console.error("Erreur:", error.response.data?.status || error.message);
     }
   };
   const editSalle = (numSalle) => {
@@ -236,8 +275,14 @@ function Salle() {
                 <button
                   className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                   onClick={() => {
-                    if (id !== "") {
-                      removeSalle(id)
+                    if (isDeleteByCheckBox) {
+                      if (checkedRows.length !== 0) {
+                        removeSalleByCkeckBox()
+                      }
+                    } else {
+                      if (id !== "") {
+                        removeSalle(id)
+                      }
                     }
                     setIsConfirmModalOpen(false);
                   }}
@@ -295,6 +340,22 @@ function Salle() {
               <table className="table-auto w-full border-collapse">
                 <thead>
                   <tr className="bg-blue-500 text-white text-sm">
+                    <th className="px-4 py-4 cursor-pointer relative">
+                      <input
+                        className='cursor-pointer'
+                        type="checkbox"
+                        checked={allChecked}
+                        onChange={handleCheckAll}
+                      />
+                      {
+                        checkedRows.length > 0 && <button className="absolute right-[-6px] rounded hover:bg-opacity-80" onClick={() => {
+                          confirmerSuppression(1)
+                          setDeleteByChekbox(true)
+                        }}>
+                          <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
+                        </button>
+                      }
+                    </th>
                     <th className="px-4 py-4">#</th>
                     <th className="px-4 py-4">Nom de la salle</th>
                     <th className="px-4 py-4">Lieu de la salle</th>
@@ -304,9 +365,13 @@ function Salle() {
                 </thead>
                 <tbody className="text-sm">
                   {currentData.map((Salle, index) => (
-
-
                     <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
+                      <td className="px-4 py-2 text-center cursor-pointer"> <input
+                        type="checkbox"
+                        className='cursor-pointer'
+                        checked={checkedRows.includes(Salle.numSalle)}
+                        onChange={() => handleCheck(Salle.numSalle)}
+                      /></td>
                       <td className="px-4 py-2 text-center">{Salle.numSalle}</td>
                       <td className="px-4 py-2 text-center">{Salle.nomSalle}</td>
                       <td className="px-4 py-2 text-center">{Salle.lieuSalle}</td>

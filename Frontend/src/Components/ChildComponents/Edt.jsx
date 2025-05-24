@@ -14,9 +14,9 @@ function Edt() {
   const [hover, setHover] = useState(false)
   const [listeEDT, setListeEdt] = useState([]);
   const [listeParcours, setListeParcours] = useState([]);
-  const [modeleDownload, setModeleDownload] = useState(null)
   const [listeClasse, setListeClasse] = useState([]);
   const dropdownRef = useRef(null);
+  const [numEdtUpdate, SetNumEdtupdate] = useState([]);
   const [originalList, setOriginalList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -26,7 +26,9 @@ function Edt() {
     niveau: "",
     mode_creation: "",
     parcours: null,
-    excel: null
+    excel: null,
+    numEdtUpdate: [],
+    action: "",
   })
   const [error, setError] = useState({ status: false, composant: "", message: "" })
   const [id, setId] = useState()
@@ -78,7 +80,24 @@ function Edt() {
     setError({ status: true, composant: "fichier", message: "Type de fichier invalide. Seuls les fichiers .xls et .xlsx sont autorisés." });
   };
   {/* API*/ }
-
+  const removeEdt = async () => {
+    const formdata = new FormData();
+    if (Array.isArray(dataEdt.numEdtUpdate)) {
+      dataEdt.numEdtUpdate.forEach((val) => {
+        formdata.append('numEdts[]', parseInt(val));
+      });
+    }
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/edt/supprimer/liste/`, formdata)
+      if (response.status !== 200 && response.status !== 204) {
+        throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
+      }
+      console.log(`supprimé avec succès`);
+      getData()
+    } catch (error) {
+      console.log("Erreur:", error.message)
+    }
+  }
   const getDataClasse = async () => {
     setIsLoading(true);
     try {
@@ -179,8 +198,8 @@ function Edt() {
       value: Parcours.numParcours,
       label: Parcours.nomParcours + (Parcours.codeParcours ? ` (${Parcours.codeParcours})` : ""),
     }));
-  const confirmerSuppression = (id) => {
-    setId(id);
+  const confirmerSuppression = () => {
+
     setIsConfirmModalOpen(true);
   }
 
@@ -257,12 +276,14 @@ function Edt() {
     }
   }
 
-
+  // useEffect(() => {
+  //   console.log("numEdtUpdate changé :", numEdtUpdate);
+  // }, [numEdtUpdate]);
   const versGeneral = () => {
     navigate('/edt')
   }
-  const versCreationEdt = () => {
-    navigate('/edt/nouveau-edt', { state: { dataEdt } })
+  const versCreationEdt = (dataEdtToSend) => {
+    navigate('/edt/nouveau-edt', { state: { dataEdt: dataEdtToSend } });
   }
   const versAFfichage = () => {
     navigate('/edt/affichage-edt')
@@ -505,7 +526,7 @@ function Edt() {
                   else {
 
                     setIsclicked(false)
-                    versCreationEdt();
+                    versCreationEdt(dataEdt);
                     setDataEdt({
                       date_debut: "",
                       date_fin: "",
@@ -534,7 +555,7 @@ function Edt() {
           >
             <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
               <div className="flex justify-between items-center w-full">
-                <h1 className="text-blue-600 text-xl font-bold">Suppression Classe</h1>
+                <h1 className="text-blue-600 text-xl font-bold">Suppression d'une edt</h1>
                 <img
                   src="/Icons/annuler.png"
                   alt="Quitter"
@@ -549,13 +570,13 @@ function Edt() {
                 <img src="/Icons/attention.png" alt="Attention" />
                 <p>Etes vous sur de vouloir supprimer cette edt ?</p>
               </div>
-              <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
+              <input type="hidden" name="id" value={id || ""} onChange={() => setId(e.target.value)} />
               <div className="w-full flex justify-center">
                 <button
                   className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                   onClick={() => {
-                    if (id !== "") {
-                      removeClasse(id)
+                    if (dataEdt.numEdtUpdate.length !== 0) {
+                      removeEdt()
                     }
                     setIsConfirmModalOpen(false);
                   }}
@@ -588,7 +609,7 @@ function Edt() {
             <button className=' hover:scale-105 text-gray-500' onClick={() => {
               const champsRemplis = dataEdt.date_debut && dataEdt.date_fin && dataEdt.niveau && dataEdt.parcours; {/*&& dataEdt.mode_creation*/ }
 
-              champsRemplis ? versCreationEdt() : setIsclicked(true)
+              champsRemplis ? versCreationEdt(dataEdt) : setIsclicked(true)
             }}>Creation</button>
             <button className=' hover:scale-105 text-gray-500' onClick={versAFfichage}>Affichage</button>
             {/* <button className=' hover:scale-105 text-gray-500' onClick={versProfile}>Profile</button> */}
@@ -626,16 +647,45 @@ function Edt() {
                     <tbody className="text-sm">
                       {currentData.map((EDT, index) => (
                         <tr key={index} className="border-b transition-all duration-300 hover:bg-gray-100">
-                          <td className="px-4 py-2 text-center">{index+1}</td>
+                          <td className="px-4 py-2 text-center">{index + 1}</td>
                           <td className="px-4 py-2 text-center">{EDT.niveauParcours}</td>
                           <td className="px-4 py-2 text-center">{EDT.dateDebut}</td>
                           <td className="px-4 py-2 text-center">{EDT.dateFin}</td>
                           <td className="px-4 py-2 flex justify-center items-center gap-2">
                             <button className="p-1 rounded hover:bg-gray-200">
-                              <img src="/Icons/modifier.png" alt="Modifier" className="w-5" />
+                              <img
+                                src="/Icons/modifier.png"
+                                alt="Modifier"
+                                className="w-5"
+                                onClick={() => {
+                                  if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
+                                    const newNumEdtUpdate = EDT.numEdts.slice();
+                                    const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
+                                    SetNumEdtupdate(newNumEdtUpdate);
+                                    setDataEdt(newDataEdt);
+                                    navigate('/edt/nouveau-edt', { state: { dataEdt: newDataEdt } });
+                                  } else {
+                                    SetNumEdtupdate([]);
+                                    console.log("Aucun reference de l'edt trouvé ce qui  empeche la modification")
+                                  }
+                                }}
+                              />
                             </button>
                             <button className="p-1 rounded hover:bg-gray-200">
-                              <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
+                              <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" onClick={() => {
+                                if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
+                                  const newNumEdtUpdate = EDT.numEdts.slice();
+                                  const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
+                                  SetNumEdtupdate(newNumEdtUpdate);
+                                  setDataEdt(newDataEdt);
+                                  confirmerSuppression()
+                                } else {
+                                  SetNumEdtupdate([]);
+                                  console.log("Aucun reference de l'edt trouvé ce qui  empeche la suppression")
+                                }
+
+
+                              }} />
                             </button>
                             <button className="p-1 rounded hover:bg-gray-200">
                               <img src="/Icons/afficher.png" alt="Supprimer" className="w-5" />
