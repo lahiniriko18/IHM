@@ -11,9 +11,7 @@ function EdtNew() {
   const initialEdt = location.state?.dataEdt || {};
   const [dataEdtState, setDataEdtState] = useState(initialEdt);
   const [isNewValue, setIsNewValue] = useState(false);
-
   const [isEditHours, setIsEditHours] = useState(false);
-
   const [selectedCell, setSelectedCell] = useState(null);
   const [listeMatiere, setListeMatiere] = useState([]);
   const [listeSalle, setListeSalle] = useState([]);
@@ -24,7 +22,6 @@ function EdtNew() {
   const [horaireError, setHoraireError] = useState("");
   const [formHoraire, setFormHoraire] = useState({ heureDebut: "", heureFin: "" });
   const { isReduire } = useSidebar();
-
   const [formCreneau, setFormCreneau] = useState({
     classe: null,
     matiere: null,
@@ -276,35 +273,35 @@ function EdtNew() {
   }
 
   const handleStartDateChange = (e) => {
-    let selected = parseISO(e.target.value);
-    const day = getDay(selected);
-    let errorMessage = "";
+    // let selected = parseISO(e.target.value);
+    // const day = getDay(selected);
+    // let errorMessage = "";
 
-    if (day === 6) {
-      selected = addDays(selected, 2);
-      errorMessage = "Le samedi n’est pas autorisé. La date a été ajustée au lundi suivant.";
-    } else if (day === 0) {
-      selected = addDays(selected, 1);
-      errorMessage = "Le dimanche n’est pas autorisé. La date a été ajustée au lundi suivant.";
-    }
+    // if (day === 6) {
+    //   selected = addDays(selected, 2);
+    //   errorMessage = "Le samedi n’est pas autorisé. La date a été ajustée au lundi suivant.";
+    // } else if (day === 0) {
+    //   selected = addDays(selected, 1);
+    //   errorMessage = "Le dimanche n’est pas autorisé. La date a été ajustée au lundi suivant.";
+    // }
 
-    const correctedStart = format(selected, "yyyy-MM-dd");
-    const dayOfWeek = getDay(selected);
-    const daysUntilSaturday = 6 - dayOfWeek;
-    const suggestedEnd = addDays(selected, daysUntilSaturday);
-    const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
+    // const correctedStart = format(selected, "yyyy-MM-dd");
+    // const dayOfWeek = getDay(selected);
+    // const daysUntilSaturday = 6 - dayOfWeek;
+    // const suggestedEnd = addDays(selected, daysUntilSaturday);
+    // const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
 
-    setDataEdtState({
-      ...dataEdtState,
-      date_debut: correctedStart,
-      date_fin: correctedEnd,
-    });
+    // setDataEdtState({
+    //   ...dataEdtState,
+    //   date_debut: correctedStart,
+    //   date_fin: correctedEnd,
+    // });
 
-    if (errorMessage) {
-      setError({ status: true, composant: "date_debut", message: errorMessage });
-    } else {
-      setError({ ...error, status: false });
-    }
+    // if (errorMessage) {
+    //   setError({ status: true, composant: "date_debut", message: errorMessage });
+    // } else {
+    //   setError({ ...error, status: false });
+    // }
   };
   const handleEndDateChange = (e) => {
     const chosenEnd = parseISO(e.target.value);
@@ -396,7 +393,7 @@ function EdtNew() {
       setListeClasseSelected(response.data);
 
     } catch (error) {
-      console.error(error.message);
+      console.error(error.response.data);
     }
   };
   const getDataSalle = async () => {
@@ -450,7 +447,8 @@ function EdtNew() {
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
-      setlisteProfesseur(response.data);
+      setDataNewEdt(response.data);
+      // console.log(response.data)
     } catch (error) {
       if (error.response) {
         console.error("Erreur du serveur :", error.response.data)
@@ -471,15 +469,17 @@ function EdtNew() {
     if (dataEdtState.action === "edit") {
       // setDataEdtState({ ...dataEdtState})
       getDataEdit();
+
     }
   }, [])
   useEffect(() => {
-    console.log("dataEdtState", dataEdtState);
-    console.log("listeClasse", listeClasse);
-    console.log("dataNewEdt", dataNewEdt);
-  }, [dataEdtState]);
+    if (dataEdtState.action === "edit") {
+      setDataEdtState({ ...dataEdtState, niveau: dataNewEdt.donnee.titre[1], date_debut: dataNewEdt.donnee.titre[0].Lundi, date_fin: dataNewEdt.donnee.titre[0].Samedi })
+      console.log("le voici ", dataEdtState.date_debut)
+    }
+  }, [dataNewEdt])
   useEffect(() => {
-    getDataClasseSelected(dataEdtState.niveau);
+    getDataClasseSelected(dataEdtState.action != "edit" ? dataEdtState.niveau : dataNewEdt.donnee.titre[1]);
   }, [dataEdtState.niveau]);
 
   useEffect(() => {
@@ -896,7 +896,16 @@ function EdtNew() {
                 <input
                   type="date"
                   onChange={handleStartDateChange}
-                  value={dataEdtState.date_debut || ""}
+                  value={
+                    dataEdtState.action === "edit"
+                      ? (
+                        dataNewEdt.donnee?.titre?.[0]?.Lundi &&
+                          /^\d{2}-\d{2}-\d{4}$/.test(dataNewEdt.donnee.titre[0].Lundi)
+                          ? format(parseISO(dataNewEdt.donnee.titre[0].Lundi.split('-').reverse().join('-')), "yyyy-MM-dd")
+                          : ""
+                      )
+                      : (dataEdtState.date_debut || "")
+                  }
                   className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </div>
@@ -905,7 +914,16 @@ function EdtNew() {
                 <input
                   type="date"
                   onChange={handleEndDateChange}
-                  value={dataEdtState.date_fin || ""} // Toujours une string
+                  value={
+                    dataEdtState.action === "edit"
+                      ? (
+                        dataNewEdt.donnee?.titre?.[0]?.Samedi &&
+                          !isNaN(Date.parse(dataNewEdt.donnee.titre[0].Samedi))
+                          ? format(parseISO(dataNewEdt.donnee.titre[0].Samedi), "yyyy-MM-dd")
+                          : ""
+                      )
+                      : (dataEdtState.date_fin || "")
+                  }
                   className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 />
               </div>
@@ -984,8 +1002,8 @@ function EdtNew() {
                                   <div
                                     key={idx}
                                     className={`p-2 flex flex-col h-full relative
-       ${idx < ligne[jour].length - 1 ? "border-r border-dashed border-gray-300" : ""}
-      hover:bg-gray-200 active:bg-gray-300`}
+                                    ${idx < ligne[jour].length - 1 ? "border-r border-dashed border-gray-300" : ""}
+                                    hover:bg-gray-200 active:bg-gray-300`}
                                     style={{ width: `${100 / ligne[jour].length}%`, minWidth: 120 }}
                                     onClick={() => {
                                       setSelectedCell({ ligneIdx: i, jour, creneauIdx: idx });
@@ -996,10 +1014,10 @@ function EdtNew() {
                                   >
                                     <span className='flex flex-col w-full '>
                                       <span className='flex flex-col w-full'>
-                                        <p>{getClasseLabel(creneau.classe)}</p>
-                                        <p>{getMatiereLabel(creneau.matiere)}</p>
-                                        <p>{getProfLabel(creneau.professeur)}</p>
-                                        <p>{getSalleLabel(creneau.salle)}</p>
+                                        <p>{getClasseLabel(creneau.classe ? creneau.classe : creneau.numClasse)}</p>
+                                        <p>{getMatiereLabel(creneau.matiere ? creneau.matiere : creneau.numMatiere)}</p>
+                                        <p>{getProfLabel(creneau.professeur ? creneau.professeur : "")}</p>
+                                        <p>{getSalleLabel(creneau.salle ? creneau.salle : creneau.numSalle)}</p>
                                       </span>
                                     </span>
                                   </div>
