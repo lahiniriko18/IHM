@@ -148,7 +148,11 @@ function EdtNew() {
       }
     }));
   }, [dataEdtState.date_debut, dataEdtState.date_fin]);
-
+  useEffect(() => {
+    if (dataEdtState.action === "edit") {
+      setDataEdtState({ ...dataEdtState, niveau: dataNewEdt.donnee.titre[1], })
+    }
+  }, [dataNewEdt])
   useEffect(() => {
     if (!formCreneau.matiere) {
       setProfesseursFiltres([]);
@@ -273,35 +277,35 @@ function EdtNew() {
   }
 
   const handleStartDateChange = (e) => {
-    // let selected = parseISO(e.target.value);
-    // const day = getDay(selected);
-    // let errorMessage = "";
+    let selected = parseISO(e.target.value);
+    const day = getDay(selected);
+    let errorMessage = "";
 
-    // if (day === 6) {
-    //   selected = addDays(selected, 2);
-    //   errorMessage = "Le samedi n’est pas autorisé. La date a été ajustée au lundi suivant.";
-    // } else if (day === 0) {
-    //   selected = addDays(selected, 1);
-    //   errorMessage = "Le dimanche n’est pas autorisé. La date a été ajustée au lundi suivant.";
-    // }
+    if (day === 6) {
+      selected = addDays(selected, 2);
+      errorMessage = "Le samedi n’est pas autorisé. La date a été ajustée au lundi suivant.";
+    } else if (day === 0) {
+      selected = addDays(selected, 1);
+      errorMessage = "Le dimanche n’est pas autorisé. La date a été ajustée au lundi suivant.";
+    }
 
-    // const correctedStart = format(selected, "yyyy-MM-dd");
-    // const dayOfWeek = getDay(selected);
-    // const daysUntilSaturday = 6 - dayOfWeek;
-    // const suggestedEnd = addDays(selected, daysUntilSaturday);
-    // const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
+    const correctedStart = format(selected, "yyyy-MM-dd");
+    const dayOfWeek = getDay(selected);
+    const daysUntilSaturday = 6 - dayOfWeek;
+    const suggestedEnd = addDays(selected, daysUntilSaturday);
+    const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
 
-    // setDataEdtState({
-    //   ...dataEdtState,
-    //   date_debut: correctedStart,
-    //   date_fin: correctedEnd,
-    // });
+    setDataEdtState({
+      ...dataEdtState,
+      date_debut: correctedStart,
+      date_fin: correctedEnd,
+    });
 
-    // if (errorMessage) {
-    //   setError({ status: true, composant: "date_debut", message: errorMessage });
-    // } else {
-    //   setError({ ...error, status: false });
-    // }
+    if (errorMessage) {
+      setError({ status: true, composant: "date_debut", message: errorMessage });
+    } else {
+      setError({ ...error, status: false });
+    }
   };
   const handleEndDateChange = (e) => {
     const chosenEnd = parseISO(e.target.value);
@@ -322,7 +326,29 @@ function EdtNew() {
     setDataEdtState({ ...dataEdtState, date_fin: e.target.value });
     setError({ ...error, status: false });
   };
-
+  function normalizeContenu(contenu, nombreCreneaux) {
+    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    return contenu.map(ligne => {
+      const newLigne = { ...ligne };
+      jours.forEach(jour => {
+        const anciens = newLigne[jour] || [];
+        if (anciens.length < nombreCreneaux) {
+          newLigne[jour] = [
+            ...anciens,
+            ...Array.from({ length: nombreCreneaux - anciens.length }, () => ({
+              classe: null,
+              matiere: null,
+              professeur: null,
+              salle: null
+            }))
+          ];
+        } else if (anciens.length > nombreCreneaux) {
+          newLigne[jour] = anciens.slice(0, nombreCreneaux);
+        }
+      });
+      return newLigne;
+    });
+  }
   const handleClick = (jour, horaire) => {
     setSelectedCell({ jour, horaire });
     setIsNewValue(true);
@@ -364,8 +390,6 @@ function EdtNew() {
         ...dataNewEdt.donnee,
         contenu: contenuNettoye,
       },
-      date_debut: dataEdtState.date_debut,
-      date_fin: dataEdtState.date_fin,
     };
     // console.log(dataToSend);
 
@@ -473,11 +497,16 @@ function EdtNew() {
     }
   }, [])
   useEffect(() => {
-    if (dataEdtState.action === "edit") {
-      setDataEdtState({ ...dataEdtState, niveau: dataNewEdt.donnee.titre[1], date_debut: dataNewEdt.donnee.titre[0].Lundi, date_fin: dataNewEdt.donnee.titre[0].Samedi })
-      console.log("le voici ", dataEdtState.date_debut)
+    if (dataEdtState.action === "edit" && dataNewEdt.donnee?.contenu) {
+      setDataNewEdt(prev => ({
+        ...prev,
+        donnee: {
+          ...prev.donnee,
+          contenu: normalizeContenu(prev.donnee.contenu, Math.max(2, listeClasse.length))
+        }
+      }));
     }
-  }, [dataNewEdt])
+  }, [dataNewEdt, listeClasse.length]);
   useEffect(() => {
     getDataClasseSelected(dataEdtState.action != "edit" ? dataEdtState.niveau : dataNewEdt.donnee.titre[1]);
   }, [dataEdtState.niveau]);
@@ -646,7 +675,7 @@ function EdtNew() {
                   setFormCreneau(prev => ({
                     ...prev,
                     matiere: selectedOption ? selectedOption.value : null,
-                    professeur: null // reset le prof si la matière change
+                    professeur: null,
                   }));
                 }}
                 value={optionsMatiere.find(option => option.value === formCreneau.matiere) || null}
@@ -917,9 +946,9 @@ function EdtNew() {
                   value={
                     dataEdtState.action === "edit"
                       ? (
-                        dataNewEdt.donnee?.titre?.[0]?.Samedi &&
-                          !isNaN(Date.parse(dataNewEdt.donnee.titre[0].Samedi))
-                          ? format(parseISO(dataNewEdt.donnee.titre[0].Samedi), "yyyy-MM-dd")
+                        dataNewEdt.donnee?.titre?.[0]?.Lundi &&
+                          /^\d{2}-\d{2}-\d{4}$/.test(dataNewEdt.donnee.titre[0].Lundi)
+                          ? format(parseISO(dataNewEdt.donnee.titre[0].Samedi.split('-').reverse().join('-')), "yyyy-MM-dd")
                           : ""
                       )
                       : (dataEdtState.date_fin || "")
