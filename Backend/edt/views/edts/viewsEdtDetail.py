@@ -25,18 +25,21 @@ class EdtDetailView(APIView):
         return Response({"donnee":response['context']}, status=response['status'])
     
     def get(self, request):
-        dernierEdt = Edt.objects.latest('numEdt')
-        lundi = dernierEdt.date - timedelta(days=dernierEdt.date.weekday())
-        samedi = lundi + timedelta(days=5)
-        numEdts = Edt.objects.filter(date__range=(lundi, samedi)).values_list('numEdt', flat=True)
+        try:
+            dernierEdt = Edt.objects.latest('numEdt')
+            lundi = dernierEdt.date - timedelta(days=dernierEdt.date.weekday())
+            samedi = lundi + timedelta(days=5)
+            numEdts = Edt.objects.filter(date__range=(lundi, samedi)).values_list('numEdt', flat=True)
 
-        donnee={
-            'niveauParcours':f"{dernierEdt.numClasse.niveau} {dernierEdt.numParcours.codeParcours}",
-            'dateDebut':datetime.strftime(lundi, "%d-%m-%Y"),
-            'dateFin':datetime.strftime(samedi, "%d-%m-%Y"),
-            'numEdts':list(numEdts)
-        }
-        return Response(donnee, status=status.HTTP_200_OK)
+            donnee={
+                'niveauParcours':f"{dernierEdt.numClasse.niveau} {dernierEdt.numParcours.codeParcours}",
+                'dateDebut':datetime.strftime(lundi, "%d-%m-%Y"),
+                'dateFin':datetime.strftime(samedi, "%d-%m-%Y"),
+                'numEdts':list(numEdts)
+            }
+            return Response(donnee, status=status.HTTP_200_OK)
+        except Edt.DoesNotExist:
+            return Response({}, status=status.HTTP_200_OK)
 
 
 class EdtProfesseurView(APIView):
