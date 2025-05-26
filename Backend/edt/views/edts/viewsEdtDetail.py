@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import timedelta,datetime
-from ...models import Edt
+from ...models import Edt,NiveauParcours
 from ...services.serviceEdt import ServiceEdtListage
 from ...services.serviceMail import ServiceMailEdtProfesseur
 from ...serializer.serializerEdtProfesseur import EdtProfesseurSerializer
@@ -87,6 +87,20 @@ class EdtProfesseurView(APIView):
                 return Response(serializer.errors)
         
         for i,buffer in enumerate(listeBuffer):
-            print("zah")
             serviceEdtProf.distribuerMail(buffer,professeurs[i],titres[i])
         return Response("Email envoyé avec succès !", status=status.HTTP_200_OK)
+    
+
+class EdtVerificationView(APIView):
+    def post(self, request):
+        donnee=request.data
+        try:
+            dateDebut=datetime.strptime(donnee['dateDebut'], "%d-%m-%Y").date()
+        except ValueError:
+            return Response({"erreur":"Type de données invalide !"}, status=status.HTTP_401_UNAUTHORIZED)
+        lundi=dateDebut - timedelta(days=dateDebut.weekday())
+        samedi=dateDebut + timedelta(days=5)
+        numNp=donnee.get('numNiveauParcours')
+        niveauParcours=NiveauParcours.objects.filter(pk=numNp).first()
+        verifEdt=Edt.objects.filter(date__range=(lundi, samedi), numParcours=niveauParcours.numParcours.numParcours, numClasse__niveau=niveauParcours.niveau).exists()
+        return Response(verifEdt, status=status.HTTP_200_OK)
