@@ -108,7 +108,7 @@ class MatiereView(APIView):
                         })
                 if sorted(profEns) != sorted(professeurs):
                     for ens in enseigners:
-                        if ens.numProfesseur not in professeurs:
+                        if ens.numProfesseur.numProfesseur not in professeurs:
                             ens.delete()
                 if len(donneeEns) > 0:
                     serializerEns=EnseignerSerializer(data=donneeEns, many=True)
