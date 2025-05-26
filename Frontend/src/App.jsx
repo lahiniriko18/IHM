@@ -19,6 +19,8 @@ import ParametreSecurite from "./Components/ChildComponents/ParametreSecurite";
 import ParametreProfile from "./Components/ChildComponents/ParametreProfile";
 import EdtRead from "./Components/ChildComponents/Edt/EdtRead";
 import EdtNew from "./Components/ChildComponents/Edt/EdtNew";
+import CreateNewEdt from "./Components/ChildComponents/Edt/CreateNewEdt";
+import EditEdt from "./Components/ChildComponents/Edt/EditEdt";
 
 function App() {
   const router = createBrowserRouter([
@@ -68,7 +70,11 @@ function App() {
         },
         {
           path: "edt/nouveau-edt",
-          element: <EdtNew />,
+          element: <CreateNewEdt />,
+        },
+        {
+          path: "edt/edit-edt",
+          element: <EditEdt />,
         },
         {
           path: "edt/affichage-edt",

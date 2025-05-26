@@ -148,6 +148,7 @@ function EdtNew() {
       }
     }));
   }, [dataEdtState.date_debut, dataEdtState.date_fin]);
+  
   useEffect(() => {
     if (dataEdtState.action === "edit") {
       setDataEdtState({ ...dataEdtState, niveau: dataNewEdt.donnee.titre[1], })
@@ -349,11 +350,7 @@ function EdtNew() {
       return newLigne;
     });
   }
-  const handleClick = (jour, horaire) => {
-    setSelectedCell({ jour, horaire });
-    setIsNewValue(true);
-    setIsEditHours(false);
-  };
+
   const getDataClasse = async () => {
     try {
       const response = await axios.get(`http://127.0.0.1:8000/api/classe/niveau-parcours/${dataEdtState.niveau}`);
@@ -614,16 +611,6 @@ function EdtNew() {
   };
   return (
     <>
-      {/* <NavigationPrompt
-        when={!!localStorage.getItem("dataNewEdt")}
-        message="Des données non sauvegardées existent. Voulez-vous vraiment quitter ?"
-        onConfirm={() => {
-          localStorage.removeItem("dataNewEdt");
-          setDataNewEdt(null);
-          setDataEdtState({});
-        }}
-      /> */}
-
       {/* Modal de création */}
       {(isNewValue) && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center">

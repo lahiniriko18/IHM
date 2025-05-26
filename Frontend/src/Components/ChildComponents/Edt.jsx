@@ -283,7 +283,7 @@ function Edt() {
     navigate('/edt')
   }
   const versCreationEdt = (dataEdtToSend) => {
-    navigate('/edt/nouveau-edt', { state: { dataEdt: dataEdtToSend } });
+    navigate('/edt/nouveau-edt', { state: { objectStateEdt: dataEdtToSend } });
   }
   const versAFfichage = () => {
     navigate('/edt/affichage-edt')
@@ -657,18 +657,18 @@ function Edt() {
                                 src="/Icons/modifier.png"
                                 alt="Modifier"
                                 className="w-5"
-                                onClick={() => {
-                                  if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
-                                    const newNumEdtUpdate = EDT.numEdts.slice();
-                                    const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
-                                    SetNumEdtupdate(newNumEdtUpdate);
-                                    setDataEdt(newDataEdt);
-                                    navigate('/edt/nouveau-edt', { state: { dataEdt: newDataEdt } });
-                                  } else {
-                                    SetNumEdtupdate([]);
-                                    console.log("Aucun reference de l'edt trouvé ce qui  empeche la modification")
-                                  }
-                                }}
+                                // onClick={() => {
+                                //   if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
+                                //     const newNumEdtUpdate = EDT.numEdts.slice();
+                                //     const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
+                                //     SetNumEdtupdate(newNumEdtUpdate);
+                                //     setDataEdt(newDataEdt);
+                                //     navigate('/edt/nouveau-edt', { state: { dataEdt: newDataEdt } });
+                                //   } else {
+                                //     SetNumEdtupdate([]);
+                                //     console.log("Aucun reference de l'edt trouvé ce qui  empeche la modification")
+                                //   }
+                                // }}
                               />
                             </button>
                             <button className="p-1 rounded hover:bg-gray-200">
