@@ -147,20 +147,20 @@ function CreateNewEdt() {
       },
     };
     console.log(dataToSend);
-    // try {
-    //   const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
-    //   if (response.status !== 200) {
-    //     throw new Error('Erreur code : ' + response.status);
-    //   }
-    //   getDataClasse()
-    //   getDataSalle();
-    //   getDataMatiere();
-    //   getDataProfesseurs();
-    //   return true;
-    // } catch (error) {
-    //   console.error(error.response.data);
-    //   return false;
-    // }
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      getDataClasse()
+      getDataSalle();
+      getDataMatiere();
+      getDataProfesseurs();
+      return true;
+    } catch (error) {
+      console.error(error.response.data);
+      return false;
+    }
   }
   //Fin de l'API
 
