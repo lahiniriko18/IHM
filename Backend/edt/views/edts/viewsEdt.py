@@ -80,17 +80,17 @@ class ListeEdtView(APIView):
         return Response(response['context'], status=response['status'])
     
     def put(self, request):
-        data=request.data
+        data=request.data.get('donnee')
         jours=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi']
 
         edtCrudInstance=ServiceEdtCrud()
         serviceCrud=ServiceModelCrud(Edt)
         
-        responseSup=serviceCrud.suppressionMutlipe(request.data, "numEdts","Emploi du temps")
+        responseSup=serviceCrud.suppressionMutlipe(data.get('titre')[2], "numEdts","Emploi du temps")
         if responseSup['status']==status.HTTP_401_UNAUTHORIZED:
             return Response(responseSup['context'], status=responseSup['status'])
 
-        response=edtCrudInstance.ajoutEdtListeDonnee(data['donnee'],jours)
+        response=edtCrudInstance.ajoutEdtListeDonnee(data,jours)
         return Response(response['context'], status=response['status'])
 
 
