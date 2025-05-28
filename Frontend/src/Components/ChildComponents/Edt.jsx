@@ -55,7 +55,6 @@ function Edt() {
     }
   };
   const verifierEdt = async () => {
-
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/edt/ajouter/verifier/", { dateDebut: dataEdt.date_debut, numNiveauParcours: dataEdt.niveau });
       if (response.status !== 200) {
@@ -65,10 +64,10 @@ function Edt() {
     } catch (error) {
       if (error.response) {
         console.error("Erreur du serveur :", error.response.data)
-        return null
+
       } else {
         console.error("Erreur inconnue :", error.message)
-        return null
+
       }
     }
   };
@@ -172,6 +171,10 @@ function Edt() {
     setFile(null);
     setError({ status: true, composant: "fichier", message: "Type de fichier invalide. Seuls les fichiers .xls et .xlsx sont autorisés." });
   };
+  const optionCreation = [
+    { value: 'manuel', label: 'Manuellement' },
+    { value: 'excel', label: 'Importez depuis excel' },
+  ]
   {/*Execution de requete */ }
   useEffect(() => {
     getDataClasse()
@@ -366,30 +369,7 @@ function Edt() {
                     (error.status && error.composant === "niveau") && (<p className='text-red-600 text-sm'>{error.message}</p>)
                   }
                 </div>
-                {/* <div className="flex flex-col w-full">
-                  <label className="font-semibold text-sm mb-1">Parcours</label>
-                  <Creatable
-                    isClearable
-                    isValidNewOption={() => false} // Empêche l'utilisateur d'écrire
-                    placeholder="Choisissez  un parcour"
 
-                    options={optionsParcours}
-                    onChange={(selectedOption) => {
-                      setDataEdt((prev) => ({
-                        ...prev,
-                        parcours: selectedOption ? selectedOption.value : null
-                      }));
-                    }}
-                    value={
-                      optionsParcours.find(
-                        (option) => option.value === dataEdt.parcours
-                      ) || null}
-                    className="text-sm"
-                  />
-                  {
-                    (error.status && error.composant === "parcours") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                  }
-                </div> */}
 
                 <div className="flex flex-col w-full">
                   <label className="font-semibold text-sm mb-1">Mode creation</label>
@@ -397,14 +377,23 @@ function Edt() {
                     isClearable
                     isValidNewOption={() => false}
                     placeholder="Choisissez un modèle"
-                    onChange={(value) => setModeCreation(value?.value || null)}
-                    options={[
-                      { value: 'manuel', label: 'Manuellement' },
-                      { value: 'excel', label: 'Importez depuis excel' },
-                    ]}
+                    onChange={(selectedOption) => {
+                      setDataEdt((prev) => ({
+                        ...prev,
+                        mode_creation: selectedOption ? selectedOption.value : null
+                      }));
+                    }}
+                    value={
+                      optionCreation.find(
+                        (option) => option.value === dataEdt.mode_creation
+                      ) || null}
+                    options={optionCreation}
                     className="text-sm"
                   />
                 </div>
+                {
+                  (error.status && error.composant === "creation") && (<p className='text-red-600 text-sm'>{error.message}</p>)
+                }
               </div>
               {
                 modeCreation === "excel" && (
@@ -489,9 +478,10 @@ function Edt() {
                     setError({ status: true, composant: "date_debut", message: "La date ne peut pas vide" });
                   } else if (!dataEdt.niveau) {
                     setError({ status: true, composant: "niveau", message: "Le niveau ne peut pas vide " });
+                  } else if (!dataEdt.mode_creation) {
+                    setError({ status: true, composant: "creation", message: "Il faut choisir la modele de creation" });
                   }
                   else {
-
                     setIsclicked(false)
                     versCreationEdt(dataEdt);
                     setDataEdt({
@@ -624,18 +614,18 @@ function Edt() {
                                 src="/Icons/modifier.png"
                                 alt="Modifier"
                                 className="w-5"
-                              // onClick={() => {
-                              //   if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
-                              //     const newNumEdtUpdate = EDT.numEdts.slice();
-                              //     const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
-                              //     SetNumEdtupdate(newNumEdtUpdate);
-                              //     setDataEdt(newDataEdt);
-                              //     navigate('/edt/nouveau-edt', { state: { dataEdt: newDataEdt } });
-                              //   } else {
-                              //     SetNumEdtupdate([]);
-                              //     console.log("Aucun reference de l'edt trouvé ce qui  empeche la modification")
-                              //   }
-                              // }}
+                                onClick={() => {
+                                  if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
+                                    const newNumEdtUpdate = EDT.numEdts.slice();
+                                    const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
+                                    SetNumEdtupdate(newNumEdtUpdate);
+                                    setDataEdt(newDataEdt);
+                                    navigate('/edt/edit-edt', { state: { objectStateEdt: newDataEdt } });
+                                  } else {
+                                    SetNumEdtupdate([]);
+                                    console.log("Aucun reference de l'edt trouvé ce qui  empeche la modification")
+                                  }
+                                }}
                               />
                             </button>
                             <button className="p-1 rounded hover:bg-gray-200">
