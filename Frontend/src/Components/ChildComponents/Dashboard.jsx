@@ -140,7 +140,7 @@ function Dashboard() {
               <p className="text-gray-400 mt-2">Chargement des données...</p>
             </div>
           ) :
-            (Object.entries(listeEDT).length === 0) ? (
+            (listeEDT.length === 0 || listeEDT.every(obj => Object.keys(obj).length === 0)) ? (
               <div className="w-full h-40  flex flex-col items-center justify-center">
                 <img src="/Icons/vide.png" alt="Vide" className='w-14' />
                 <p className='text-gray-400'>Aucun données trouvé</p>

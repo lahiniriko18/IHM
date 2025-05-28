@@ -179,39 +179,73 @@ function CreateNewEdt() {
   const versCreationEdt = () => navigate('/edt/nouveau-edt');
 
   // Ajout de nouvelle ligne de donnéés
-  const ajouterNouveauLigne = () => {
-    const horaireVide = objectEdt.donnee.contenu.some(
-      l => !l.Horaire.heureDebut || !l.Horaire.heureFin
-    );
-    if (horaireVide) {
-      alert("Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne.");
-      return;
-    }
-    const nombreCreneaux = Math.max(2, listeClasse.length || 0);
-    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-    const nouvelleLigne = {
-      Horaire: {
-        heureDebut: "",
-        heureFin: ""
+  function ajouterNouveauLigne(desc) {
+    if (desc === "ligne") {
+      const horaireVide = objectEdt.donnee.contenu.some(
+        l => !l.Horaire.heureDebut || !l.Horaire.heureFin
+      );
+      if (horaireVide) {
+        alert("Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne.");
+        return;
       }
-    };
+      const nombreCreneaux = Math.max(2, listeClasse.length || 0);
+      const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+      const nouvelleLigne = {
+        Horaire: {
+          heureDebut: "",
+          heureFin: ""
+        }
+      };
 
-    jours.forEach(jour => {
-      nouvelleLigne[jour] = Array.from({ length: nombreCreneaux }, () => ({
-        classe: null,
-        matiere: null,
-        professeur: null,
-        salle: null
+      jours.forEach(jour => {
+        nouvelleLigne[jour] = Array.from({ length: nombreCreneaux }, () => ({
+          classe: null,
+          matiere: null,
+          professeur: null,
+          salle: null
+        }));
+      });
+
+      setObjectEdt(prev => ({
+        ...prev,
+        donnee: {
+          ...prev.donnee,
+          contenu: [...prev.donnee.contenu, nouvelleLigne]
+        }
       }));
-    });
+    } else {
 
-    setObjectEdt(prev => ({
-      ...prev,
-      donnee: {
-        ...prev.donnee,
-        contenu: [...prev.donnee.contenu, nouvelleLigne]
+      const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+      const horaireVide = objectEdt.donnee.contenu.some(
+        l => !l.Horaire.heureDebut || !l.Horaire.heureFin
+      );
+      if (horaireVide) {
+        alert("Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne.");
+        return;
       }
-    }));
+      setFormHoraire({ heure_debut: "", heure_fin: "" });
+      setObjectEdt(prev => ({
+        ...prev,
+        donnee: {
+          ...prev.donnee,
+          contenu: [
+            ...prev.donnee.contenu,
+            {
+              Horaire: { heureDebut: "", heureFin: "" },
+              ...Object.fromEntries(jours.map(jour => [
+                jour,
+                Array.from({ length: Math.max(2, listeClasse.length) }, () => ({
+                  classe: null,
+                  matiere: null,
+                  professeur: null,
+                  salle: null
+                }))
+              ]))
+            }
+          ]
+        }
+      }));
+    }
   };
 
   // formatage de l'horaire
@@ -311,7 +345,7 @@ function CreateNewEdt() {
     }
 
     // Récupère l'index selon le modèle
-    const Index = modele === 1 ? caseSelectionne?.ligneIdx : caseSelectionne?.colonneIndex;
+    const Index = modele === 1 ? caseSelectionne?.ligneIdx : caseSelectionne?.colIdx;
     const jour = caseSelectionne?.jour;
     const crenauIdx = caseSelectionne?.crenauIdx ?? 0;
 
@@ -518,7 +552,7 @@ function CreateNewEdt() {
                 <h1 className="text-blue-600 text-xl font-bold">
                   {caseSelectionne?.jour}{" "}
                   {caseSelectionne
-                    ? `${formatHeure(objectEdt.donnee.contenu[caseSelectionne.ligneIdx]?.Horaire.heureDebut)} - ${formatHeure(objectEdt.donnee.contenu[caseSelectionne.ligneIdx]?.Horaire.heureFin)}`
+                    ? `${formatHeure(modele == 1 ? objectEdt.donnee.contenu[caseSelectionne.ligneIdx]?.Horaire.heureDebut : objectEdt.donnee.contenu[caseSelectionne.colIdx]?.Horaire.heureDebut)} - ${formatHeure(modele == 1 ? objectEdt.donnee.contenu[caseSelectionne.ligneIdx]?.Horaire.heureFin : objectEdt.donnee.contenu[caseSelectionne.colIdx]?.Horaire.heureFin)}`
                     : ""}
                 </h1>
                 <img
@@ -681,16 +715,13 @@ function CreateNewEdt() {
           </div>
         )
       }
-
       <div className={`${isReduire ? "left-20" : "left-56"} fixed right-0 top-14 p-5 h-screen overflow-auto bg-white z-40 transition-all duration-700`}>
         <div className="flex flex-col gap-1 h-full">
           <div className='flex gap-3'>
             <button className='hover:scale-105 text-gray-500' onClick={versGeneral}>Géneral</button>
             <button className='font-bold hover:scale-105 text-blue-600' onClick={versCreationEdt}>Creation</button>
             <button className='hover:scale-105 text-gray-500' onClick={versAFfichage}>Affichage</button>
-
           </div>
-
           <div className="flex justify-between items-center ">
             <span className="text-blue-600 font-bold flex flex-row items-center z-50">
               Création EDT pour : <p className='ms-2'>
@@ -702,12 +733,7 @@ function CreateNewEdt() {
                         ? (niveauSelected.numParcours.codeParcours
                           ? niveauSelected.numParcours.codeParcours
                           : " - " + niveauSelected.numParcours.nomParcours
-                        )
-                        : ""
-                    )
-                  )
-                  : ""
-                }
+                        ) : "")) : ""}
               </p>
             </span>
 
@@ -752,6 +778,22 @@ function CreateNewEdt() {
                               setFormHoraire({ ...objectEdt.donnee.contenu[i].Horaire });
                               setIsOpenHours(true);
                             }} />
+                            {i > 0 && (
+                              <button
+                                className="absolute top-2  right-20 text-red-600"
+                                onClick={() => {
+                                  setObjectEdt(prev => ({
+                                    ...prev,
+                                    donnee: {
+                                      ...prev.donnee,
+                                      contenu: prev.donnee.contenu.filter((_, idx) => idx !== i)
+                                    }
+                                  }));
+                                }}
+                              >
+                                <img src="/Icons/retirer.png" alt="" className="w-5 cursor-pointer" />
+                              </button>
+                            )}
                           </td>
                           {
                             Object.keys(ligne).filter(key => key !== 'Horaire').map((jour, j) => (
@@ -767,8 +809,31 @@ function CreateNewEdt() {
                                         setFormCreneau({ ...creneau });
                                         setIsOpenAdd(true);
                                       }}>
-                                      <span className='flex flex-col w-full '>
+                                      <span className='flex flex-col w-full  relative '>
                                         <span className='flex flex-col w-full'>
+                                          {(() => {
+                                            const isValid = caseItem.classe && caseItem.matiere && caseItem.professeur && caseItem.salle;
+                                            return isValid && (
+                                              <img
+                                                src="/Icons/supprimer.png"
+                                                className='absolute right-1 w-4 hover:scale-125 transition-all duration-200'
+                                                alt=""
+                                                onClick={e => {
+                                                  e.stopPropagation();
+                                                  setObjectEdt(prev => {
+                                                    const newData = { ...prev };
+                                                    newData.donnee.contenu[i][jour][value] = {
+                                                      classe: null,
+                                                      matiere: null,
+                                                      professeur: null,
+                                                      salle: null
+                                                    };
+                                                    return newData;
+                                                  });
+                                                }}
+                                              />
+                                            );
+                                          })()}
                                           <p>{getClasseLabel(caseItem.classe ? caseItem.classe : caseItem.numClasse)}</p>
                                           <p>{getMatiereLabel(caseItem.matiere ? caseItem.matiere : caseItem.numMatiere)}</p>
                                           <p>{getProfLabel(caseItem.professeur ? caseItem.professeur : "")}</p>
@@ -788,8 +853,7 @@ function CreateNewEdt() {
                     <img
                       src="/Icons/plus.png"
                       alt="Ajouter une ligne"
-                      className='w-8 cursor-pointer' onClick={ajouterNouveauLigne} />
-
+                      className='w-8 cursor-pointer' onClick={() => { ajouterNouveauLigne("ligne") }} />
                   </div>
                 </div>
               ) : (
@@ -799,14 +863,14 @@ function CreateNewEdt() {
                       <tr>
                         <th className="border-2 border-t-white py-6 border-l-white"></th>
                         {
-                          objectEdt.donnee.contenu.map((ligne, index) => (
-                            <th key={j} className="border bg-blue-500 text-white text-center relative">{formatHeure(ligne.Horaire.heureDebut) - formatHeure(ligne.Horaire.heureFin)}
+                          objectEdt.donnee.contenu.map((ligne, j) => (
+                            <th key={j} className="border bg-blue-500 text-white text-center relative">{formatHeure(ligne.Horaire.heureDebut)} - {formatHeure(ligne.Horaire.heureFin)}
                               <img
                                 src="/Icons/modifier.png"
                                 alt=""
                                 className="absolute bottom-2 right-1 w-5 cursor-pointer"
                                 onClick={() => {
-                                  setCaseSelectionne({ colonneIndex: index });
+                                  setCaseSelectionne({ colonneIndex: j });
                                   setFormHoraire({
                                     heureDebut: verifierHeure(ligne.Horaire.heureDebut),
                                     heureFin: verifierHeure(ligne.Horaire.heureFin),
@@ -831,14 +895,13 @@ function CreateNewEdt() {
                                 </button>
                               )}
                             </th>
-                          ))
-                        }
+                          ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {object.keys(objectEdt.donnee.contenu[0]).filter(key => key !== "Horaire").map((jour, i) => (
-                        <tr>
-                          <td key={i} className="border p-2 text-center font-semibold bg-gray-50 w-32 min-w-[20px] max-w-[120px]">
+                      {Object.keys(objectEdt.donnee.contenu[0]).filter(key => key !== "Horaire").map((jour, i) => (
+                        <tr key={i}>
+                          <td className="border p-2 text-center font-semibold bg-gray-50 w-32 min-w-[20px] max-w-[120px]">
                             {jour}
                           </td>
                           {
@@ -855,13 +918,36 @@ function CreateNewEdt() {
                                           minWidth: 120
                                         }}
                                         onClick={() => {
-                                          setCaseSelectionne({ jour, numLigne: j, colonneIndex: index });
-                                          const creneau = objectEdt.donnee.contenu[i][jour][index];
+                                          setCaseSelectionne({ jour, colIdx: j, crenauIdx: index });
+                                          const creneau = objectEdt.donnee.contenu[j][jour][index];
                                           setFormCreneau({ ...creneau });
                                           setIsOpenAdd(true);
                                         }}
                                       >
-                                        <span className="flex flex-col w-full">
+                                        <span className="flex flex-col w-full relative">
+                                          {(() => {
+                                            const isValid = caseItem.classe && caseItem.matiere && caseItem.professeur && caseItem.salle;
+                                            return isValid && (
+                                              <img
+                                                src="/Icons/supprimer.png"
+                                                className='absolute right-1 w-4 hover:scale-125 transition-all duration-200'
+                                                alt=""
+                                                onClick={e => {
+                                                  e.stopPropagation();
+                                                  setObjectEdt(prev => {
+                                                    const newData = { ...prev };
+                                                    newData.donnee.contenu[j][jour][index] = {
+                                                      classe: null,
+                                                      matiere: null,
+                                                      professeur: null,
+                                                      salle: null
+                                                    };
+                                                    return newData;
+                                                  });
+                                                }}
+                                              />
+                                            );
+                                          })()}
                                           <span className="flex flex-col w-full">
                                             <p>{getClasseLabel(caseItem.classe)}</p>
                                             <p>{getMatiereLabel(caseItem.matiere)}</p>
@@ -882,9 +968,9 @@ function CreateNewEdt() {
                   </table>
                   <div className="flex justify-end mt-2">
                     <button
-                      className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition"
+                      className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition" onClick={() => { ajouterNouveauLigne("colonne") }}
                     >
-                      <img src="/Icons/plus.png" alt="Ajouter une colonne" className="w-5" onClick={ajouterNouveauLigne} />
+                      <img src="/Icons/plus.png" alt="Ajouter une colonne" className="w-5" />
                       Ajouter une colonne
                     </button>
                   </div>
@@ -892,10 +978,8 @@ function CreateNewEdt() {
               )}
           </div>
         </div>
-
       </div>
     </>
   )
 }
-
 export default CreateNewEdt

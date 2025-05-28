@@ -35,6 +35,7 @@ function Edt() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const fileTypes = ["XLS", "XLSX"];
+  {/* API*/ }
   const getData = async () => {
     setIsLoading(true);
     try {
@@ -53,33 +54,24 @@ function Edt() {
       }
     }
   };
-  const handleChange = (file) => {
-    setFile(file);
+  const verifierEdt = async () => {
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const arrayBuffer = event.target.result; // 
-      const data = new Uint8Array(arrayBuffer); // 
-      const binaryStr = Array.from(data).map((byte) => String.fromCharCode(byte)).join(""); // 
-
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
-
-
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-
-
-      const jsonData = XLSX.utils.sheet_to_json(sheet);
-      console.log("Données Excel :", jsonData);
-    };
-
-    reader.readAsArrayBuffer(file);
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/edt/ajouter/verifier/", { dateDebut: dataEdt.date_debut, numNiveauParcours: dataEdt.niveau });
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      return response.data
+    } catch (error) {
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+        return null
+      } else {
+        console.error("Erreur inconnue :", error.message)
+        return null
+      }
+    }
   };
-  const handleTypeError = (err) => {
-    setFile(null);
-    setError({ status: true, composant: "fichier", message: "Type de fichier invalide. Seuls les fichiers .xls et .xlsx sont autorisés." });
-  };
-  {/* API*/ }
   const removeEdt = async () => {
     const formdata = new FormData();
     if (Array.isArray(dataEdt.numEdtUpdate)) {
@@ -155,7 +147,31 @@ function Edt() {
       console.error("Erreur lors du téléchargement :", error);
     }
   };
+  const handleChange = (file) => {
+    setFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const arrayBuffer = event.target.result; // 
+      const data = new Uint8Array(arrayBuffer); // 
+      const binaryStr = Array.from(data).map((byte) => String.fromCharCode(byte)).join(""); // 
 
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
+
+
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+
+
+      const jsonData = XLSX.utils.sheet_to_json(sheet);
+      console.log("Données Excel :", jsonData);
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+  const handleTypeError = (err) => {
+    setFile(null);
+    setError({ status: true, composant: "fichier", message: "Type de fichier invalide. Seuls les fichiers .xls et .xlsx sont autorisés." });
+  };
   {/*Execution de requete */ }
   useEffect(() => {
     getDataClasse()
@@ -203,61 +219,16 @@ function Edt() {
     setIsConfirmModalOpen(true);
   }
 
-
-  const handleStartDateChange = (e) => {
-    let selected = parseISO(e.target.value);
-    const day = getDay(selected);
-    let errorMessage = "";
-
-    if (day === 6) {
-      selected = addDays(selected, 2);
-      errorMessage = "Le samedi n’est pas autorisé. La date a été ajustée au lundi suivant.";
-    } else if (day === 0) {
-      selected = addDays(selected, 1);
-      errorMessage = "Le dimanche n’est pas autorisé. La date a été ajustée au lundi suivant.";
-    }
-
-    const correctedStart = format(selected, "yyyy-MM-dd");
-    const dayOfWeek = getDay(selected);
-    const daysUntilSaturday = 6 - dayOfWeek;
-    const suggestedEnd = addDays(selected, daysUntilSaturday);
-    const correctedEnd = format(suggestedEnd, "yyyy-MM-dd");
-
+  const handleStartDateChange = (event) => {
+    const selectedDate = parseISO(event.target.value);
+    const lundi = startOfWeek(selectedDate, { weekStartsOn: 1 });
+    const samedi = addDays(lundi, 5);
     setDataEdt({
       ...dataEdt,
-      date_debut: correctedStart,
-      date_fin: correctedEnd,
+      date_debut: format(lundi, "yyyy-MM-dd"),
+      date_fin: format(samedi, "yyyy-MM-dd"),
     });
-
-    if (errorMessage) {
-      setError({ status: true, composant: "date_debut", message: errorMessage });
-    } else {
-      setError({ ...error, status: false });
-    }
   };
-
-
-  const handleEndDateChange = (e) => {
-    const chosenEnd = parseISO(e.target.value);
-    const start = parseISO(dataEdt.date_debut);
-
-    const dayOfWeek = getDay(start);
-    const maxEnd = addDays(start, 6 - dayOfWeek);
-
-    if (isAfter(chosenEnd, maxEnd)) {
-      setError({
-        status: true,
-        composant: "date_fin",
-        message: "La date de fin ne peut pas dépasser le samedi suivant la date de début.",
-      });
-      return;
-    }
-
-    setDataEdt({ ...dataEdt, date_fin: e.target.value });
-    setError({ ...error, status: false });
-  };
-
-
 
   function handleSearch(e) {
     const value = e.target.value;
@@ -275,10 +246,6 @@ function Edt() {
       setListeClasse(originalList);
     }
   }
-
-  // useEffect(() => {
-  //   console.log("numEdtUpdate changé :", numEdtUpdate);
-  // }, [numEdtUpdate]);
   const versGeneral = () => {
     navigate('/edt')
   }
@@ -657,18 +624,18 @@ function Edt() {
                                 src="/Icons/modifier.png"
                                 alt="Modifier"
                                 className="w-5"
-                                // onClick={() => {
-                                //   if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
-                                //     const newNumEdtUpdate = EDT.numEdts.slice();
-                                //     const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
-                                //     SetNumEdtupdate(newNumEdtUpdate);
-                                //     setDataEdt(newDataEdt);
-                                //     navigate('/edt/nouveau-edt', { state: { dataEdt: newDataEdt } });
-                                //   } else {
-                                //     SetNumEdtupdate([]);
-                                //     console.log("Aucun reference de l'edt trouvé ce qui  empeche la modification")
-                                //   }
-                                // }}
+                              // onClick={() => {
+                              //   if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
+                              //     const newNumEdtUpdate = EDT.numEdts.slice();
+                              //     const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
+                              //     SetNumEdtupdate(newNumEdtUpdate);
+                              //     setDataEdt(newDataEdt);
+                              //     navigate('/edt/nouveau-edt', { state: { dataEdt: newDataEdt } });
+                              //   } else {
+                              //     SetNumEdtupdate([]);
+                              //     console.log("Aucun reference de l'edt trouvé ce qui  empeche la modification")
+                              //   }
+                              // }}
                               />
                             </button>
                             <button className="p-1 rounded hover:bg-gray-200">
