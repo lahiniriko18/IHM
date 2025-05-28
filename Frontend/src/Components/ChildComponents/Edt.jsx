@@ -11,6 +11,7 @@ function Edt() {
   const [search, setSearch] = useState(null);
   const [isadd, setisadd] = useState(true)
   const [isOpen, setIsOpen] = useState(false);
+  const [exist, setIsExist] = useState(false);
   const [hover, setHover] = useState(false)
   const [listeEDT, setListeEdt] = useState([]);
   const [listeParcours, setListeParcours] = useState([]);
@@ -55,12 +56,15 @@ function Edt() {
     }
   };
   const verifierEdt = async () => {
+    const data = { dateDebut: formatDateToDDMMYYYY(dataEdt.date_debut), numNiveauParcours: dataEdt.niveau }
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/edt/ajouter/verifier/", { dateDebut: dataEdt.date_debut, numNiveauParcours: dataEdt.niveau });
+      const response = await axios.post("http://127.0.0.1:8000/api/edt/ajouter/verifier/", data);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
-      return response.data
+      console.log("Vérification de l'EDT réussie :", response.data);
+      setIsExist(response.data)
+
     } catch (error) {
       if (error.response) {
         console.error("Erreur du serveur :", error.response.data)
@@ -468,8 +472,6 @@ function Edt() {
               }
             </div>
 
-
-
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
@@ -480,6 +482,8 @@ function Edt() {
                     setError({ status: true, composant: "niveau", message: "Le niveau ne peut pas vide " });
                   } else if (!dataEdt.mode_creation) {
                     setError({ status: true, composant: "creation", message: "Il faut choisir la modele de creation" });
+                  } else if (verifierEdt() && exist) {
+                    setError({ status: true, composant: "creation", message: "Edt existe dejà" });
                   }
                   else {
                     setIsclicked(false)

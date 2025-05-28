@@ -159,8 +159,12 @@ function EditEdt() {
       getDataProfesseurs();
       return true;
     } catch (error) {
-      console.error(error.response.data);
-      return false;
+      if (error.response) {
+        console.error("Erreur du serveur :", error.response.data)
+
+      } else {
+        console.error("Erreur inconnue :", error.message)
+      }
     }
   }
   //Fin de l'API
