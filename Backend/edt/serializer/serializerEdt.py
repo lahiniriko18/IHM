@@ -262,7 +262,7 @@ class EdtTableSerializer(serializers.Serializer):
 
     def validate_titre(self, value):
         jours=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"]
-        if len(value) != 2:
+        if len(value) < 2:
             raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})
         if not isinstance(value[0], dict):
             raise serializers.ValidationError({"erreur":"Format de la titre invalide !"})

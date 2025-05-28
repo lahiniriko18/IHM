@@ -77,9 +77,11 @@ class ServiceEdtListage:
 
 class ServiceEdtCrud:
     def ajoutEdtListeDonnee(self,data,jours):
+        print(data)
         serializer=EdtTableSerializer(data=data)
         
         if serializer.is_valid():
+            
             donnee = serializer.validated_data
             contenu=donnee["contenu"]
             dates=donnee["titre"][0]
@@ -132,8 +134,10 @@ class ServiceEdtCrud:
                     serializerConstituer.save()
                 serializerEdt= EdtSerializer(data=donneEdts, many=True)
                 if serializerEdt.is_valid():
+                    
                     serializerEdt.save()
                 else:
+                    print("Eto 2")
                     return {
                         "context":serializerEdt.errors,
                         "status":status.HTTP_401_UNAUTHORIZED
@@ -143,6 +147,7 @@ class ServiceEdtCrud:
                 "context":{"message":"Ajout d'emploi du temps avec succès !"},
                 "status":status.HTTP_200_OK
             }
+        print("ato izy mety")
         return {
             "context":serializer.errors,
             "status":status.HTTP_401_UNAUTHORIZED
