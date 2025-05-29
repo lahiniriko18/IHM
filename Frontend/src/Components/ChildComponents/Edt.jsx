@@ -579,9 +579,7 @@ function Edt() {
           <div className='flex flex-row gap-3 mb-5'>
             <button className='font-bold hover:scale-105 text-bleu' onClick={versGeneral}>Géneral</button>
             <button className=' hover:scale-105 text-gray-500' onClick={() => {
-              const champsRemplis = dataEdt.date_debut && dataEdt.date_fin && dataEdt.niveau && dataEdt.parcours; {/*&& dataEdt.mode_creation*/ }
-
-              champsRemplis ? versCreationEdt(dataEdt) : setIsclicked(true)
+              versCreationEdt()
             }}>Creation</button>
             <button className=' hover:scale-105 text-gray-500' onClick={versAFfichage}>Affichage</button>
             {/* <button className=' hover:scale-105 text-gray-500' onClick={versProfile}>Profile</button> */}

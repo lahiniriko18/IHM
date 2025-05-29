@@ -19,6 +19,7 @@ function CreateNewEdt() {
   const [listeMatiere, setListeMatiere] = useState([]);
   const [listeSalle, setListeSalle] = useState([]);
   const [listeClasse, setListeClasse] = useState([]);
+  const [listeNiveau, setListeNiveau] = useState([]);
   const [niveauSelected, setNiveauSelected] = useState([]);
   const [listeProfesseur, setlisteProfesseur] = useState([]);
   const [professeursFiltres, setProfesseursFiltres] = useState([]);
@@ -59,6 +60,21 @@ function CreateNewEdt() {
   })
 
   //API
+  const getDataNiveau = async () => {
+
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/niveau-parcours/");
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      setListeNiveau(response.data);
+
+    } catch (error) {
+      console.error(error.message);
+    } finally {
+
+    }
+  };
   const getDataClasse = async () => {
     try {
       const response = await axios.get(`http://127.0.0.1:8000/api/classe/niveau-parcours/${numNiveauParcours}`);
@@ -163,8 +179,6 @@ function CreateNewEdt() {
     }
   }
   //Fin de l'API
-
-
 
   //Function & Code ankoatrin'ny api & useffect 
 
@@ -443,6 +457,12 @@ function CreateNewEdt() {
   }
 
   // ****Affichage dans le form 
+  const optionsNiveau = listeNiveau
+
+    .map((Classe) => ({
+      value: Classe.numNiveauParcours,
+      label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
+    }));
   const optionsClasse = listeClasse
     .map((Classe) => {
       const parcoursLabels = Array.isArray(Classe.parcours)
@@ -494,23 +514,25 @@ function CreateNewEdt() {
 
   // mi-inserer ny valeur ny titre 
   useEffect(() => {
-    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
-    const lundi = parseISO(objectStateEdt.date_debut)
-    const titre = {};
-    jours.forEach((jour, index) => {
-      const jourDate = addDays(lundi, index);
-      titre[jour] = format(jourDate, "dd-MM-yyyy");
-      setObjectEdt(prev => ({
-        ...prev,
-        donnee: {
-          ...prev.donnee,
-          titre: [
-            titre,
-            prev.donnee.titre?.[1] ?? numNiveauParcours
-          ]
-        }
-      }));
-    });
+    if (objectStateEdt.date_debut) {
+      const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
+      const lundi = parseISO(objectStateEdt.date_debut)
+      const titre = {};
+      jours.forEach((jour, index) => {
+        const jourDate = addDays(lundi, index);
+        titre[jour] = format(jourDate, "dd-MM-yyyy");
+        setObjectEdt(prev => ({
+          ...prev,
+          donnee: {
+            ...prev.donnee,
+            titre: [
+              titre,
+              prev.donnee.titre?.[1] ?? numNiveauParcours
+            ]
+          }
+        }));
+      });
+    }
   }, [objectStateEdt.date_debut])
   // maka liste Rehetra a chaque changement num
   useEffect(() => {
@@ -537,11 +559,15 @@ function CreateNewEdt() {
   }, [formCreneau.matiere, listeProfesseur]);
   // maka num niveau-parcours + date de debut et fin au premier rendu
   useEffect(() => {
+    getDataNiveau()
     objectStateEdt.niveau ? setNumNiveauParcours(objectStateEdt.niveau) : null
     if (objectStateEdt.date_debut && objectStateEdt.date_fin) {
       formatDate(objectStateEdt.date_debut)
     }
   }, [])
+  useEffect(() => {
+    setNumNiveauParcours(objectStateEdt.niveau)
+  }, [objectStateEdt.niveau])
   return (
     <>
       {
@@ -724,17 +750,20 @@ function CreateNewEdt() {
           </div>
           <div className="flex justify-between items-center ">
             <span className="text-blue-600 font-bold flex flex-row items-center z-50">
-              Création EDT pour : <p className='ms-2'>
-                {niveauSelected && niveauSelected.niveau
-                  ? (
-                    niveauSelected.niveau +
-                    (
-                      niveauSelected.numParcours
-                        ? (niveauSelected.numParcours.codeParcours
-                          ? niveauSelected.numParcours.codeParcours
-                          : " - " + niveauSelected.numParcours.nomParcours
-                        ) : "")) : ""}
-              </p>
+              Création EDT pour :  <Creatable
+                isClearable
+                options={optionsNiveau}
+                isValidNewOption={() => false}
+                onChange={(selectedOption) => {
+                  setObjectStateEdt(prev => ({
+                    ...prev,
+                    niveau: selectedOption ? selectedOption.value : null
+                  }));
+                }}
+                value={optionsNiveau.find(option => option.value === objectStateEdt.niveau) || null}
+                placeholder=" "
+                className="text-sm min-w-20 border-0"
+              />
             </span>
 
             <div className="flex gap-2 items-center">
