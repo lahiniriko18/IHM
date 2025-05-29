@@ -157,7 +157,7 @@ function EditEdt() {
       getDataSalle();
       getDataMatiere();
       getDataProfesseurs();
-      return true;
+
     } catch (error) {
       if (error.response) {
         console.error("Erreur du serveur :", error.response.data)
@@ -173,7 +173,7 @@ function EditEdt() {
 
   // Navigation 
   const versGeneral = () => {
-    navigate('/edt');
+    navigate('/edt', { state: { refresh: true } })
   };
 
   const versAFfichage = () => {
@@ -322,7 +322,26 @@ function EditEdt() {
     const selectedDate = parseISO(event.target.value);
     const lundi = startOfWeek(selectedDate, { weekStartsOn: 1 });
     const samedi = addDays(lundi, 5);
-    setObjectStateEdt({ ...objectStateEdt, date_debut: format(lundi, "yyyy-MM-dd"), date_fin: format(samedi, "yyyy-MM-dd") })
+    setObjectStateEdt({ ...objectStateEdt, date_debut: format(lundi, "yyyy-MM-dd"), date_fin: format(samedi, "yyyy-MM-dd") });
+
+    // Mets à jour objectEdt ici, pas dans un useEffect
+    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    const titre = {};
+    jours.forEach((jour, index) => {
+      const jourDate = addDays(lundi, index);
+      titre[jour] = format(jourDate, "dd-MM-yyyy");
+    });
+    setObjectEdt(prev => ({
+      ...prev,
+      donnee: {
+        ...prev.donnee,
+        titre: [
+          titre,
+          prev.donnee.titre?.[1] || numNiveauParcours, // Utilise le titre existant ou le numNiveauParcours
+          prev.donnee.titre?.[2] || ""
+        ]
+      }
+    }));
   };
 
   // Envoyer le donnée au django
@@ -333,10 +352,8 @@ function EditEdt() {
     if (horaireVide) {
       alert("Veuillez remplir tous les horaires avant d'enregistrer.");
     } else {
-      const ok = sendData();
-      if (ok) {
-        versGeneral();
-      }
+      sendData();
+      versGeneral()
     }
   }
   // Validation formulaire d'ajout  Creanau
@@ -501,27 +518,6 @@ function EditEdt() {
   //useEffect
 
   // mi-inserer ny valeur ny titre 
-  useEffect(() => {
-    if (objectStateEdt.dataToSend) {
-      const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
-      const lundi = parseISO(objectStateEdt.date_debut)
-      const titre = {};
-      jours.forEach((jour, index) => {
-        const jourDate = addDays(lundi, index);
-        titre[jour] = format(jourDate, "dd-MM-yyyy");
-        setObjectEdt(prev => ({
-          ...prev,
-          donnee: {
-            ...prev.donnee,
-            titre: [
-              titre,
-              prev.donnee.titre?.[1] ?? numNiveauParcours
-            ]
-          }
-        }));
-      });
-    }
-  }, [objectStateEdt.date_debut])
   // maka liste Rehetra a chaque changement num
   useEffect(() => {
     if (numNiveauParcours) {

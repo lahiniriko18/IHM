@@ -3,6 +3,7 @@ import { useSidebar } from '../Context/SidebarContext';
 import { useNavigate } from 'react-router-dom';
 import Creatable from 'react-select/creatable';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import { FileUploader } from "react-drag-drop-files";
 import * as XLSX from "xlsx";
 import { parseISO, format, addDays, getDay, isAfter, isBefore, startOfWeek, } from "date-fns";
@@ -10,6 +11,7 @@ function Edt() {
   const [isclicked, setIsclicked] = useState(false)
   const [search, setSearch] = useState(null);
   const [isadd, setisadd] = useState(true)
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [exist, setIsExist] = useState(false);
   const [hover, setHover] = useState(false)
@@ -62,9 +64,7 @@ function Edt() {
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
-      console.log("Vérification de l'EDT réussie :", response.data);
-      setIsExist(response.data)
-
+      return response.data
     } catch (error) {
       if (error.response) {
         console.error("Erreur du serveur :", error.response.data)
@@ -179,11 +179,11 @@ function Edt() {
     { value: 'manuel', label: 'Manuellement' },
     { value: 'excel', label: 'Importez depuis excel' },
   ]
-  {/*Execution de requete */ }
+
   useEffect(() => {
+    getData()
     getDataClasse()
     getDataParcours()
-    getData()
   }, [])
 
   useEffect(() => {
@@ -193,6 +193,14 @@ function Edt() {
       }, 4000);
     }
   }, [error])
+
+  useEffect(() => {
+    if (location.state?.refresh) {
+      getData();
+      // Optionnel : nettoyer le flag pour éviter de rappeler à chaque fois
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state]);
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -475,34 +483,37 @@ function Edt() {
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
-                onClick={() => {
+                onClick={async () => {
                   if (dataEdt.date_debut.trim() == "" || dataEdt.date_fin.trim() == "") {
                     setError({ status: true, composant: "date_debut", message: "La date ne peut pas vide" });
                   } else if (!dataEdt.niveau) {
                     setError({ status: true, composant: "niveau", message: "Le niveau ne peut pas vide " });
                   } else if (!dataEdt.mode_creation) {
                     setError({ status: true, composant: "creation", message: "Il faut choisir la modele de creation" });
-                  } else if (verifierEdt() && exist) {
-                    setError({ status: true, composant: "creation", message: "Edt existe dejà" });
-                  }
-                  else {
-                    setIsclicked(false)
-                    versCreationEdt(dataEdt);
-                    setDataEdt({
-                      date_debut: "",
-                      date_fin: "",
-                      niveau: null,
-                      mode_creation: "",
-                      parcours: null,
-                      excel: null
-                    });
-                    setError({ ...error, status: false })
+                  } else {
+                    const a = await verifierEdt();
+                    console.log("voici  aa", a);
+
+                    if (a) {
+                      setError({ status: true, composant: "creation", message: "Edt existe dejà" });
+                    } else {
+                      setIsclicked(false)
+                      versCreationEdt(dataEdt);
+                      setDataEdt({
+                        date_debut: "",
+                        date_fin: "",
+                        niveau: null,
+                        mode_creation: "",
+                        parcours: null,
+                        excel: null
+                      });
+                      setError({ ...error, status: false })
+                    }
                   }
                 }}
               >
                 {modeCreation === 'excel' ? 'VALIDER' : 'SUIVANT'}
               </button>
-
             </div>
           </div >
         </div >
