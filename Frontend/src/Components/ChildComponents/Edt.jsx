@@ -46,6 +46,7 @@ function Edt() {
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
+      console.log(response.data)
       setListeEdt(response.data);
       setOriginalList(response.data)
       setIsLoading(false);
@@ -197,8 +198,9 @@ function Edt() {
   useEffect(() => {
     if (location.state?.refresh) {
       getData();
+
       // Optionnel : nettoyer le flag pour éviter de rappeler à chaque fois
-      window.history.replaceState({}, document.title)
+
     }
   }, [location.state]);
   useEffect(() => {
@@ -248,17 +250,15 @@ function Edt() {
   function handleSearch(e) {
     const value = e.target.value;
     setSearch(value);
-
     if (value.trim() !== "") {
       const filtered = originalList.filter((Edt) =>
-        Edt.niveau.toLowerCase().includes(value.toLowerCase()) ||
-        (Edt.groupe && Edt.groupe.toLowerCase().includes(value.toLowerCase())) ||
-        Edt.parcours.nomParcours.toLowerCase().includes(value.toLowerCase()) ||
-        Edt.numEdt.toString().includes(value)
+        Edt.niveauParcours.toLowerCase().includes(value.toLowerCase()) ||
+        (Edt.dateDebut.toLowerCase().includes(value.toLowerCase())) ||
+        Edt.dateFin.toLowerCase().includes(value.toLowerCase())
       );
       setListeEdt(filtered);
     } else {
-      setListeClasse(originalList);
+      setListeEdt(originalList);
     }
   }
   const versGeneral = () => {
@@ -566,8 +566,8 @@ function Edt() {
         <input
           type="text"
           placeholder='Rechercher ici...'
-          // value={search}
-          // onChange={handleSearch}
+          value={search || ""}
+          onChange={handleSearch}
           className="border p-2 ps-12 relative rounded w-[50%]  focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
         />
         <img src="/Icons/rechercher.png" alt="Search" className='w-6 absolute left-[26%]' />

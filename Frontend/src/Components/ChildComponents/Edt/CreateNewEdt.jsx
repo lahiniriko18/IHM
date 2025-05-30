@@ -33,7 +33,7 @@ function CreateNewEdt() {
     salle: null,
   });
   const [caseSelectionne, setCaseSelectionne] = useState(null)
-  const [objectEdt, setObjectEdt] = useState(() => {
+  const initialObjectEdt = () => {
     const nombreCase = Math.max(2, listeClasse.lenght || 0)
     const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
     const ligneInitiale = {
@@ -57,7 +57,8 @@ function CreateNewEdt() {
         contenu: [ligneInitiale]
       }
     };
-  })
+  }
+  const [objectEdt, setObjectEdt] = useState(initialObjectEdt())
 
   //API
   const getDataNiveau = async () => {
@@ -337,14 +338,14 @@ function CreateNewEdt() {
   };
 
   // Envoyer le donnée au django
-  const envoyerDonnee = () => {
+  const envoyerDonnee = async () => {
     const horaireVide = objectEdt.donnee.contenu.some(
       l => !l.Horaire.heureDebut || !l.Horaire.heureFin
     );
     if (horaireVide) {
       alert("Veuillez remplir tous les horaires avant d'enregistrer.");
     } else {
-      const ok = sendData();
+      const ok = await sendData();
       if (ok) {
         versGeneral();
       }
@@ -557,6 +558,44 @@ function CreateNewEdt() {
       )
     );
   }, [formCreneau.matiere, listeProfesseur]);
+
+  // mametraka ny isan'ny crenau 
+  useEffect(() => {
+    // Si pas de niveau ou pas de classe, on remet le tableau à l'état initial
+    if (!numNiveauParcours || listeClasse.length === 0) {
+      setObjectEdt(initialObjectEdt());
+      return;
+    }
+    // Sinon, on construit le tableau avec le bon nombre de créneaux
+    const nombreCase = Math.max(2, listeClasse.length);
+    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    const ligneInitiale = {
+      Horaire: { heureDebut: "", heureFin: "" }
+    };
+    jours.forEach(jour => {
+      ligneInitiale[jour] = Array.from({ length: nombreCase }, () => ({
+        classe: null,
+        matiere: null,
+        professeur: null,
+        salle: null
+      }));
+    });
+    setObjectEdt({
+      donnee: {
+        titre: [
+          { Lundi: "", Mardi: "", Mercredi: "", Jeudi: "", Vendredi: "", Samedi: "" },
+          numNiveauParcours ? numNiveauParcours : objectStateEdt.niveau,
+        ],
+        contenu: [ligneInitiale]
+      }
+    });
+  }, [listeClasse, numNiveauParcours]);
+
+  //mametraka valeur @numNiveauparcours
+  useEffect(() => {
+    setNumNiveauParcours(objectStateEdt.niveau)
+  }, [objectStateEdt.niveau])
+
   // maka num niveau-parcours + date de debut et fin au premier rendu
   useEffect(() => {
     getDataNiveau()
@@ -565,9 +604,7 @@ function CreateNewEdt() {
       formatDate(objectStateEdt.date_debut)
     }
   }, [])
-  useEffect(() => {
-    setNumNiveauParcours(objectStateEdt.niveau)
-  }, [objectStateEdt.niveau])
+
   return (
     <>
       {
