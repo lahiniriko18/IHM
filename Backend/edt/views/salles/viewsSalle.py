@@ -2,7 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from ...serializer.serializerSalle import SalleSerializer
-from ...models import Salle
+from ...models import Salle,Edt
+from django.db.models import Q
 from datetime import date,datetime,timedelta
 from ...services.serviceModel import ServiceModelCrud
 class SalleView(APIView):
@@ -27,7 +28,7 @@ class SalleView(APIView):
                 fin=datetime.combine(datetime.today(), edt.heureFin)
                 heureTotal += (fin - debut)
             donnees[i]["heureTotal"]=heureTotal.total_seconds()
-        return Response(donnees)
+        return Response(donnees, status=status.HTTP_200_OK)
     
     
     def post(self, request):
@@ -59,3 +60,27 @@ class SalleDetailView(APIView):
         serviceCrud=ServiceModelCrud(Salle)
         response=serviceCrud.suppressionMutlipe(request.data, "numSalles","Salles")
         return Response(response['context'], status=response['status'])
+    
+
+class SalleEdtView(APIView):
+    def post(self, request):
+        donnee=request.data
+        heureDebut=donnee['heureDebut']
+        heureFin=donnee['heureFin']
+        try:
+            dateVerif=datetime.strptime(donnee['date'], "%d-%m-%Y").date()
+            heureDebut=datetime.strptime(heureDebut, "%H:%M").time()
+            heureFin=datetime.strptime(heureFin, "%H:%M").time()
+        except ValueError:
+            return Response({"erreur":"Type de données invalide !"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        numSalles=Edt.objects.filter(Q(date=dateVerif) & Q(Q(heureDebut__range=(heureDebut,heureFin)) | Q(heureFin__range=(heureDebut,heureFin)))).values_list('numSalle', flat=True)
+        print(list(numSalles))
+        salles=Salle.objects.filter().exclude(pk__in=list(numSalles))
+        for salle in salles:
+            if not salle.statut:
+                salle.statut=not salle.statut
+                salle.save()
+        
+        donnees=SalleSerializer(salles, many=True).data
+        return Response(donnees, status=status.HTTP_200_OK)

@@ -14,7 +14,7 @@ urlpatterns = [
     path('supprimer/liste/', EdtTableauView.as_view()),
     path('telecharger/',ModeleExcelView.as_view()),
     path('ajouter/liste/', ListeEdtView.as_view()),
-    path('modifier/liste/', ListeEdtView.as_view()),
+    path('modifier/liste/', ListeEdtView.as_view()),    
     path('modifier/donnee/', EdtDetailView.as_view()),
     path('dernier/', EdtDetailView.as_view()),
     path('mail/distribuer/', EdtProfesseurView.as_view())
