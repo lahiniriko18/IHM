@@ -345,14 +345,14 @@ function EditEdt() {
   };
 
   // Envoyer le donnée au django
-  const envoyerDonnee = () => {
+  const envoyerDonnee = async () => {
     const horaireVide = objectEdt.donnee.contenu.some(
       l => !l.Horaire.heureDebut || !l.Horaire.heureFin
     );
     if (horaireVide) {
       alert("Veuillez remplir tous les horaires avant d'enregistrer.");
     } else {
-      sendData();
+      await sendData();
       versGeneral()
     }
   }
