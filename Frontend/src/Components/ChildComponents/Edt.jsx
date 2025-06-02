@@ -38,7 +38,7 @@ function Edt() {
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const fileTypes = ["XLS", "XLSX"];
-  {/* API*/ }
+  // API
   const getData = async () => {
     setIsLoading(true);
     try {
@@ -216,10 +216,6 @@ function Edt() {
     };
   }, []);
   const optionsClasse = listeClasse
-    // .sort((a, b) => a.niveau.localeCompare(b.niveau))
-    // .filter((classe, index, self) =>
-    //   index === self.findIndex((c) => c.niveau === classe.niveau)
-    // )
     .map((Classe) => ({
       value: Classe.numNiveauParcours,
       label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
@@ -492,8 +488,6 @@ function Edt() {
                     setError({ status: true, composant: "creation", message: "Il faut choisir la modele de creation" });
                   } else {
                     const a = await verifierEdt();
-                    console.log("voici  aa", a);
-
                     if (a) {
                       setError({ status: true, composant: "creation", message: "Edt existe dejà" });
                     } else {

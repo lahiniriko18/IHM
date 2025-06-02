@@ -140,6 +140,7 @@ function CreateNewEdt() {
     }
   };
   const sendData = async () => {
+
     const contenuNettoye = objectEdt.donnee.contenu.map(ligne => {
       const nouvelleLigne = {
         Horaire: { ...ligne.Horaire },
@@ -156,28 +157,28 @@ function CreateNewEdt() {
       });
       return nouvelleLigne;
     });
-
+    console.log("Avant :", objectEdt);
     const dataToSend = {
       donnee: {
         ...objectEdt.donnee,
         contenu: contenuNettoye,
       },
     };
-    console.log(dataToSend);
-    try {
-      const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status);
-      }
-      getDataClasse()
-      getDataSalle();
-      getDataMatiere();
-      getDataProfesseurs();
-      return true;
-    } catch (error) {
-      console.error(error.response.data);
-      return false;
-    }
+    console.log("Après :", dataToSend);
+    // try {
+    //   const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
+    //   if (response.status !== 200) {
+    //     throw new Error('Erreur code : ' + response.status);
+    //   }
+    //   getDataClasse()
+    //   getDataSalle();
+    //   getDataMatiere();
+    //   getDataProfesseurs();
+    //   return true;
+    // } catch (error) {
+    //   console.error(error.response.data);
+    //   return false;
+    // }
   }
   //Fin de l'API
 
@@ -334,7 +335,12 @@ function CreateNewEdt() {
     const selectedDate = parseISO(event.target.value);
     const lundi = startOfWeek(selectedDate, { weekStartsOn: 1 });
     const samedi = addDays(lundi, 5);
-    setObjectStateEdt({ ...objectStateEdt, date_debut: format(lundi, "yyyy-MM-dd"), date_fin: format(samedi, "yyyy-MM-dd") })
+    setObjectStateEdt(prev => ({
+      ...prev,
+      date_debut: format(lundi, "yyyy-MM-dd"),
+      date_fin: format(samedi, "yyyy-MM-dd")
+    }));
+
   };
 
   // Envoyer le donnée au django
@@ -515,26 +521,27 @@ function CreateNewEdt() {
 
   // mi-inserer ny valeur ny titre 
   useEffect(() => {
-    if (objectStateEdt.date_debut) {
-      const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
-      const lundi = parseISO(objectStateEdt.date_debut)
+    if (objectStateEdt?.date_debut) {
+      const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+      const lundi = parseISO(objectStateEdt.date_debut);
       const titre = {};
       jours.forEach((jour, index) => {
         const jourDate = addDays(lundi, index);
         titre[jour] = format(jourDate, "dd-MM-yyyy");
-        setObjectEdt(prev => ({
-          ...prev,
-          donnee: {
-            ...prev.donnee,
-            titre: [
-              titre,
-              prev.donnee.titre?.[1] ?? numNiveauParcours
-            ]
-          }
-        }));
       });
+      setObjectEdt(prev => ({
+        ...prev,
+        donnee: {
+          ...prev.donnee,
+          titre: [
+            titre,
+            prev.donnee.titre?.[1] ?? objectStateEdt.niveau
+          ]
+        }
+      }));
     }
-  }, [objectStateEdt.date_debut])
+  }, [objectStateEdt]); // plutôt que seulement .date_debut
+
   // maka liste Rehetra a chaque changement num
   useEffect(() => {
     if (numNiveauParcours) {
@@ -561,12 +568,11 @@ function CreateNewEdt() {
 
   // mametraka ny isan'ny crenau 
   useEffect(() => {
-    // Si pas de niveau ou pas de classe, on remet le tableau à l'état initial
     if (!numNiveauParcours || listeClasse.length === 0) {
       setObjectEdt(initialObjectEdt());
       return;
     }
-    // Sinon, on construit le tableau avec le bon nombre de créneaux
+
     const nombreCase = Math.max(2, listeClasse.length);
     const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
     const ligneInitiale = {
@@ -580,24 +586,28 @@ function CreateNewEdt() {
         salle: null
       }));
     });
-    setObjectEdt({
+
+    // 🔐 Récupère l’ancien titre pour ne pas l’écraser
+    setObjectEdt(prev => ({
       donnee: {
         titre: [
-          { Lundi: "", Mardi: "", Mercredi: "", Jeudi: "", Vendredi: "", Samedi: "" },
-          numNiveauParcours ? numNiveauParcours : objectStateEdt.niveau,
+          prev.donnee?.titre?.[0] || {},
+          numNiveauParcours ?? objectStateEdt.niveau
         ],
         contenu: [ligneInitiale]
       }
-    });
+    }));
   }, [listeClasse, numNiveauParcours]);
+
 
   //mametraka valeur @numNiveauparcours
   useEffect(() => {
     setNumNiveauParcours(objectStateEdt.niveau)
-  }, [objectStateEdt.niveau])
+  }, [objectStateEdt])
 
   // maka num niveau-parcours + date de debut et fin au premier rendu
   useEffect(() => {
+    console.log(objectStateEdt);
     getDataNiveau()
     objectStateEdt.niveau ? setNumNiveauParcours(objectStateEdt.niveau) : null
     if (objectStateEdt.date_debut && objectStateEdt.date_fin) {
@@ -683,7 +693,7 @@ function CreateNewEdt() {
                     setFormCreneau(prev => ({
                       ...prev,
                       professeur: selectedOption ? selectedOption.value : null
-                    }));
+                    })); 
                   }}
                   value={
                     professeursFiltres
@@ -816,7 +826,10 @@ function CreateNewEdt() {
               </div>
             </div>
 
-            <button className="button" onClick={envoyerDonnee}>Creer l'EDT</button>
+            <button className="button" onClick={() => {
+              console.log(objectEdt)
+              envoyerDonnee()
+            }}>Creer l'EDT</button>
           </div>
           <div className="h-[73%] overflow-x-auto w-full m-4">
             {
