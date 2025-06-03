@@ -12,6 +12,7 @@ function CreateNewEdt() {
   const [modele, setModele] = useState(1);
   const [isOpenAdd, setIsOpenAdd] = useState(false)
   const [isOpenHours, setIsOpenHours] = useState(false)
+  const [alertModal, setAlertModal] = useState({ status: false, type: "", message: "" });
   const [horaireError, setHoraireError] = useState("");
   const initialStateEdt = location.state?.objectStateEdt || {}
   const [objectStateEdt, setObjectStateEdt] = useState(initialStateEdt)
@@ -100,17 +101,18 @@ function CreateNewEdt() {
       console.error(error.response.data);
     }
   };
-  const getDataSalle = async () => {
+  const getDataSalle = async (donnees) => {
+    // console.log(donnees);
 
     try {
-      const response = await axios.get("http://127.0.0.1:8000/api/salle/");
+      const response = await axios.post("http://127.0.0.1:8000/api/salle/liste/verifier/", donnees);
       if (response.status !== 200) {
         throw new Error('Erreur code : ' + response.status);
       }
       setListeSalle(response.data);
 
     } catch (error) {
-      console.error(error.message);
+      console.error(error.response.data);
     }
   };
   const getDataMatiere = async () => {
@@ -145,8 +147,6 @@ function CreateNewEdt() {
       const nouvelleLigne = {
         Horaire: { ...ligne.Horaire },
       };
-
-      // Pour chaque jour (Lundi, Mardi, etc.)
       Object.keys(ligne).forEach(jour => {
         if (jour === "Horaire") return;
 
@@ -157,28 +157,27 @@ function CreateNewEdt() {
       });
       return nouvelleLigne;
     });
-    console.log("Avant :", objectEdt);
+
     const dataToSend = {
       donnee: {
         ...objectEdt.donnee,
         contenu: contenuNettoye,
       },
     };
-    console.log("Après :", dataToSend);
-    // try {
-    //   const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
-    //   if (response.status !== 200) {
-    //     throw new Error('Erreur code : ' + response.status);
-    //   }
-    //   getDataClasse()
-    //   getDataSalle();
-    //   getDataMatiere();
-    //   getDataProfesseurs();
-    //   return true;
-    // } catch (error) {
-    //   console.error(error.response.data);
-    //   return false;
-    // }
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/edt/ajouter/liste/`, dataToSend);
+      if (response.status !== 200) {
+        throw new Error('Erreur code : ' + response.status);
+      }
+      getDataClasse()
+      getDataSalle();
+      getDataMatiere();
+      getDataProfesseurs();
+      return true;
+    } catch (error) {
+      console.error(error.message);
+      return false;
+    }
   }
   //Fin de l'API
 
@@ -332,14 +331,24 @@ function CreateNewEdt() {
     setObjectStateEdt({ ...objectStateEdt, date_debut: format(lundi, "yyyy-MM-dd"), date_fin: format(samedi, "yyyy-MM-dd") })
   }
   const handleDateChange = (event) => {
-    const selectedDate = parseISO(event.target.value);
-    const lundi = startOfWeek(selectedDate, { weekStartsOn: 1 });
-    const samedi = addDays(lundi, 5);
-    setObjectStateEdt(prev => ({
-      ...prev,
-      date_debut: format(lundi, "yyyy-MM-dd"),
-      date_fin: format(samedi, "yyyy-MM-dd")
-    }));
+    const date = event.target.value;
+    if (date) {
+      const selectedDate = parseISO(date);
+      const lundi = startOfWeek(selectedDate, { weekStartsOn: 1 });
+      const samedi = addDays(lundi, 5);
+      setObjectStateEdt(prev => ({
+        ...prev,
+        date_debut: format(lundi, "yyyy-MM-dd"),
+        date_fin: format(samedi, "yyyy-MM-dd")
+      }));
+    } else {
+      setObjectStateEdt(prev => ({
+        ...prev,
+        date_debut: "",
+        date_fin: ""
+      }));
+    }
+
 
   };
 
@@ -462,6 +471,26 @@ function CreateNewEdt() {
     setHoraireError("");
     setIsOpenHours(false);
   }
+  // Mise a jour de titre 
+  const miseAjourtitre = () => {
+    const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+    const lundi = parseISO(objectStateEdt.date_debut);
+    const titre = {};
+    jours.forEach((jour, index) => {
+      const jourDate = addDays(lundi, index);
+      titre[jour] = format(jourDate, "dd-MM-yyyy");
+    });
+    setObjectEdt(prev => ({
+      ...prev,
+      donnee: {
+        ...prev.donnee,
+        titre: [
+          titre,
+          prev.donnee.titre?.[1] ?? objectStateEdt.niveau
+        ]
+      }
+    }));
+  }
 
   // ****Affichage dans le form 
   const optionsNiveau = listeNiveau
@@ -491,7 +520,7 @@ function CreateNewEdt() {
       };
     });
 
-  const optionsSalle = listeSalle
+  const optionsSalle = listeSalle.length > 0 ? listeSalle
     .filter(Salle => Salle.status = true)
     .filter((Salle, index, self) =>
       index === self.findIndex((c) => c.nomSalle === Salle.nomSalle)
@@ -499,7 +528,7 @@ function CreateNewEdt() {
     .map((Salle) => ({
       value: Salle.numSalle,
       label: Salle.nomSalle,
-    }));
+    })) : []
   const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere))
     .map((Matiere) => ({
       value: Matiere.numMatiere,
@@ -519,26 +548,20 @@ function CreateNewEdt() {
 
   //useEffect
 
+  // maka num niveau-parcours + date de debut et fin au premier rendu
+  useEffect(() => {
+    console.log(objectStateEdt);
+    getDataNiveau()
+    objectStateEdt.niveau ? setNumNiveauParcours(objectStateEdt.niveau) : null
+    if (objectStateEdt.date_debut && objectStateEdt.date_fin) {
+      miseAjourtitre()
+      formatDate(objectStateEdt.date_debut)
+    }
+  }, [])
   // mi-inserer ny valeur ny titre 
   useEffect(() => {
     if (objectStateEdt?.date_debut) {
-      const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-      const lundi = parseISO(objectStateEdt.date_debut);
-      const titre = {};
-      jours.forEach((jour, index) => {
-        const jourDate = addDays(lundi, index);
-        titre[jour] = format(jourDate, "dd-MM-yyyy");
-      });
-      setObjectEdt(prev => ({
-        ...prev,
-        donnee: {
-          ...prev.donnee,
-          titre: [
-            titre,
-            prev.donnee.titre?.[1] ?? objectStateEdt.niveau
-          ]
-        }
-      }));
+      miseAjourtitre()
     }
   }, [objectStateEdt]); // plutôt que seulement .date_debut
 
@@ -546,7 +569,7 @@ function CreateNewEdt() {
   useEffect(() => {
     if (numNiveauParcours) {
       getDataClasse()
-      getDataSalle()
+      // getDataSalle()
       getDataMatiere()
       getDataProfesseurs()
       getNiveau()
@@ -587,33 +610,34 @@ function CreateNewEdt() {
       }));
     });
 
-    // 🔐 Récupère l’ancien titre pour ne pas l’écraser
-    setObjectEdt(prev => ({
+    // Calcul du titre ici, à partir de la date_debut
+    let titreJours = {};
+    if (objectStateEdt.date_debut) {
+      const lundi = parseISO(objectStateEdt.date_debut);
+      jours.forEach((jour, index) => {
+        const jourDate = addDays(lundi, index);
+        titreJours[jour] = format(jourDate, "dd-MM-yyyy");
+      });
+    } else {
+      jours.forEach(jour => titreJours[jour] = "");
+    }
+
+    setObjectEdt({
       donnee: {
         titre: [
-          prev.donnee?.titre?.[0] || {},
+          titreJours,
           numNiveauParcours ?? objectStateEdt.niveau
         ],
         contenu: [ligneInitiale]
       }
-    }));
-  }, [listeClasse, numNiveauParcours]);
+    });
+  }, [listeClasse, numNiveauParcours, objectStateEdt.date_debut]);
 
 
   //mametraka valeur @numNiveauparcours
   useEffect(() => {
     setNumNiveauParcours(objectStateEdt.niveau)
   }, [objectStateEdt])
-
-  // maka num niveau-parcours + date de debut et fin au premier rendu
-  useEffect(() => {
-    console.log(objectStateEdt);
-    getDataNiveau()
-    objectStateEdt.niveau ? setNumNiveauParcours(objectStateEdt.niveau) : null
-    if (objectStateEdt.date_debut && objectStateEdt.date_fin) {
-      formatDate(objectStateEdt.date_debut)
-    }
-  }, [])
 
   return (
     <>
@@ -693,7 +717,7 @@ function CreateNewEdt() {
                     setFormCreneau(prev => ({
                       ...prev,
                       professeur: selectedOption ? selectedOption.value : null
-                    })); 
+                    }));
                   }}
                   value={
                     professeursFiltres
@@ -788,6 +812,47 @@ function CreateNewEdt() {
           </div>
         )
       }
+      {
+        (alertModal.status) && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center"
+            tabIndex="-1"
+          >
+            <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
+              <div className="flex justify-between items-center w-full">
+
+                {alertModal.type == "info" && <h1 className="text-blue-600 text-xl font-bold">Information</h1>}
+                {alertModal.type == "error" && <h1 className="text-blue-600 text-xl font-bold">Erreur</h1>}
+                {alertModal.type == "alarm" && <h1 className="text-blue-600 text-xl font-bold">Attention</h1>}
+                <img
+                  src="/Icons/annuler.png"
+                  alt="Quitter"
+                  className="w-6 h-6 cursor-pointer"
+                  onClick={() => {
+                    setAlertModal({ ...alertModal, status: false, type: "", message: "" });
+                  }}
+                />
+              </div>
+              <div className="flex flex-row gap-2">
+                {alertModal.type == "info" && <img src="/Icons/info.png" alt="Attention" />}
+                {alertModal.type == "alarm" && <img src="/Icons/attention.png" alt="Attention" />}
+                {alertModal.type == "error" && <img src="/Icons/annuler.png" alt="Attention" />}
+                <p>{alertModal.message}</p>
+              </div>
+              <div className="w-full flex justify-center">
+                <button
+                  className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
+                  onClick={() => {
+                    setAlertModal({ ...alertModal, status: false, type: "", message: "" });
+                  }}
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div >
+        )
+      }
       <div className={`${isReduire ? "left-20" : "left-56"} fixed right-0 top-14 p-5 h-screen overflow-auto bg-white z-40 transition-all duration-700`}>
         <div className="flex flex-col gap-1 h-full">
           <div className='flex gap-3'>
@@ -831,6 +896,7 @@ function CreateNewEdt() {
               envoyerDonnee()
             }}>Creer l'EDT</button>
           </div>
+
           <div className="h-[73%] overflow-x-auto w-full m-4">
             {
               modele === 1 ? (
@@ -882,11 +948,21 @@ function CreateNewEdt() {
                                     <div className={`p-2 flex flex-col h-full relative
                                     ${value < ligne[jour].length - 1 ? "border-r border-dashed border-gray-300" : ""}
                                     hover:bg-gray-200 active:bg-gray-300`}
-                                      style={{ width: `${100 / ligne[jour].length}%`, minWidth: 120 }} key={value} onClick={() => {
-                                        setCaseSelectionne({ ligneIdx: i, jour, crenauIdx: value });
-                                        const creneau = objectEdt.donnee.contenu[i][jour][value];
-                                        setFormCreneau({ ...creneau });
-                                        setIsOpenAdd(true);
+                                      style={{ width: `${100 / ligne[jour].length}%`, minWidth: 120 }} key={value} onClick={async () => {
+                                        if (!numNiveauParcours) {
+                                          setAlertModal({ ...alertModal, status: true, type: "alarm", message: "Le classe est vide ,Selectionner le d'abord!" })
+                                        }
+                                        else if (!objectStateEdt.date_debut) {
+                                          setAlertModal({ ...alertModal, status: true, type: "info", message: "Pour la verification de la disponibilité de la salle,selectionner le date du debut svp!" })
+                                        } else if (!objectEdt.donnee.contenu[i].Horaire.heureDebut) {
+                                          setAlertModal({ ...alertModal, status: true, type: "info", message: "Pour la verification de la disponibilité de la salle,entrer l' horaire!" })
+                                        } else {
+                                          setCaseSelectionne({ ligneIdx: i, jour, crenauIdx: value });
+                                          const creneau = objectEdt.donnee.contenu[i][jour][value];
+                                          setFormCreneau({ ...creneau });
+                                          await getDataSalle({ date: formatDateToDDMMYYYY(objectStateEdt.date_debut), heureDebut: objectEdt.donnee.contenu[i].Horaire.heureDebut, heureFin: objectEdt.donnee.contenu[i].Horaire.heureFin })
+                                          setIsOpenAdd(true);
+                                        }
                                       }}>
                                       <span className='flex flex-col w-full  relative '>
                                         <span className='flex flex-col w-full'>
@@ -1057,7 +1133,7 @@ function CreateNewEdt() {
               )}
           </div>
         </div>
-      </div>
+      </div >
     </>
   )
 }
