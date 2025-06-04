@@ -23,7 +23,7 @@ function Navbar() {
     { to: "/parcours", label: "Parcours", icon: "icons8-partage-de-connaissances-50.png" },
     { to: "/edt", label: "Emploi du temps", icon: "icons8-objet-avec-durée-50.png" },
     { to: "/rapport", label: "Rapport", icon: "evaluation.png" },
-    { to: "/parametre", label: "Paramètre", icon: "icons8-paramètres-60.png" },
+    { to: "/parametre", label: "Paramètre", icon: "parametre.png" },
     { to: "/utilisateur", label: "Utilisateurs", icon: "utilisateur.png" },
   ];
 

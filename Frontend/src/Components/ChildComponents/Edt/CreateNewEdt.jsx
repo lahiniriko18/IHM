@@ -4,7 +4,7 @@ import Creatable from 'react-select/creatable';
 import axios from 'axios';
 import { startOfWeek, addDays, format, parseISO } from "date-fns";
 import { useLocation, useNavigate } from 'react-router-dom';
-
+import { motion, AnimatePresence } from 'framer-motion';
 function CreateNewEdt() {
   const { isReduire } = useSidebar();
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ function CreateNewEdt() {
   const [modele, setModele] = useState(1);
   const [isOpenAdd, setIsOpenAdd] = useState(false)
   const [isOpenHours, setIsOpenHours] = useState(false)
+  const [setting, setSetting] = useState(false)
   const [alertModal, setAlertModal] = useState({ status: false, type: "", message: "" });
   const [horaireError, setHoraireError] = useState("");
   const initialStateEdt = location.state?.objectStateEdt || {}
@@ -170,7 +171,7 @@ function CreateNewEdt() {
         throw new Error('Erreur code : ' + response.status);
       }
       getDataClasse()
-      getDataSalle();
+      // getDataSalle();
       getDataMatiere();
       getDataProfesseurs();
       return true;
@@ -181,8 +182,8 @@ function CreateNewEdt() {
   }
   //Fin de l'API
 
-  //Function & Code ankoatrin'ny api & useffect 
 
+  //Function & Code ankoatrin'ny api & useffect 
   // Navigation 
   const versGeneral = () => {
     navigate('/edt');
@@ -200,7 +201,7 @@ function CreateNewEdt() {
         l => !l.Horaire.heureDebut || !l.Horaire.heureFin
       );
       if (horaireVide) {
-        alert("Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne.");
+        setAlertModal({ ...alertModal, status: true, type: "alarm", message: "Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne." })
         return;
       }
       const nombreCreneaux = Math.max(2, listeClasse.length || 0);
@@ -229,13 +230,12 @@ function CreateNewEdt() {
         }
       }));
     } else {
-
       const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
       const horaireVide = objectEdt.donnee.contenu.some(
         l => !l.Horaire.heureDebut || !l.Horaire.heureFin
       );
       if (horaireVide) {
-        alert("Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne.");
+        setAlertModal({ ...alertModal, status: true, type: "alarm", message: "Veuillez d'abord remplir tous les horaires existants avant d'ajouter une nouvelle colonne." })
         return;
       }
       setFormHoraire({ heure_debut: "", heure_fin: "" });
@@ -276,9 +276,7 @@ function CreateNewEdt() {
     return "";
   }
 
-
   //Recuper le nom d'une proprieté a partir de son id :
-
   const getClasseLabel = (numClasse) => {
     const found = listeClasse.find(c => c.numClasse === numClasse);
     if (!found) return "";
@@ -348,17 +346,32 @@ function CreateNewEdt() {
         date_fin: ""
       }));
     }
-
-
   };
-
+  const verifierNull = () => {
+    // Retourne true si TOUTES les cases sont vides, false sinon
+    return objectEdt.donnee.contenu.every(ligne =>
+      Object.keys(ligne)
+        .filter(key => key !== 'Horaire')
+        .every(jour =>
+          ligne[jour].every(casItem =>
+            !casItem.classe && !casItem.matiere && !casItem.professeur && !casItem.salle
+          )
+        )
+    );
+  };
   // Envoyer le donnée au django
   const envoyerDonnee = async () => {
     const horaireVide = objectEdt.donnee.contenu.some(
       l => !l.Horaire.heureDebut || !l.Horaire.heureFin
     );
-    if (horaireVide) {
-      alert("Veuillez remplir tous les horaires avant d'enregistrer.");
+    if (!numNiveauParcours) {
+      setAlertModal({ ...alertModal, status: true, type: "alarm", message: "Veuillez selectionner le classe et remplir tous les donnée avant de d'envoyer" })
+    } else if (!objectStateEdt.date_debut) {
+      setAlertModal({ ...alertModal, status: true, type: "alarm", message: "Veuillez entrer  le date avant de d'enregistrer l'emploi du temps" })
+    } else if (horaireVide) {
+      setAlertModal({ ...alertModal, status: true, type: "alarm", message: "Veuillez remplir les données du horaire avant de d'envoyer " })
+    } else if (verifierNull()) {
+      setAlertModal({ ...alertModal, status: true, type: "alarm", message: "L'edt ne peut pas etre vide ,il faudra au moins une seance " })
     } else {
       const ok = await sendData();
       if (ok) {
@@ -430,8 +443,9 @@ function CreateNewEdt() {
       return;
     }
 
-    // Vérifie si l'horaire existe déjà (sauf la colonne en cours d'édition)
     const Index = modele === 1 ? caseSelectionne.ligneIdx : caseSelectionne.colonneIndex;
+
+    // Vérifie si l'horaire existe déjà (sauf la colonne en cours d'édition)
     const existe = objectEdt.donnee.contenu.some(
       (l, i) =>
         i !== Index &&
@@ -442,27 +456,34 @@ function CreateNewEdt() {
       setHoraireError("Cet horaire existe déjà dans le tableau.");
       return;
     }
-    // Vérifie si l'horaire ajouté est inférieur à un horaire déjà existant
+
+    // Vérifie qu'il n'y a pas de chevauchement ou d'inclusion
     const debutMinutes = parseInt(formHoraire.heureDebut.split(":")[0], 10) * 60 + parseInt(formHoraire.heureDebut.split(":")[1], 10);
     const finMinutes = parseInt(formHoraire.heureFin.split(":")[0], 10) * 60 + parseInt(formHoraire.heureFin.split(":")[1], 10);
-    const conflit = objectEdt.donnee.contenu.some((l, i) => {
+
+    const chevauchement = objectEdt.donnee.contenu.some((l, i) => {
       if (i === Index) return false;
       const d = l.Horaire.heureDebut;
       const f = l.Horaire.heureFin;
       if (!d || !f) return false;
       const dMin = parseInt(d.split(":")[0], 10) * 60 + parseInt(d.split(":")[1], 10);
       const fMin = parseInt(f.split(":")[0], 10) * 60 + parseInt(f.split(":")[1], 10);
-      // Si le nouvel horaire commence avant ou finit avant un existant
-      return debutMinutes < dMin || finMinutes < fMin;
+
+      // Si le nouvel horaire commence ou finit à l'intérieur d'un horaire existant
+      // ou s'il englobe un horaire existant
+      return (
+        (debutMinutes > dMin && debutMinutes < fMin) || // commence à l'intérieur
+        (finMinutes > dMin && finMinutes < fMin) ||     // finit à l'intérieur
+        (debutMinutes <= dMin && finMinutes >= fMin)    // englobe l'existant
+      );
     });
-    if (conflit) {
-      setHoraireError("L'horaire ajouté est inférieur à un horaire déjà existant.");
+    if (chevauchement) {
+      setHoraireError("L'horaire saisi chevauche ou est inclus dans un horaire existant.");
       return;
     }
 
     setObjectEdt(prev => {
       const newData = { ...prev };
-      const Index = modele === 1 ? caseSelectionne.ligneIdx : caseSelectionne.colonneIndex;
       if (typeof Index === "number" && newData.donnee.contenu[Index]) {
         newData.donnee.contenu[Index].Horaire = { ...formHoraire };
       }
@@ -519,7 +540,10 @@ function CreateNewEdt() {
           (Classe.groupe ? Classe.groupe.toString().split(" ").slice(1).join(" ") : ""),
       };
     });
-
+  const optionCreation = [
+    { value: 'manuel', label: 'Manuellement' },
+    { value: 'excel', label: 'Importez depuis excel' },
+  ]
   const optionsSalle = listeSalle.length > 0 ? listeSalle
     .filter(Salle => Salle.status = true)
     .filter((Salle, index, self) =>
@@ -860,6 +884,7 @@ function CreateNewEdt() {
             <button className='font-bold hover:scale-105 text-blue-600' onClick={versCreationEdt}>Creation</button>
             <button className='hover:scale-105 text-gray-500' onClick={versAFfichage}>Affichage</button>
           </div>
+
           <div className="flex justify-between items-center ">
             <span className="text-blue-600 font-bold flex flex-row items-center z-50">
               Création EDT pour :  <Creatable
@@ -878,24 +903,78 @@ function CreateNewEdt() {
               />
             </span>
 
-            <div className="flex gap-2 items-center">
-              <div className='flex items-center'>
-                <p className='w-40'>Date début : </p>
-                <input type="date" value={objectStateEdt.date_debut || ""} onChange={handleDateChange} name="date_debut" id="date_debut" className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition" />
-              </div>
-              <div className='flex items-center'>
-                <p className='w-40'>Date fin : </p>
-                <input
-                  type="date" value={objectStateEdt.date_fin || ""} readOnly onChange={() => setObjectStateEdt({ ...objectStateEdt, date_fin: e.target.value })} className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition" name='date_fin' id="date_fin"
-                />
-              </div>
+            <div className='flex flex-row items-center gap-2'>
+              <img
+                src="/Icons/parametre.png"
+                alt="Settings"
+                className={`w-7 cursor-pointer transition-all duration-500 ease-in-out
+    ${setting ? "rotate-180 scale-110 translate-x-1" : "rotate-0 scale-100 translate-x-0"}
+  `}
+                onClick={() => setSetting(!setting)}
+              />
+              <AnimatePresence mode="wait">
+                {setting ? (
+                  <motion.div
+                    key="setting-panel"
+                    initial={{ opacity: 0, y: -100 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="flex gap-2 items-center"
+                  >
+                    <div className='flex items-center'>
+                      <p className=''>Mode: </p>
+                      <Creatable
+                        isClearable
+                        isValidNewOption={() => false}
+                        placeholder="Choisissez un modèle"
+                        onChange={(selectedOption) => {
+                          setObjectStateEdt((prev) => ({
+                            ...prev,
+                            mode_creation: selectedOption ? selectedOption.value : null
+                          }));
+                        }}
+                        value={
+                          optionCreation.find(
+                            (option) => option.value === objectStateEdt.mode_creation
+                          ) || null}
+                        options={optionCreation}
+                        className="text-sm z-50"
+                      />
+                    </div>
+                    <div className='flex items-center'>
+                      <p className='w-40'>Modele du tableau: {modele} </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="date-panel"
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5, ease: "easeIn" }}
+                    className="flex gap-2 items-center"
+                  >
+                    <div className='flex items-center'>
+                      <p className='w-40'>Date début : </p>
+                      <input type="date" value={objectStateEdt.date_debut || ""} onChange={handleDateChange} name="date_debut" id="date_debut" className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition" />
+                    </div>
+                    <div className='flex items-center'>
+                      <p className='w-40'>Date fin : </p>
+                      <input
+                        type="date" value={objectStateEdt.date_fin || ""} readOnly onChange={() => setObjectStateEdt({ ...objectStateEdt, date_fin: e.target.value })} className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition" name='date_fin' id="date_fin"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <button className="button" onClick={() => {
               console.log(objectEdt)
               envoyerDonnee()
             }}>Creer l'EDT</button>
-          </div>
+          </div >
 
           <div className="h-[73%] overflow-x-auto w-full m-4">
             {
@@ -1072,11 +1151,21 @@ function CreateNewEdt() {
                                           width: `${100 / arr.length}%`,
                                           minWidth: 120
                                         }}
-                                        onClick={() => {
-                                          setCaseSelectionne({ jour, colIdx: j, crenauIdx: index });
-                                          const creneau = objectEdt.donnee.contenu[j][jour][index];
-                                          setFormCreneau({ ...creneau });
-                                          setIsOpenAdd(true);
+                                        onClick={async () => {
+                                          if (!numNiveauParcours) {
+                                            setAlertModal({ ...alertModal, status: true, type: "alarm", message: "Le classe est vide ,Selectionner le d'abord!" })
+                                          }
+                                          else if (!objectStateEdt.date_debut) {
+                                            setAlertModal({ ...alertModal, status: true, type: "info", message: "Pour la verification de la disponibilité de la salle,selectionner le date du debut svp!" })
+                                          } else if (!objectEdt.donnee.contenu[i].Horaire.heureDebut) {
+                                            setAlertModal({ ...alertModal, status: true, type: "info", message: "Pour la verification de la disponibilité de la salle,entrer l' horaire!" })
+                                          } else {
+                                            setCaseSelectionne({ jour, colIdx: j, crenauIdx: index });
+                                            const creneau = objectEdt.donnee.contenu[j][jour][index];
+                                            setFormCreneau({ ...creneau });
+                                            await getDataSalle({ date: formatDateToDDMMYYYY(objectStateEdt.date_debut), heureDebut: objectEdt.donnee.contenu[i].Horaire.heureDebut, heureFin: objectEdt.donnee.contenu[i].Horaire.heureFin })
+                                            setIsOpenAdd(true);
+                                          }
                                         }}
                                       >
                                         <span className="flex flex-col w-full relative">
@@ -1132,7 +1221,7 @@ function CreateNewEdt() {
                 </div>
               )}
           </div>
-        </div>
+        </div >
       </div >
     </>
   )
