@@ -1155,33 +1155,44 @@ function CreateNewEdt() {
                       </div>
 
                       {/* UI fixe */}
-                      {
-                        !file ?
-                          <div className="absolute inset-0 z-0 flex flex-col items-center justify-center pointer-events-none">
-                            <img src="/Icons/upload.png" alt="Upload" className="w-16 h-16 mb-4" />
-                            <p className="text-gray-500 text-sm text-center">
-                              Glissez-déposez un fichier ici ou cliquez pour le sélectionner
-                            </p>
-                            <p className="text-gray-400 text-xs mt-2 text-center">
-                              Formats acceptés : XLS, XLSX
-                            </p>
-                          </div> :
-                          <div className="absolute inset-0 z-0 flex flex-col items-center justify-center pointer-events-none">
-                            <img src="/Images/excel.png" alt="Excel" className="w-16 h-16 mb-4" />
-                            <p className="text-gray-500 text-sm text-center">
-                              Fichier sélectionné: {file.name}
-                            </p>
-                            <p className="text-gray-400 text-xs mt-2 text-center">
-                              Cliquer dans le cadre pour modifier le fichier telecharger
-                            </p>
-                          </div>
-                      }
+                      <div className="absolute inset-0 z-0 flex flex-col items-center justify-center pointer-events-none">
+                        <img src="/Icons/upload.png" alt="Upload" className="w-16 h-16 mb-4" />
+                        <p className="text-gray-500 text-sm text-center">
+                          Glissez-déposez un fichier ici ou cliquez pour le sélectionner
+                        </p>
+                        <p className="text-gray-400 text-xs mt-2 text-center">
+                          Formats acceptés : XLS, XLSX
+                        </p>
+                      </div>
+                      {/* Aperçu tableau invisible pour html2canvas */}
+                      <div className="hidden" ref={previewRef}>
+                        <table className="table-auto border w-full text-xs bg-white text-black">
+                          <tbody>
+                            {previewData.map((row, i) => (
+                              <tr key={i}>
+                                {row.map((cell, j) => (
+                                  <td key={j} className="border px-2 py-1">
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
 
-                    </div>
+                      {/* Affichage de l’image générée */}
+                      {imagePreviewUrl && (
+                        <div className="mt-4">
+                          <p className="font-semibold mb-2">Aperçu :</p>
+                          <img src={imagePreviewUrl} alt="Aperçu Excel" className="w-full max-w-lg mx-auto border" />
+                        </div>
+                      )}
+                    </div>                    
                     {
                       (error.status && error.composant === "fichier") && (<p className='text-red-600 text-sm'>{error.message}</p>)
                     }
-
+                    {file && <p className="text-sm mt-2">Fichier sélectionné : {file.name}</p>}
                   </div>
                 </div> : isLoading ? (
                   <div className="w-full h-40 flex flex-col items-center  justify-center </div>mt-[10%]">
