@@ -693,7 +693,9 @@ function Professeur() {
         />
         <img src="/Icons/rechercher.png" alt="Search" className='w-6 absolute left-[26%]' />
       </div>
+
       {/*Listes*/}
+
       <div className={`${isReduire ? "fixed h-screen right-0 top-14 left-20 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700" : "fixed h-screen right-0 top-14 left-56 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700"}`}>
         <div className="flex justify-between w-full">
           <h1 className="font-bold">Liste des Professeurs enregistrées</h1>
