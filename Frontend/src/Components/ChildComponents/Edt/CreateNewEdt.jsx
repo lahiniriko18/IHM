@@ -471,6 +471,29 @@ function CreateNewEdt() {
         )
     );
   };
+  //envoyer le fichier vers django
+  const envoyerFichier = async () => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("fichier", file); // "file" doit correspondre au nom attendu par Django
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/ajouter/excel/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      if (response.status !== 201 && response.status !== 200) throw new Error('Erreur');
+      console.log("Ajouter avec succès 😄");
+    } catch (error) {
+      console.error("Erreur exacte de l'ajout :", error.response || error.message);
+    } finally {
+      console.log("Requête terminée et exécutée");
+    }
+  };
   // Envoyer le donnée au django
   const envoyerDonnee = async () => {
     const horaireVide = objectEdt.donnee.contenu.some(
@@ -710,7 +733,9 @@ function CreateNewEdt() {
       miseAjourtitre()
     }
   }, [objectStateEdt]); // plutôt que seulement .date_debut
-
+  useEffect(() => {
+    objectStateEdt.mode_creation == 'manuel' && setFile(null)
+  }, [objectStateEdt.mode_creation])
   // maka liste Rehetra a chaque changement num
   useEffect(() => {
     if (numNiveauParcours) {
@@ -1102,8 +1127,11 @@ function CreateNewEdt() {
             </div>
 
             <button className="button" onClick={() => {
-              console.log(objectEdt)
-              envoyerDonnee()
+              if (!file) {
+                envoyerDonnee();
+              } else {
+                envoyerFichier()
+              }
             }}>Creer l'EDT</button>
           </div >
 
@@ -1111,9 +1139,13 @@ function CreateNewEdt() {
             {
               objectStateEdt.mode_creation != "manuel" ?
                 <div className='flex flex-col gap-8 w-full px-5'>
-                  <div className="flex justify-end">
-                    <span
-                      className="relative"
+                  <div className="flex justify-between items-center w-full flex-row">
+                    <div >
+                      {
+                        file && <img src="/Icons/annuler.png" className='w-6 cursor-pointer' alt="Sypprimer le fichier telecharger" onClick={() => setFile(null)} />
+                      }
+                    </div>
+                    <span className="relative"
                       onMouseOver={() => setHover(true)}
                       onMouseLeave={() => setHover(false)}
                       onClick={() => {
@@ -1143,9 +1175,8 @@ function CreateNewEdt() {
                     </span>
                   </div>
                   <div className="flex flex-col  h-full">
-
                     {/* Zone FileUploader modifiée avec hauteur augmentée */}
-                    <div className="relative w-full h-[390px] border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition duration-200 overflow-hidden">
+                    <div className="relative w-full h-[385px] border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition duration-200 overflow-hidden">
                       <div
                         {...getRootProps()}
                         className="absolute inset-0 z-10 cursor-pointer"
