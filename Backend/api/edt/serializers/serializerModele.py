@@ -34,6 +34,7 @@ class ModeleEdtSerializer(serializers.Serializer):
         parcours = niveauParcours.numParcours
 
         donnees["nbCase"] = nbGroupe
+        donnees["typeFichier"]=data["typeFichier"]
         donnees["titre1"] = f"{niveauParcours.niveau} {parcours.codeParcours}"
 
         locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")

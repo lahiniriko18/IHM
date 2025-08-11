@@ -9,6 +9,7 @@ class ModeleExcelView(APIView):
         serializer = ModeleEdtSerializer(data=request.data)
         if serializer.is_valid():
             donnee = serializer.validated_data
+            print(donnee)
 
             excelService = ServiceCreerExcel(
                 donnee["nbCase"], donnee["titre1"], donnee["titre2"]
