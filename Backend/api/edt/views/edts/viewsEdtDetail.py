@@ -4,10 +4,10 @@ from rest_framework import status
 from datetime import timedelta, datetime
 from ...models import Edt
 from ....etablissements.models import NiveauParcours
-from ...services.serviceEdt import ServiceEdtListage
 from ...services.serviceMail import ServiceMailEdtProfesseur
 from ...serializers.serializerEdtProfesseur import EdtProfesseurSerializer
 from ...services.serviceExcel import ServiceCreerExcel
+from common.services.serviceEdt import listeEdtParNumEdts
 
 
 class EdtDetailView(APIView):
@@ -19,10 +19,11 @@ class EdtDetailView(APIView):
             numEdts = donnee.getlist("numEdts[]")
 
         if any(not str(numEdt).isdigit() for numEdt in numEdts):
-            return Response({"erreur": "Type de données invalide !"})
-
-        eg = ServiceEdtListage()
-        response = eg.listeEdtParNumEdts(numEdts)
+            return Response(
+                {"erreur": "Type de données invalide !"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        response = listeEdtParNumEdts(numEdts)
 
         return Response({"donnee": response["context"]}, status=response["status"])
 

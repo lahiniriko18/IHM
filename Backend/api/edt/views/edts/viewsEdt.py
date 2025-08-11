@@ -104,10 +104,8 @@ class ListeEdtView(APIView):
         d = {"numEdts": data.get("titre")[2]}
         responseSup = serviceCrud.suppressionMutlipe(d, "numEdts", "Emploi du temps")
         if responseSup["status"] == status.HTTP_401_UNAUTHORIZED:
-            print("Tsy mety")
             return Response(responseSup["context"], status=responseSup["status"])
 
-        print("Mety")
         response = edtCrudInstance.ajoutEdtListeDonnee(data, jours)
         return Response(response["context"], status=response["status"])
 

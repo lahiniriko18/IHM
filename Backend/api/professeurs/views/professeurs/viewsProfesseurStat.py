@@ -5,11 +5,14 @@ from ...serializers.serializerProfesseur import ProfesseurStatSerializer
 from ...models import Professeur
 from datetime import datetime, timedelta
 from ....edt.models import Edt
+from common.services.serviceEdt import listeEdtParNumEdts
 
 
 class ProfesseurStatView(APIView):
     def get(self, request):
-        serializer = ProfesseurStatSerializer(data=request.data, context={"request": request})
+        serializer = ProfesseurStatSerializer(
+            data=request.data, context={"request": request}
+        )
         if serializer.is_valid():
             donnee = serializer.validated_data
             professeur = Professeur.objects.filter(pk=donnee["numProfesseur"]).exists()
@@ -19,7 +22,6 @@ class ProfesseurStatView(APIView):
                     numProfesseur=donnee["numProfesseur"],
                 )
                 heureTotal = timedelta()
-
                 for edt in edts:
                     debut = datetime.combine(datetime.today(), edt.heureDebut)
                     fin = datetime.combine(datetime.today(), edt.heureFin)
@@ -37,3 +39,14 @@ class ProfesseurStatView(APIView):
         return Response(
             {"erreur": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
+
+    def post(self, request):
+        dateStr = request.data.get("date")
+        date = datetime.strptime(dateStr, "%d-%m-%Y")
+        lundi = date - timedelta(date.weekday())
+        numEdts = Edt.objects.filter(
+            date__range=(lundi, lundi + timedelta(days=5))
+        ).values_list("numEdt", flat=True)
+
+        response = listeEdtParNumEdts(numEdts)
+        return Response({"donnee": response["context"]}, status=response["status"])

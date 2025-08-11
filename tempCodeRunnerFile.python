@@ -1,1 +1,7 @@
-print(type(l))
+from datetime import timedelta, datetime
+
+date=input("Saisir date :")
+dp=datetime.strptime(date,"%d-%m-%Y")
+d=timedelta(days=dp.weekday())
+
+print(dp,dp-d)

@@ -34,5 +34,6 @@ urlpatterns = [
         ProfesseurNiveauParcoursView.as_view(),
         name="professeur.niveauParcours",
     ),
-    path("horaire/", ProfesseurStatView.as_view(), name="professeur.horaire.deuxDates"),
+    path("horaire/", ProfesseurStatView.as_view()),
+    path("semaine/", ProfesseurStatView.as_view()),
 ]
