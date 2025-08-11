@@ -37,7 +37,7 @@ EMAIL_HOST_PASSWORD = 'cxdzxtwdmbhwhyxb'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
-AUTH_USER_MODEL = 'edt.Utilisateur'
+AUTH_USER_MODEL = 'utilisateurs.Utilisateur'
 AUTHENTICATION_BACKENDS = [
     'edt.auth_backends.EmailOrUsernameBackend',
     'django.contrib.auth.backends.ModelBackend',
@@ -57,7 +57,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'edt',
+    'api.edt',
+    'api.etablissements',
+    'api.professeurs',
+    'api.utilisateurs',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
