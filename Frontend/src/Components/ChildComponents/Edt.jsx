@@ -1,25 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSidebar } from '../Context/SidebarContext';
 import { useNavigate } from 'react-router-dom';
 import Creatable from 'react-select/creatable';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
-import { FileUploader } from "react-drag-drop-files";
+
 import * as XLSX from "xlsx";
-import { parseISO, format, addDays, getDay, isAfter, isBefore, startOfWeek, } from "date-fns";
+import { parseISO, format, addDays, startOfWeek, } from "date-fns";
 function Edt() {
   const [isclicked, setIsclicked] = useState(false)
   const [search, setSearch] = useState(null);
   const [isadd, setisadd] = useState(true)
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [exist, setIsExist] = useState(false);
-  const [hover, setHover] = useState(false)
   const [listeEDT, setListeEdt] = useState([]);
-  const [listeParcours, setListeParcours] = useState([]);
+
   const [listeClasse, setListeClasse] = useState([]);
-  const dropdownRef = useRef(null);
-  const [numEdtUpdate, SetNumEdtupdate] = useState([]);
+
+  // const [numEdtUpdate, SetNumEdtupdate] = useState([]);
   const [originalList, setOriginalList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -36,9 +33,8 @@ function Edt() {
   const [error, setError] = useState({ status: false, composant: "", message: "" })
   const [id, setId] = useState()
   const navigate = useNavigate();
-  const [file, setFile] = useState(null);
-  const fileTypes = ["XLS", "XLSX"];
-  {/* API*/ }
+
+  // API
   const getData = async () => {
     setIsLoading(true);
     try {
@@ -109,73 +105,14 @@ function Edt() {
       setIsLoading(false);
     }
   };
-  const getDataParcours = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/api/parcours/");
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status);
-      }
-      setListeParcours(response.data);
 
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   function formatDateToDDMMYYYY(dateStr) {
     if (!dateStr) return "";
     const [year, month, day] = dateStr.split("-");
     return `${day}-${month}-${year}`;
   }
-  const telechargerFichier = async (numero) => {
-    if (!dataEdt.niveau) {
-      setError({ ...error, status: true, composant: "niveau", message: "Selectionner d'abord le niveau!" })
-      return
-    }
-    try {
-      const response = await axios.post(`http://127.0.0.1:8000/api/edt/telecharger/`, { niveauParcours: dataEdt.niveau, typeFichier: numero, dateDebut: dataEdt.date_debut ? formatDateToDDMMYYYY(dataEdt.date_debut) : null, dateFin: dataEdt.date_fin ? formatDateToDDMMYYYY(dataEdt.date_debut) : null }, {
-        responseType: "blob", // Important pour gérer les fichiers binaires
-      });
-
-      // Créer une URL temporaire pour le fichier
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `modele-${numero}.xlsx`); // Nom du fichier téléchargé
-      document.body.appendChild(link);
-      link.click(); // Simule un clic pour télécharger le fichier
-      link.remove(); // Supprime le lien après le téléchargement
-    } catch (error) {
-      console.error("Erreur lors du téléchargement :", error);
-    }
-  };
-  const handleChange = (file) => {
-    setFile(file);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const arrayBuffer = event.target.result; // 
-      const data = new Uint8Array(arrayBuffer); // 
-      const binaryStr = Array.from(data).map((byte) => String.fromCharCode(byte)).join(""); // 
-
-      const workbook = XLSX.read(binaryStr, { type: "binary" });
 
 
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-
-
-      const jsonData = XLSX.utils.sheet_to_json(sheet);
-      console.log("Données Excel :", jsonData);
-    };
-
-    reader.readAsArrayBuffer(file);
-  };
-  const handleTypeError = (err) => {
-    setFile(null);
-    setError({ status: true, composant: "fichier", message: "Type de fichier invalide. Seuls les fichiers .xls et .xlsx sont autorisés." });
-  };
   const optionCreation = [
     { value: 'manuel', label: 'Manuellement' },
     { value: 'excel', label: 'Importez depuis excel' },
@@ -184,16 +121,10 @@ function Edt() {
   useEffect(() => {
     getData()
     getDataClasse()
-    getDataParcours()
+ 
   }, [])
 
-  useEffect(() => {
-    if (error.status) {
-      const stop = setTimeout(() => {
-        setError({ ...error, status: false })
-      }, 4000);
-    }
-  }, [error])
+
 
   useEffect(() => {
     if (location.state?.refresh) {
@@ -203,34 +134,19 @@ function Edt() {
 
     }
   }, [location.state]);
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
   const optionsClasse = listeClasse
-    // .sort((a, b) => a.niveau.localeCompare(b.niveau))
-    // .filter((classe, index, self) =>
-    //   index === self.findIndex((c) => c.niveau === classe.niveau)
-    // )
     .map((Classe) => ({
       value: Classe.numNiveauParcours,
       label: Classe.niveau + (Classe.numParcours.codeParcours ? Classe.numParcours.codeParcours : " - " + Classe.numParcours.nomParcours),
     }));
 
-  const optionsParcours = listeParcours
-    .sort((a, b) => a.nomParcours.localeCompare(b.nomParcours)) // Trie par `nomParcours`
-    .map((Parcours) => ({
-      value: Parcours.numParcours,
-      label: Parcours.nomParcours + (Parcours.codeParcours ? ` (${Parcours.codeParcours})` : ""),
-    }));
+  // const optionsParcours = listeParcours
+  //   .sort((a, b) => a.nomParcours.localeCompare(b.nomParcours)) // Trie par `nomParcours`
+  //   .map((Parcours) => ({
+  //     value: Parcours.numParcours,
+  //     label: Parcours.nomParcours + (Parcours.codeParcours ? ` (${Parcours.codeParcours})` : ""),
+  //   }));
   const confirmerSuppression = () => {
 
     setIsConfirmModalOpen(true);
@@ -270,7 +186,7 @@ function Edt() {
   const versAFfichage = () => {
     navigate('/edt/affichage-edt')
   }
-  const [modeCreation, setModeCreation] = useState(null);
+  // const [modeCreation, setModeCreation] = useState(null);
   const nombreElemParParge = 6;
   const [pageActuel, setPageActuel] = useState(1);
   const totalPages = Math.ceil(listeEDT.length / nombreElemParParge);
@@ -299,7 +215,7 @@ function Edt() {
           className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center"
           tabIndex="-1"
         >
-          <div className={`${modeCreation === "excel" ? "w-[100%] sm:w-[90%] md:w-[70%] lg:w-[60%] max-h-[95%]" : " w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%]"}  bg-white overflow-y-auto p-5 rounded-lg shadow-lg space-y-4 `} >
+          <div className={" w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%]  bg-white overflow-y-auto p-5 rounded-lg shadow-lg space-y-4 "} >
             <div className="flex justify-between items-center w-full">
               {isadd ? (<h1 className="text-blue-600 text-xl font-bold">Nouvelle EDT</h1>) : (<h1 className="text-blue-600 text-xl font-bold">Modification d'une EDT</h1>)}
               <img
@@ -320,8 +236,8 @@ function Edt() {
                 }}
               />
             </div>
-            <div className={modeCreation === 'excel' ? `flex flex-row ` : `flex flex-col`} >
-              <div className={modeCreation === 'excel' ? `w-1/2 flex flex-col gap-4 ` : `w-full`}>
+            <div className={`flex flex-col`} >
+              <div className={`w-full`}>
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-col w-full">
                     <label className="font-semibold text-sm mb-1">Date debut:</label>
@@ -407,77 +323,7 @@ function Edt() {
                   (error.status && error.composant === "creation") && (<p className='text-red-600 text-sm'>{error.message}</p>)
                 }
               </div>
-              {
-                modeCreation === "excel" && (
-                  <div className='flex flex-col gap-8 w-1/2 px-5'>
-                    <div className="flex justify-end">
-                      <span
-                        className="relative"
-                        onMouseOver={() => setHover(true)}
-                        onMouseLeave={() => setHover(false)}
-                        onClick={() => {
-                          setHover(false)
-                          setIsOpen(!isOpen)
-                        }} ref={dropdownRef}>
-                        <img
-                          src="/Icons/telecharger.png"
-                          alt="Télécharger"
-                          className="cursor-pointer w-5"
-                        />
-                        {(hover && !isOpen) && (
-                          <p className="absolute w-44 right-0 px-2 py-2 bg-gray-200 text-gray-600 rounded text-sm">
-                            Télécharger un modèle
-                          </p>
-                        )}
-                        <div
-                          className={`absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-50 transition-all duration-200 transform ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-                            }`}
-                        >
-                          <ul className="text-sm text-gray-700">
-                            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => { telechargerFichier(1) }}>Modele 1</li>
-                            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => { telechargerFichier(2) }}>Modele 2</li>
-                            {/* <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Déconnexion</li> */}
-                          </ul>
-                        </div>
-                      </span>
-                    </div>
-                    <div className="flex flex-col  h-full">
-                      <h3 className="font-semibold text-sm mb-1">Importer un fichier Excel</h3>
-                      {/* Zone FileUploader modifiée avec hauteur augmentée */}
-                      <div className="relative w-full h-[200px] border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition duration-200 overflow-hidden group">
-                        {/* FileUploader invisible mais prend toute la zone */}
-                        <div className="absolute inset-0 z-10">
-                          <FileUploader
-                            handleChange={handleChange}
-                            name="file"
-                            types={fileTypes}
-                            multiple={false}
-                            onTypeError={handleTypeError}
-                            children={
-                              <div className="w-full h-full cursor-pointer"></div> // zone cliquable vide
-                            }
-                          />
-                        </div>
-
-                        {/* Contenu visible et non cliquable */}
-                        <div className="absolute inset-0 z-0 flex flex-col items-center justify-center pointer-events-none">
-                          <img src="/Icons/upload.png" alt="Upload" className="w-16 h-16 mb-4" />
-                          <p className="text-gray-500 text-sm text-center">
-                            Glissez-déposez un fichier ici ou cliquez pour le sélectionner
-                          </p>
-                          <p className="text-gray-400 text-xs mt-2 text-center">
-                            Formats acceptés : XLS, XLSX
-                          </p>
-                        </div>
-                      </div>
-
-                      {
-                        (error.status && error.composant === "fichier") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                      }
-                      {file && <p className="text-sm mt-2">Fichier sélectionné : {file.name}</p>}
-                    </div>
-                  </div>)
-              }
+            
             </div>
 
             <div className="w-full flex justify-center">
@@ -492,8 +338,6 @@ function Edt() {
                     setError({ status: true, composant: "creation", message: "Il faut choisir la modele de creation" });
                   } else {
                     const a = await verifierEdt();
-                    console.log("voici  aa", a);
-
                     if (a) {
                       setError({ status: true, composant: "creation", message: "Edt existe dejà" });
                     } else {
@@ -512,7 +356,7 @@ function Edt() {
                   }
                 }}
               >
-                {modeCreation === 'excel' ? 'VALIDER' : 'SUIVANT'}
+                SUIVANT
               </button>
             </div>
           </div >
@@ -542,7 +386,7 @@ function Edt() {
                 <img src="/Icons/attention.png" alt="Attention" />
                 <p>Etes vous sur de vouloir supprimer cette edt ?</p>
               </div>
-              <input type="hidden" name="id" value={id || ""} onChange={() => setId(e.target.value)} />
+              <input type="hidden" name="id" value={id || ""} onChange={(e) => setId(e.target.value)} />
               <div className="w-full flex justify-center">
                 <button
                   className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
@@ -631,11 +475,9 @@ function Edt() {
                                   if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
                                     const newNumEdtUpdate = EDT.numEdts.slice();
                                     const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
-                                    SetNumEdtupdate(newNumEdtUpdate);
                                     setDataEdt(newDataEdt);
                                     navigate('/edt/edit-edt', { state: { objectStateEdt: newDataEdt } });
                                   } else {
-                                    SetNumEdtupdate([]);
                                     console.log("Aucun reference de l'edt trouvé ce qui  empeche la modification")
                                   }
                                 }}
@@ -646,15 +488,11 @@ function Edt() {
                                 if (Array.isArray(EDT.numEdts) && EDT.numEdts.length > 0) {
                                   const newNumEdtUpdate = EDT.numEdts.slice();
                                   const newDataEdt = { ...dataEdt, action: "edit", numEdtUpdate: newNumEdtUpdate };
-                                  SetNumEdtupdate(newNumEdtUpdate);
                                   setDataEdt(newDataEdt);
-                                  confirmerSuppression()
+                                  confirmerSuppression();
                                 } else {
-                                  SetNumEdtupdate([]);
-                                  console.log("Aucun reference de l'edt trouvé ce qui  empeche la suppression")
+                                  console.log("Aucun reference de l'edt trouvé ce qui  empeche la suppression");
                                 }
-
-
                               }} />
                             </button>
                             <button className="p-1 rounded hover:bg-gray-200">
