@@ -65,7 +65,8 @@ function ParametreInfo() {
       const renamedFile = renameFile(selectedFile);
       formData.append("logo", renamedFile); // clé = "logo"
     } else {
-      formData.append("logo", ""); 
+      console.log("Aucun fichier sélectionné, envoi de null");
+      formData.append("logo", null); 
     }
     try {
       const response = await axios.post(
