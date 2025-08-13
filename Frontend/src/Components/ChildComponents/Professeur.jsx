@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-import Creatable, { useCreatable } from 'react-select/creatable';
+import Creatable from 'react-select/creatable';
 import { useNavigate } from 'react-router-dom';
 import { useSidebar } from '../Context/SidebarContext';
 import axios from 'axios';
@@ -138,7 +138,7 @@ function Professeur() {
 
     if (selectedFile) {
       const renamedFile = renameFile(selectedFile);
-      formData.append('photos', renamedFile); // clé = "photos"
+      formData.append('photos', renamedFile);
     }
 
     try {
@@ -229,9 +229,7 @@ function Professeur() {
       } else {
         console.error("Erreur inconnue :", error.message)
       }
-    } finally {
-
-    }
+    } 
   }
   const getData = async () => {
     setIsLoading(true);
@@ -596,7 +594,7 @@ function Professeur() {
               </div>
             </div>
 
-            <input type="hidden" name="id" value={id || ""} onChange={() => setId(e.target.value)} />
+            <input type="hidden" name="id" value={id || ""} onChange={(e) => setId(e.target.value)} />
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
@@ -656,7 +654,7 @@ function Professeur() {
                 <img src="/Icons/attention.png" alt="Attention" />
                 <p>Etes vous sur de vouloir supprimer le(s) professeur(s) selectionée ?</p>
               </div>
-              <input type="hidden" name="id" value={id} onChange={() => setId(e.target.value)} />
+              <input type="hidden" name="id" value={id} onChange={(e) => setId(e.target.value)} />
               <div className="w-full flex justify-center">
                 <button
                   className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
