@@ -157,7 +157,8 @@ function EdtRead() {
 
         {/* Tableau selon le modèle */}
         <div className="h-[73%]  w-full m-4">
-          {isLoading ? (
+          {
+            /* {isLoading ? (
             <div className="w-full h-40 flex flex-col items-center  justify-center </div>mt-[10%]">
               <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
               <p className="text-gray-400 mt-2">Chargement des données...</p>
@@ -169,76 +170,126 @@ function EdtRead() {
                 Veuillez sélectionner au moins un niveau
               </p>
             </div>
-          ) : modele === 1 ? (
-            <div className="overflow-auto h-full">
-              <div className="text-center font-bold mb-4">
-                Emploi du temps pour la semaine du {ObjectParametre.dateDebut}{" "}
-                au {ObjectParametre.dateFin}
+          ) :*/ modele === 1 ? (
+              <div className="overflow-auto h-full">
+                <div className="text-center font-bold mb-4">
+                  Emploi du temps pour la semaine du {ObjectParametre.dateDebut}{" "}
+                  au {ObjectParametre.dateFin}
+                </div>
+                <p className="text-center"> L1 IG</p>
+                <table className="table-fixed  w-full text-sm border-black border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="border-r border-b border-black border-t-0 border-l-0"></th>
+                      <th className="border border-black">A</th>
+                      <th className="border border-black">B</th>
+                      <th className="border border-black">C</th>
+                      <th className="border border-black">D</th>
+                      <th className="border border-black">E</th>
+                      <th className="border border-black">F</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border border-black">
+                      <td className="border border-black w-1/2"> a</td>
+                      <td className="border border-black">b</td>
+                      <td className="border border-black">c</td>
+                      <td className="border border-black">d</td>
+                      <td className="border border-black">e</td>
+                      <td className="border border-black">f</td>
+                      <td className="border border-black">g</td>
+                    </tr>
+                    <tr className="border border-black">
+                      <td className="border border-black w-1/2"> a</td>
+                      <td className="border border-black">b</td>
+                      <td className="border border-black">c</td>
+                      <td className="border border-black">d</td>
+                      <td className="border border-black">e</td>
+                      <td className="border border-black">f</td>
+                      <td className="border border-black">g</td>
+                    </tr>
+                    <tr className="border border-black">
+                      <td className="border border-black w-1/2"> a</td>
+                      <td className="border border-black">b</td>
+                      <td className="border border-black">c</td>
+                      <td className="border border-black">d</td>
+                      <td className="border border-black">e</td>
+                      <td className="border border-black">f</td>
+                      <td className="border border-black">g</td>
+                    </tr>
+                    <tr className="border border-black">
+                      <td className="border border-black w-1/2"> a</td>
+                      <td className="border border-black">b</td>
+                      <td className="border border-black">c</td>
+                      <td className="border border-black">d</td>
+                      <td className="border border-black">e</td>
+                      <td className="border border-black">f</td>
+                      <td className="border border-black">g</td>
+                    </tr>
+                    <tr className="border border-black">
+                      <td className="border border-black w-1/2"> a</td>
+                      <td className="border border-black">b</td>
+                      <td className="border border-black">c</td>
+                      <td className="border border-black">d</td>
+                      <td className="border border-black">e</td>
+                      <td className="border border-black">f</td>
+                      <td className="border border-black">g</td>
+                    </tr>
+                    <tr className="border border-black">
+                      <td className="border border-black w-1/2"> a</td>
+                      <td className="border border-black">b</td>
+                      <td className="border border-black">c</td>
+                      <td className="border border-black">d</td>
+                      <td className="border border-black">e</td>
+                      <td className="border border-black">f</td>
+                      <td className="border border-black">g</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <p className="text-center"> L1 IG</p>
-              <table className="table-fixed  w-1/2 text-sm border-black border-collapse">
-                <thead>
-                  <tr>
-                    <th className="border-r border-b border-black border-t-0 border-l-0"></th>
-                    <th className="border border-black">A</th>
-                    <th className="border border-black">B</th>
-                    <th className="border border-black">C</th>
-                    <th className="border border-black">D</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border border-black">
-                    <td className="border border-black"> a</td>
-                    <td className="border border-black">b</td>
-                    <td className="border border-black">c</td>
-                    <td className="border border-black">d</td>
-                    <td className="border border-black">e</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="overflow-auto  h-full">
-              <table className="table-fixed border w-full text-sm border-black">
-                <thead className="sticky top-0 z-10">
-                  <tr>
-                    <th className="border  border-t-white border-l-white"></th>
-                    {horaires.map((horaire, index) => (
-                      <th
-                        key={index}
-                        className="border p-2 text-center bg-gray-100"
-                      >
-                        <p>
-                          {horaire.heure_debut}h - {horaire.heure_fin}h
-                        </p>
-                        {/* <img src="/Icons/modifier.png" alt="" className="absolute bottom-2 right-1 w-5 cursor-pointer" onClick={() => setIsEditHours(true)} /> */}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {jours.map((jour, i) => (
-                    <tr key={i}>
-                      <td className="border p-2 text-center font-semibold">
-                        {jour}
-                      </td>
-                      {horaires.map((horaire, j) => (
-                        <td
-                          key={j}
-                          className="border cursor-pointer h-20 relative"
-                          onClick={() => handleClick(jour, horaire)}
+            ) : (
+              <div className="overflow-auto  h-full">
+                <table className="table-fixed border w-full text-sm border-black">
+                  <thead className="sticky top-0 z-10">
+                    <tr>
+                      <th className="border  border-t-white border-l-white"></th>
+                      {horaires.map((horaire, index) => (
+                        <th
+                          key={index}
+                          className="border p-2 text-center bg-gray-100"
                         >
-                          <div className="absolute inset-0 flex items-center justify-center hover:bg-gray-200">
-                            edt
-                          </div>
-                        </td>
+                          <p>
+                            {horaire.heure_debut}h - {horaire.heure_fin}h
+                          </p>
+                          {/* <img src="/Icons/modifier.png" alt="" className="absolute bottom-2 right-1 w-5 cursor-pointer" onClick={() => setIsEditHours(true)} /> */}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {jours.map((jour, i) => (
+                      <tr key={i}>
+                        <td className="border p-2 text-center font-semibold">
+                          {jour}
+                        </td>
+                        {horaires.map((horaire, j) => (
+                          <td
+                            key={j}
+                            className="border cursor-pointer h-20 relative"
+                            onClick={() => handleClick(jour, horaire)}
+                          >
+                            <div className="absolute inset-0 flex items-center justify-center hover:bg-gray-200">
+                              edt
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          }
         </div>
       </div>
     </div>
