@@ -5,7 +5,7 @@ from api.etablissements.serializers.serializerNiveauParcours import (
     NiveauParcoursSerializer,
 )
 from api.edt.models import Edt
-from api.etablissements.models import Classe
+from api.etablissements.models import Classe, NiveauParcours
 from collections import defaultdict
 from datetime import datetime
 
@@ -80,3 +80,36 @@ def listeEdtParNumEdts(numEdts):
         "context": EdtSerializer(edts, many=True).data,
         "status": status.HTTP_200_OK,
     }
+
+
+def add_value_on_list_edt(edtSemaines):
+    donnees = []
+    for edtSemaine in edtSemaines:
+        niveauParcours = (
+            NiveauParcours.objects.filter(
+                niveau=edtSemaine["numClasse__niveau"],
+                numParcours=edtSemaine["numParcours"],
+            )
+            .values("numNiveauParcours", "niveau", "numParcours__codeParcours")
+            .first()
+        )
+        lundi = edtSemaine["dateDebut"] - timedelta(
+            days=edtSemaine["dateDebut"].weekday()
+        )
+        samedi = lundi + timedelta(days=5)
+        donnee = {
+            "niveauParcours": f"{niveauParcours['niveau']} {niveauParcours['numParcours__codeParcours']}",
+            "dateDebut": datetime.strftime(lundi, "%d-%m-%Y"),
+            "dateFin": datetime.strftime(samedi, "%d-%m-%Y"),
+        }
+        numEdts = Edt.objects.filter(
+            numClasse__niveau=edtSemaine["numClasse__niveau"],
+            numParcours=edtSemaine["numParcours"],
+            date__range=(edtSemaine["dateDebut"], edtSemaine["dateFin"]),
+        ).values_list("numEdt", flat=True)
+        donnee["numEdts"] = list(numEdts)
+
+        donnees.append(donnee)
+
+    donnees = sorted(donnees, key=lambda d: sum(d["numEdts"]), reverse=True)
+    return donnees

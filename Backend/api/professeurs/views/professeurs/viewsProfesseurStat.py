@@ -6,10 +6,11 @@ from ...models import Professeur
 from datetime import datetime, timedelta
 from ....edt.models import Edt
 from common.services.serviceEdt import listeEdtParNumEdts
+from common.utils.date_utils import get_semaine_by_date
 
 
-class ProfesseurStatView(APIView):
-    def get(self, request):
+class ProfesseurHoraireView(APIView):
+    def post(self, request):
         serializer = ProfesseurStatSerializer(
             data=request.data, context={"request": request}
         )
@@ -34,19 +35,23 @@ class ProfesseurStatView(APIView):
                     status=status.HTTP_200_OK,
                 )
             return Response(
-                {"erreur": "Professeur introuvable !"}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Professeur introuvable !"}, status=status.HTTP_404_NOT_FOUND
             )
         return Response(
-            {"erreur": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+            {"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
         )
 
+class ProfesseurEdtSemaineView(APIView):
     def post(self, request):
         dateStr = request.data.get("date")
-        date = datetime.strptime(dateStr, "%d-%m-%Y")
-        lundi = date - timedelta(date.weekday())
-        numEdts = Edt.objects.filter(
-            date__range=(lundi, lundi + timedelta(days=5))
-        ).values_list("numEdt", flat=True)
+        if dateStr:
+            lundi, samedi = get_semaine_by_date(dateStr, 5)
+            numEdts = Edt.objects.filter(date__range=(lundi, samedi)).values_list(
+                "numEdt", flat=True
+            )
 
-        response = listeEdtParNumEdts(numEdts)
-        return Response({"donnee": response["context"]}, status=response["status"])
+            response = listeEdtParNumEdts(numEdts)
+            return Response({"donnee": response["context"]}, status=response["status"])
+        return Response(
+            {"error": "Date introuvable !"}, status=status.HTTP_400_BAD_REQUEST
+        )

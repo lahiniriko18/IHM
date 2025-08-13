@@ -4,7 +4,10 @@ from ..views.professeurs.viewsProfesseurDetail import (
     ProfesseurDetailView,
     ProfesseurNiveauParcoursView,
 )
-from ..views.professeurs.viewsProfesseurStat import ProfesseurStatView
+from ..views.professeurs.viewsProfesseurStat import (
+    ProfesseurEdtSemaineView,
+    ProfesseurHoraireView,
+)
 
 urlpatterns = [
     path("", ProfesseurView.as_view(), name="professeur"),
@@ -34,6 +37,6 @@ urlpatterns = [
         ProfesseurNiveauParcoursView.as_view(),
         name="professeur.niveauParcours",
     ),
-    path("horaire/", ProfesseurStatView.as_view()),
-    path("semaine/", ProfesseurStatView.as_view()),
+    path("horaire/", ProfesseurHoraireView.as_view()),
+    path("semaine/", ProfesseurEdtSemaineView.as_view()),
 ]

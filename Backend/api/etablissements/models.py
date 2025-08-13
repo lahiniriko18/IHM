@@ -7,7 +7,7 @@ class Etablissement(models.Model):
     adresse = models.CharField(max_length=50, null=True)
     email = models.EmailField(max_length=50)
     slogant = models.CharField(max_length=255, null=True)
-    logo = models.ImageField(upload_to="images/logo/")
+    logo = models.ImageField(upload_to="images/logo/", null=True, blank=True)
     contact = models.CharField(max_length=17)
     maxUtilisateur = models.IntegerField(default=3, null=True, blank=True)
 

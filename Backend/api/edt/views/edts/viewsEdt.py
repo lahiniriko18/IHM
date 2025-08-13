@@ -1,14 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from datetime import datetime, timedelta
 from django.db.models.functions import TruncWeek
 from django.db.models import Min, Max
 from ...serializers.serializerEdt import EdtSerializer
 from ...models import Edt
-from ....etablissements.models import NiveauParcours
 from ...services.serviceEdt import ServiceEdtCrud
 from common.services.serviceModel import ServiceModelCrud
+from common.services.serviceEdt import add_value_on_list_edt
 
 
 class EdtView(APIView):
@@ -19,36 +18,7 @@ class EdtView(APIView):
             .annotate(dateDebut=Min("date"), dateFin=Max("date"))
             .order_by("semaine")
         )
-
-        donnees = []
-        for edtSemaine in edtSemaines:
-            niveauParcours = (
-                NiveauParcours.objects.filter(
-                    niveau=edtSemaine["numClasse__niveau"],
-                    numParcours=edtSemaine["numParcours"],
-                )
-                .values("numNiveauParcours", "niveau", "numParcours__codeParcours")
-                .first()
-            )
-            lundi = edtSemaine["dateDebut"] - timedelta(
-                days=edtSemaine["dateDebut"].weekday()
-            )
-            samedi = lundi + timedelta(days=5)
-            donnee = {
-                "niveauParcours": f"{niveauParcours['niveau']} {niveauParcours['numParcours__codeParcours']}",
-                "dateDebut": datetime.strftime(lundi, "%d-%m-%Y"),
-                "dateFin": datetime.strftime(samedi, "%d-%m-%Y"),
-            }
-            numEdts = Edt.objects.filter(
-                numClasse__niveau=edtSemaine["numClasse__niveau"],
-                numParcours=edtSemaine["numParcours"],
-                date__range=(edtSemaine["dateDebut"], edtSemaine["dateFin"]),
-            ).values_list("numEdt", flat=True)
-            donnee["numEdts"] = list(numEdts)
-
-            donnees.append(donnee)
-
-        donnees = sorted(donnees, key=lambda d: sum(d["numEdts"]), reverse=True)
+        donnees = add_value_on_list_edt(edtSemaines)
         return Response(donnees)
 
     def post(self, request):
