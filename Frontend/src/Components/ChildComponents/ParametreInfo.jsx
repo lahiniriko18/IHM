@@ -69,19 +69,23 @@ function ParametreInfo() {
       formData.append("logo", null); 
     }
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/etablissement/ajouter/",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      console.log(formData);
+      formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+      });
+      // const response = await axios.post(
+      //   "http://127.0.0.1:8000/api/etablissement/ajouter/",
+      //   formData,
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //     },
+      //   }
+      // );
 
-      if (response.status !== 201) throw new Error("Erreur " + response.status);
-      getData();
-      console.log("Établissement enregistré !");
+      // if (response.status !== 201) throw new Error("Erreur " + response.status);
+      // getData();
+      // console.log("Établissement enregistré !");
     } catch (error) {
       console.error(
         "Erreur :",
