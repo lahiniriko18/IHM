@@ -68,6 +68,9 @@ function EdtRead() {
     }
   };
   useEffect(() => {
+    getEdtAvecNiveau();
+  }, [ObjectParametre]);
+  useEffect(() => {
     console.log(ObjectParametre);
   }, [ObjectParametre]);
   const optionsNiveau = listeNiveau.map((Classe) => ({

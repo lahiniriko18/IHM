@@ -1417,11 +1417,11 @@ function CreateNewEdt() {
 
             <button
               className="button"
-              onClick={() => {
+              onClick={() => async () => {
                 if (!file) {
                   envoyerDonnee();
                 } else {
-                  envoyerFichier();
+                  await envoyerFichier();
                   navigate("/edt");
                 }
               }}
