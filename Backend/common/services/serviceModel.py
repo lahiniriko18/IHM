@@ -10,7 +10,6 @@ class ServiceModelCrud:
         if not isinstance(ids, list):
             ids=data.getlist(f'{nomIds}[]')
         if any(not str(id).isdigit() for id in ids):
-    
             return {
                 "context":{"erreur":"Type de données invalide !"},
                 "status":status.HTTP_401_UNAUTHORIZED
