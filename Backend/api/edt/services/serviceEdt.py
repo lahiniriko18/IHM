@@ -92,5 +92,4 @@ class ServiceEdtCrud:
                 "context": {"message": "Ajout d'emploi du temps avec succès !"},
                 "status": status.HTTP_200_OK,
             }
-        print("ato izy mety")
         return {"context": serializer.errors, "status": status.HTTP_401_UNAUTHORIZED}
