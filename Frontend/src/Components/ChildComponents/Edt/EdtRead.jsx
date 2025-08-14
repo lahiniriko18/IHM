@@ -22,6 +22,7 @@ function EdtRead() {
     dateDebut: "",
     dateFin: "",
   });
+  
   const handleDateChange = (event) => {
     const date = event.target.value;
     if (date) {
@@ -41,6 +42,11 @@ function EdtRead() {
       }));
     }
   };
+  function formatDateToDDMMYYYY(dateStr) {
+    if (!dateStr) return "";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
+  }
   const getDataNiveau = async () => {
     try {
       const response = await axios.get(
@@ -60,8 +66,10 @@ function EdtRead() {
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/api/edt/niveau-semaine/",
-        ObjectParametre.dateDebut,
-        ObjectParametre.numNiveauParcours
+        {
+          date: formatDateToDDMMYYYY(ObjectParametre.dateDebut),
+          numNiveauParcours: ObjectParametre.numNiveauParcours,
+        }
       );
       if (response.status !== 200) {
         throw new Error("Erreur code : " + response.status);
