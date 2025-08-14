@@ -1,7 +1,6 @@
-from datetime import datetime, timedelta
+d={
+    "a":1,
+    "b":2,
+}
 
-dateStr = input("Saisir date :")
-date = datetime.strptime(dateStr, "%d-%m-%Y")
-lundi = date - timedelta(date.weekday())
-dernier = lundi + timedelta(days=5)
-print(lundi, dernier)
+print(d.get("c"))

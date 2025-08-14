@@ -9,7 +9,7 @@ from django.db.models import Q
 
 class ExcelSerializer(serializers.Serializer):
     fichier = serializers.FileField()
-    typeFichier = serializers.CharField()
+    typeFichier = serializers.CharField(default=1, required=False)
 
 
 class TitreSerializer(serializers.Serializer):
@@ -447,7 +447,7 @@ class DataSerializer(serializers.Serializer):
             "mai": 5,
             "juin": 6,
             "juillet": 7,
-            "aôut": 8,
+            "août": 8,
             "septembre": 9,
             "octobre": 10,
             "novembre": 11,
@@ -518,8 +518,8 @@ class DataSerializer(serializers.Serializer):
 
         if moisDebut is None:
             moisDebut = moisFin
-        moisDebutNum = mois.get(moisDebut)
-        moisFinNum = mois.get(moisFin)
+        moisDebutNum = mois.get(moisDebut.lower())
+        moisFinNum = mois.get(moisFin.lower())
 
         if moisDebutNum is None or moisFinNum is None:
             messageErreur("Mois invalide !")
