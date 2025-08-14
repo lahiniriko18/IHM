@@ -6,7 +6,6 @@ const RouteChangeTracker = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.log("Changement d'URL :", location.pathname);
     // Tu peux déclencher d'autres effets ici si besoin
   }, [location.pathname]);
 

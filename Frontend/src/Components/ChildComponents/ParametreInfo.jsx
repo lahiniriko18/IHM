@@ -65,9 +65,14 @@ function ParametreInfo() {
       const renamedFile = renameFile(selectedFile);
       formData.append("logo", renamedFile); // clé = "logo"
     } else {
-      formData.append("logo", ""); 
+      console.log("Aucun fichier sélectionné, envoi de null");
+      formData.append("logo", "");
     }
     try {
+      console.log(formData);
+      formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+      });
       const response = await axios.post(
         "http://127.0.0.1:8000/api/etablissement/ajouter/",
         formData,
