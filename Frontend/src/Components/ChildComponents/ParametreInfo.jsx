@@ -66,26 +66,26 @@ function ParametreInfo() {
       formData.append("logo", renamedFile); // clé = "logo"
     } else {
       console.log("Aucun fichier sélectionné, envoi de null");
-      formData.append("logo", null); 
+      formData.append("logo", "");
     }
     try {
       console.log(formData);
       formData.forEach((value, key) => {
         console.log(`${key}: ${value}`);
       });
-      // const response = await axios.post(
-      //   "http://127.0.0.1:8000/api/etablissement/ajouter/",
-      //   formData,
-      //   {
-      //     headers: {
-      //       "Content-Type": "multipart/form-data",
-      //     },
-      //   }
-      // );
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/etablissement/ajouter/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      // if (response.status !== 201) throw new Error("Erreur " + response.status);
-      // getData();
-      // console.log("Établissement enregistré !");
+      if (response.status !== 201) throw new Error("Erreur " + response.status);
+      getData();
+      console.log("Établissement enregistré !");
     } catch (error) {
       console.error(
         "Erreur :",
