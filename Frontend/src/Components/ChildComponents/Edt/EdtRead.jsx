@@ -12,6 +12,7 @@ function EdtRead() {
   const versCreationEdt = () => navigate("/edt/nouveau-edt");
   const versAFfichage = () => navigate("/edt/affichage-edt");
   const [modele, setModele] = useState(1);
+  const [listeEdtAvecNiveau, setListeEdtAvecNiveau] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [listeNiveau, setListeNiveau] = useState([]);
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
@@ -53,6 +54,17 @@ function EdtRead() {
       console.error(error.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+  const getEdtAvecNiveau = async () => {
+    try {
+      const response = await axios.get("http://");
+      if (response.status !== 200) {
+        throw new Error("Erreur code : " + response.status);
+      }
+      setListeEdtAvecNiveau(response.data);
+    } catch (error) {
+      console.error(error.message);
     }
   };
   useEffect(() => {

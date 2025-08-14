@@ -1422,6 +1422,7 @@ function CreateNewEdt() {
                   envoyerDonnee();
                 } else {
                   envoyerFichier();
+                  navigate("/edt");
                 }
               }}
             >
