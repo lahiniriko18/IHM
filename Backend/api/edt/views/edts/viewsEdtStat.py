@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from common.utils.date_utils import get_semaine_by_date
 from ...models import Edt
+from common.services.serviceEdt import listeEdtParNumEdts
 
 
 class EdtSemaineView(APIView):
@@ -10,13 +11,29 @@ class EdtSemaineView(APIView):
         dateStr = request.data.get("date")
         if dateStr:
             lundi, samedi = get_semaine_by_date(dateStr, 5)
-            edtSemaines = (
-                Edt.objects.filter(date__range=(lundi, samedi))
-                .values("numClasse__niveau", "numParcours")
-                .order_by("date")
+            numEdts = Edt.objects.filter(date__range=(lundi, samedi)).values_list(
+                "numEdt", flat=True
             )
-            print(edtSemaines)
-            return Response({"message": f"Edt du semaine de {lundi}-{samedi}"})
+            response = listeEdtParNumEdts(sorted(list(numEdts)))
+            return Response({"donnee": response["context"]}, status=response["status"])
+
         return Response(
             {"error": "Date introuvable"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class EdtNiveauSemaineView(APIView):
+    def post(self, request):
+        dateStr = request.data.get("date")
+        niveau = request.data.get("niveau")
+        if dateStr and niveau:
+            lundi, samedi = get_semaine_by_date(dateStr, 5)
+            numEdts = Edt.objects.filter(
+                date__range=(lundi, samedi), numClasse__niveau=niveau
+            ).values_list("numEdt", flat=True)
+            response = listeEdtParNumEdts(sorted(list(numEdts)))
+            return Response({"donnee": response["context"]}, status=response["status"])
+
+        return Response(
+            {"error": "Date ou niveau introuvable"}, status=status.HTTP_400_BAD_REQUEST
         )

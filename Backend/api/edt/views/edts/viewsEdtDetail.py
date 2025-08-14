@@ -24,7 +24,6 @@ class EdtDetailView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         response = listeEdtParNumEdts(numEdts)
-
         return Response({"donnee": response["context"]}, status=response["status"])
 
     def get(self, request):

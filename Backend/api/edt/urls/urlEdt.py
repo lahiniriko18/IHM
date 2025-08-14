@@ -7,7 +7,7 @@ from ..views.edts.viewsEdtDetail import (
     EdtProfesseurView,
     EdtVerificationView,
 )
-from ..views.edts.viewsEdtStat import EdtSemaineView
+from ..views.edts.viewsEdtStat import EdtSemaineView, EdtNiveauSemaineView
 
 urlpatterns = [
     path("", EdtView.as_view()),
@@ -24,4 +24,5 @@ urlpatterns = [
     path("dernier/", EdtDetailView.as_view()),
     path("mail/distribuer/", EdtProfesseurView.as_view()),
     path("semaine/", EdtSemaineView.as_view()),
+    path("niveau-semaine/", EdtNiveauSemaineView.as_view()),
 ]
