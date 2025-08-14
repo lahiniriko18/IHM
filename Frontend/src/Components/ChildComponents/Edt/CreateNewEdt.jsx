@@ -583,6 +583,7 @@ function CreateNewEdt() {
       if (response.status !== 201 && response.status !== 200)
         throw new Error("Erreur");
       console.log("Ajouter avec succès 😄");
+      navigate("/edt");
     } catch (error) {
       console.error(
         "Erreur exacte de l'ajout :",
@@ -1417,12 +1418,11 @@ function CreateNewEdt() {
 
             <button
               className="button"
-              onClick={() => async () => {
+              onClick={() => {
                 if (!file) {
                   envoyerDonnee();
                 } else {
-                  await envoyerFichier();
-                  navigate("/edt");
+                  envoyerFichier();
                 }
               }}
             >
