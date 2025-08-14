@@ -1,13 +1,15 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from datetime import datetime, timedelta
+
+from common.services.serviceEdt import listeEdtParNumEdts
 from rest_framework import status
-from datetime import timedelta, datetime
-from ...models import Edt
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from ....etablissements.models import NiveauParcours
-from ...services.serviceMail import ServiceMailEdtProfesseur
+from ...models import Edt
 from ...serializers.serializerEdtProfesseur import EdtProfesseurSerializer
 from ...services.serviceExcel import ServiceCreerExcel
-from common.services.serviceEdt import listeEdtParNumEdts
+from ...services.serviceMail import ServiceMailEdtProfesseur
 
 
 class EdtDetailView(APIView):

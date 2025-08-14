@@ -1,12 +1,13 @@
 from datetime import datetime
+
 from rest_framework import status
-from ..serializers.serializerEdt import EdtSerializer
+
+from ...etablissements.models import Constituer, NiveauParcours
+from ...etablissements.serializers.serializerConstituer import ConstituerSerializer
 from ...etablissements.serializers.serializerNiveauParcours import (
     NiveauParcoursSerializer,
 )
-from ...etablissements.models import Constituer, NiveauParcours
 from ..serializers.serializerEdt import EdtSerializer, EdtTableSerializer
-from ...etablissements.serializers.serializerConstituer import ConstituerSerializer
 
 
 class ServiceEdtCrud:

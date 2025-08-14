@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from ..models import Enseigner, Professeur, Matiere
+
+from ..models import Enseigner, Matiere, Professeur
 
 
 class EnseignerSerializer(serializers.ModelSerializer):

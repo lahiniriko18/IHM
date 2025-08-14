@@ -1,8 +1,10 @@
-from rest_framework import serializers
-from ..models import Etablissement
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 import re
+
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from rest_framework import serializers
+
+from ..models import Etablissement
 
 
 class EtablissementSerializer(serializers.ModelSerializer):

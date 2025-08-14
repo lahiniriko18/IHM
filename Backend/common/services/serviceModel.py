@@ -1,5 +1,6 @@
 from rest_framework import status
 
+
 class ServiceModelCrud:
     def __init__(self, model):
         self.model = model

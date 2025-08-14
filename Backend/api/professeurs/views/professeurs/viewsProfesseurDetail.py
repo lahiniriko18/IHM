@@ -1,13 +1,15 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.conf import settings
-from ...serializers.serializerProfesseur import ProfesseurSerializer
-from ...serializers.serializerMatiere import MatiereSerializer
-from ...models import Professeur, Matiere
-from ....etablissements.models import NiveauParcours
 import os
+
 from common.services.serviceModel import ServiceModelCrud
+from django.conf import settings
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ....etablissements.models import NiveauParcours
+from ...models import Matiere, Professeur
+from ...serializers.serializerMatiere import MatiereSerializer
+from ...serializers.serializerProfesseur import ProfesseurSerializer
 
 
 class ProfesseurDetailView(APIView):
@@ -23,14 +25,6 @@ class ProfesseurDetailView(APIView):
             enseigners__numProfesseur__numProfesseur=numProfesseur
         )
         donnee["matieres"] = MatiereSerializer(matieres, many=True).data
-        # if donnee["photos"]:
-        #     verifChemin = os.path.join(settings.MEDIA_ROOT, donnee["photos"])
-        #     if os.path.exists(verifChemin):
-        #         donnee["photos"] = request.build_absolute_uri(
-        #             settings.MEDIA_URL + donnee["photos"]
-        #         )
-        #     else:
-        #         donnee["photos"] = ""
 
         return Response(donnee, status=status.HTTP_200_OK)
 

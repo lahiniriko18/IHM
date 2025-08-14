@@ -1,7 +1,8 @@
-from django.urls import path
-from ..views.viewsEtablissement import EtablissementView
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import path
+
+from ..views.viewsEtablissement import EtablissementView
 
 urlpatterns = [
     path("", EtablissementView.as_view(), name="etablissement"),

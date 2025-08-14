@@ -1,13 +1,14 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.db.models.functions import TruncWeek
-from django.db.models import Min, Max
-from ...serializers.serializerEdt import EdtSerializer
-from ...models import Edt
-from ...services.serviceEdt import ServiceEdtCrud
-from common.services.serviceModel import ServiceModelCrud
 from common.services.serviceEdt import add_value_on_list_edt
+from common.services.serviceModel import ServiceModelCrud
+from django.db.models import Max, Min
+from django.db.models.functions import TruncWeek
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ...models import Edt
+from ...serializers.serializerEdt import EdtSerializer
+from ...services.serviceEdt import ServiceEdtCrud
 
 
 class EdtView(APIView):

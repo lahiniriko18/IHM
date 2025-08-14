@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from ..models import Constituer, Parcours, Classe
+
+from ..models import Classe, Constituer, Parcours
 
 
 class ConstituerSerializer(serializers.ModelSerializer):

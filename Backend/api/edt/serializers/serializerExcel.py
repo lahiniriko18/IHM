@@ -1,10 +1,12 @@
+from datetime import datetime, time, timedelta
+
+from django.db.models import Q
 from rest_framework import serializers
-from datetime import datetime, timedelta, time
-from ...etablissements.models import Parcours, Classe, NiveauParcours, Salle
-from ...professeurs.models import Professeur, Enseigner, Matiere
+
+from ...etablissements.models import Classe, NiveauParcours, Parcours, Salle
 from ...etablissements.serializers.serializerClasse import ClasseSerializer
 from ...etablissements.serializers.serializerParcours import ParcoursSerializer
-from django.db.models import Q
+from ...professeurs.models import Enseigner, Matiere, Professeur
 
 
 class ExcelSerializer(serializers.Serializer):

@@ -1,9 +1,10 @@
-from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from django.core.validators import validate_email
+from rest_framework import serializers
+
 from ...etablissements.serializers.serializerEtablissement import (
     EtablissementSerializer,
 )
-from django.contrib.auth import get_user_model
 
 Utilisateur = get_user_model()
 import re

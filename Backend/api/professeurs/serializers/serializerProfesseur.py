@@ -1,13 +1,15 @@
-from rest_framework import serializers
-from ..models import Professeur
-from ...etablissements.models import Etablissement
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
-from datetime import datetime
 import re
+from datetime import datetime
+
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from rest_framework import serializers
+
+from ...etablissements.models import Etablissement
 from ...etablissements.serializers.serializerEtablissement import (
     EtablissementSerializer,
 )
+from ..models import Professeur
 
 
 class ProfesseurSerializer(serializers.ModelSerializer):

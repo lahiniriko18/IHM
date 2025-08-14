@@ -1,10 +1,11 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ...models import Matiere
+from ...serializers.serializerEnseigner import EnseignerSerializer
 from ...serializers.serializerMatiere import MatiereSerializer
 from ...serializers.serializerPosseder import PossederSerializer
-from ...serializers.serializerEnseigner import EnseignerSerializer
-from ...models import Matiere
 
 
 class MatiereView(APIView):

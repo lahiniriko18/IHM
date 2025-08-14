@@ -1,6 +1,7 @@
-from rest_framework import serializers
-from datetime import date, datetime, timedelta
 import locale
+from datetime import date, datetime, timedelta
+
+from rest_framework import serializers
 
 
 class EdtProfesseurSerializer(serializers.Serializer):

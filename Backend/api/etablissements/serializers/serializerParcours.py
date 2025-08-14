@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from ..models import Parcours, Mention
 from rest_framework.validators import UniqueValidator
+
+from ..models import Mention, Parcours
 
 
 class ParcoursSerializer(serializers.ModelSerializer):

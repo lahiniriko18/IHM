@@ -1,10 +1,12 @@
-from rest_framework import status
+from collections import defaultdict
 from datetime import datetime, time
-from ..models import Edt
+
+from django.core.mail import EmailMessage
+from rest_framework import status
+
 from ...professeurs.models import Professeur
 from ...professeurs.serializers.serializerProfesseur import ProfesseurSerializer
-from collections import defaultdict
-from django.core.mail import EmailMessage
+from ..models import Edt
 
 
 class ServiceMailEdtProfesseur:

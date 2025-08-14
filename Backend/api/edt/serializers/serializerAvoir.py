@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from ..models import Avoir, Edt
+
 from ...etablissements.models import Etablissement
+from ..models import Avoir, Edt
 
 
 class AvoirSerializer(serializers.ModelSerializer):

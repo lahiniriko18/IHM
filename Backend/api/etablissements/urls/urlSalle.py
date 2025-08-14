@@ -1,5 +1,6 @@
 from django.urls import path
-from ..views.salles.viewsSalle import SalleView, SalleDetailView, SalleEdtView
+
+from ..views.salles.viewsSalle import SalleDetailView, SalleEdtView, SalleView
 from ..views.salles.viewsSalleStat import SalleStatView
 
 urlpatterns = [

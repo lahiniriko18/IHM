@@ -1,13 +1,14 @@
 from django.urls import path
-from ..views.edts.viewsEdt import EdtView, ListeEdtView, EdtTableauView
-from ..views.edts.viewsEdtExcel import EdtExcelView
-from ..views.edts.viewsModele import ModeleExcelView
+
+from ..views.edts.viewsEdt import EdtTableauView, EdtView, ListeEdtView
 from ..views.edts.viewsEdtDetail import (
     EdtDetailView,
     EdtProfesseurView,
     EdtVerificationView,
 )
-from ..views.edts.viewsEdtStat import EdtSemaineView, EdtNiveauSemaineView
+from ..views.edts.viewsEdtExcel import EdtExcelView
+from ..views.edts.viewsEdtStat import EdtNiveauSemaineView, EdtSemaineView
+from ..views.edts.viewsModele import ModeleExcelView
 
 urlpatterns = [
     path("", EdtView.as_view()),

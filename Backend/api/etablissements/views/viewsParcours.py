@@ -1,9 +1,10 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from ..serializers.serializerParcours import ParcoursSerializer
-from ..models import Parcours
 from common.services.serviceModel import ServiceModelCrud
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ..models import Parcours
+from ..serializers.serializerParcours import ParcoursSerializer
 
 
 class ParcoursView(APIView):

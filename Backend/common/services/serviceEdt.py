@@ -1,13 +1,13 @@
-from datetime import timedelta, datetime
-from rest_framework import status
+from collections import defaultdict
+from datetime import datetime, timedelta
+
+from api.edt.models import Edt
 from api.edt.serializers.serializerEdt import EdtSerializer
+from api.etablissements.models import Classe, NiveauParcours
 from api.etablissements.serializers.serializerNiveauParcours import (
     NiveauParcoursSerializer,
 )
-from api.edt.models import Edt
-from api.etablissements.models import Classe, NiveauParcours
-from collections import defaultdict
-from datetime import datetime
+from rest_framework import status
 
 
 def listeEdtParNumEdts(numEdts):

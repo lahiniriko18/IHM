@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from django.db import models
 
 

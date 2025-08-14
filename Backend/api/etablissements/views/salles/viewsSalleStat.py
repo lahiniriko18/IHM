@@ -1,9 +1,11 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from ...serializers.serializerSalle import SalleSerializer, SalleStatSerializer
-from ...models import Salle
 from datetime import datetime, timedelta
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ...models import Salle
+from ...serializers.serializerSalle import SalleSerializer, SalleStatSerializer
 
 
 class SalleStatView(APIView):

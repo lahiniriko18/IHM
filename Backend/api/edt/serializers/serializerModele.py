@@ -1,10 +1,12 @@
+import locale
+from datetime import date, datetime, timedelta
+
 from rest_framework import serializers
-from ...etablissements.models import NiveauParcours, Classe
+
+from ...etablissements.models import Classe, NiveauParcours
 from ...etablissements.serializers.serializerNiveauParcours import (
     NiveauParcoursSerializer,
 )
-from datetime import date, datetime, timedelta
-import locale
 
 
 class ModeleEdtSerializer(serializers.Serializer):

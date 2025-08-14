@@ -1,8 +1,8 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from common.utils.email_utilis import EnvoyerMail
 from django.conf import settings
 from rest_framework import status
-from common.utils.email_utilis import EnvoyerMail
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 class EmailView(APIView):

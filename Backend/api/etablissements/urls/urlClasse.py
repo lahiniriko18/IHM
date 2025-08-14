@@ -1,4 +1,5 @@
 from django.urls import path
+
 from ..views.classes.viewsClasse import ClasseView
 from ..views.classes.viewsClasseDetail import ClasseDetailView, ClasseNiveauParcoursView
 

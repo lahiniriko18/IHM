@@ -1,8 +1,9 @@
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from ..models import Edt, Action
-from ...professeurs.models import Professeur,Matiere
-from ...etablissements.models import Parcours, Salle, Classe, Mention
+from rest_framework.views import APIView
+
+from ...etablissements.models import Classe, Mention, Parcours, Salle
+from ...professeurs.models import Matiere, Professeur
+from ..models import Action, Edt
 
 
 class EffectifView(APIView):

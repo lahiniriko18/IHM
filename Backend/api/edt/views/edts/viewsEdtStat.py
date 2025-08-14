@@ -1,10 +1,11 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from common.utils.date_utils import get_semaine_by_date
-from ...models import Edt
 from common.services.serviceEdt import listeEdtParNumEdts
+from common.utils.date_utils import get_semaine_by_date
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from ....etablissements.models import NiveauParcours
+from ...models import Edt
 
 
 class EdtSemaineView(APIView):

@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from ..models import Posseder, NiveauParcours
+
 from ...professeurs.models import Matiere
+from ..models import NiveauParcours, Posseder
 
 
 class PossederSerializer(serializers.ModelSerializer):

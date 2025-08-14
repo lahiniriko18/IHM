@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from ..models import Mention, Etablissement
 from rest_framework.validators import UniqueValidator
+
+from ..models import Etablissement, Mention
 
 
 class MentionSerializer(serializers.ModelSerializer):

@@ -1,14 +1,15 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from common.services.serviceModel import ServiceModelCrud
 from rest_framework import status
-from ...serializers.serializerMatiere import MatiereSerializer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ....etablissements.models import NiveauParcours
 from ....etablissements.serializers.serializerNiveauParcours import (
     NiveauParcoursSerializer,
 )
-from ...serializers.serializerProfesseur import ProfesseurSerializer
 from ...models import Matiere, Professeur
-from ....etablissements.models import NiveauParcours
-from common.services.serviceModel import ServiceModelCrud
+from ...serializers.serializerMatiere import MatiereSerializer
+from ...serializers.serializerProfesseur import ProfesseurSerializer
 
 
 class MatiereDetailView(APIView):

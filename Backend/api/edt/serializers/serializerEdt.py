@@ -1,8 +1,10 @@
-from rest_framework import serializers
-from ..models import Edt
-from ...etablissements.models import Salle, Parcours, Classe, Mention, NiveauParcours
-from ...professeurs.models import Matiere, Professeur, Enseigner
 from datetime import datetime
+
+from rest_framework import serializers
+
+from ...etablissements.models import Classe, Mention, NiveauParcours, Parcours, Salle
+from ...professeurs.models import Enseigner, Matiere, Professeur
+from ..models import Edt
 
 
 class EdtSerializer(serializers.ModelSerializer):

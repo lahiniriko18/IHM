@@ -1,5 +1,6 @@
 from django.urls import path
-from ..views.viewsMention import MentionView, MentionDetailView
+
+from ..views.viewsMention import MentionDetailView, MentionView
 
 urlpatterns = [
     path("", MentionView.as_view(), name="mention"),

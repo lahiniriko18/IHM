@@ -1,8 +1,9 @@
 from django.urls import path
-from .views.viewsAuth import *
-from .views.viewsUtilisateur import *
-from .views.viewsEmails import ValidationCodeView
 from rest_framework_simplejwt.views import TokenRefreshView
+
+from .views.viewsAuth import *
+from .views.viewsEmails import ValidationCodeView
+from .views.viewsUtilisateur import *
 
 urlpatterns = [
     path("inscription/", InscriptionView.as_view()),

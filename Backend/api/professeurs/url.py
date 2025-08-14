@@ -1,5 +1,6 @@
-from django.urls import path, include
-from .urls import urlProfesseur, urlMatiere, urlEnseigner
+from django.urls import include, path
+
+from .urls import urlEnseigner, urlMatiere, urlProfesseur
 
 urlpatterns = [
     path("professeur/", include(urlProfesseur)),

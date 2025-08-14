@@ -1,6 +1,8 @@
-from rest_framework import serializers
-from ..models import Salle
 from datetime import datetime
+
+from rest_framework import serializers
+
+from ..models import Salle
 
 
 class SalleSerializer(serializers.ModelSerializer):

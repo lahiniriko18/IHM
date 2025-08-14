@@ -1,12 +1,14 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from ...serializers.serializerProfesseur import ProfesseurStatSerializer
-from ...models import Professeur
 from datetime import datetime, timedelta
-from ....edt.models import Edt
+
 from common.services.serviceEdt import listeEdtParNumEdts
 from common.utils.date_utils import get_semaine_by_date
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ....edt.models import Edt
+from ...models import Professeur
+from ...serializers.serializerProfesseur import ProfesseurStatSerializer
 
 
 class ProfesseurHoraireView(APIView):

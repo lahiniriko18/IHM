@@ -1,12 +1,14 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from ...serializers.serializerSalle import SalleSerializer
-from ...models import Salle
-from ....edt.models import Edt
-from django.db.models import Q
 from datetime import date, datetime, timedelta
+
 from common.services.serviceModel import ServiceModelCrud
+from django.db.models import Q
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ....edt.models import Edt
+from ...models import Salle
+from ...serializers.serializerSalle import SalleSerializer
 
 
 class SalleView(APIView):

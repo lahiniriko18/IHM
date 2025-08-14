@@ -1,4 +1,5 @@
 from django.urls import path
+
 from ..views.professeurs.viewsProfesseur import ProfesseurView
 from ..views.professeurs.viewsProfesseurDetail import (
     ProfesseurDetailView,

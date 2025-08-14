@@ -1,8 +1,9 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
-from ..serializers.serializerAction import ActionSerializer
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from ..models import Action
+from ..serializers.serializerAction import ActionSerializer
 
 
 class ActionView(APIView):

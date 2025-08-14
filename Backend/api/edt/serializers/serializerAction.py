@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from ..models import Action
+
 from ...utilisateurs.models import Utilisateur
+from ..models import Action
 
 
 class ActionSerializer(serializers.ModelSerializer):

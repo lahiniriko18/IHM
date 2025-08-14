@@ -1,5 +1,6 @@
 from django.urls import path
-from ..views.viewsNiveauParcours import NiveauParcoursView, NiveauParcoursDetailView
+
+from ..views.viewsNiveauParcours import NiveauParcoursDetailView, NiveauParcoursView
 
 urlpatterns = [
     path("", NiveauParcoursView.as_view(), name="niveauParcours"),

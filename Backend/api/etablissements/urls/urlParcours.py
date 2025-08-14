@@ -1,5 +1,6 @@
 from django.urls import path
-from ..views.viewsParcours import ParcoursView, ParcourDetailView
+
+from ..views.viewsParcours import ParcourDetailView, ParcoursView
 
 urlpatterns = [
     path("", ParcoursView.as_view(), name="parcours"),
