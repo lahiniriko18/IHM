@@ -58,8 +58,10 @@ function EdtRead() {
   };
   const getEdtAvecNiveau = async () => {
     try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/api/niveau-parcours/"
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/edt/niveau-semaine/",
+        ObjectParametre.dateDebut,
+        ObjectParametre.numNiveauParcours
       );
       if (response.status !== 200) {
         throw new Error("Erreur code : " + response.status);
