@@ -6,19 +6,18 @@ from rest_framework.views import APIView
 
 from ....etablissements.models import NiveauParcours
 from ...models import Edt
+from common.services.serviceEdtStat import get_edt_par_niveauParcours_date
 
 
 class EdtSemaineView(APIView):
     def post(self, request):
         dateStr = request.data.get("date")
         if dateStr:
-            lundi, samedi = get_semaine_by_date(dateStr, 5)
-            numEdts = Edt.objects.filter(date__range=(lundi, samedi)).values_list(
-                "numEdt", flat=True
-            )
-            response = listeEdtParNumEdts(sorted(list(numEdts)))
-            return Response({"donnee": response["context"]}, status=response["status"])
-
+            numNiveauParcours = Edt.objects.values_list(
+                "numParcours__niveauParcours__numNiveauParcours", flat=True
+            ).distinct()
+            donnees = get_edt_par_niveauParcours_date(dateStr, numNiveauParcours)
+            return Response({"donnee": donnees}, status=status.HTTP_200_OK)
         return Response(
             {"error": "Date introuvable"}, status=status.HTTP_400_BAD_REQUEST
         )
@@ -28,31 +27,12 @@ class EdtNiveauSemaineView(APIView):
     def post(self, request):
         dateStr = request.data.get("date")
         numNiveauParcours = request.data.get("numNiveauParcours")
-        print(request.data)
         if dateStr and numNiveauParcours and isinstance(numNiveauParcours, list):
             if len(numNiveauParcours) > 0:
-                lundi, samedi = get_semaine_by_date(dateStr, 5)
-                niveauParcours = NiveauParcours.objects.filter(pk__in=numNiveauParcours)
-                donnees = {}
-                if niveauParcours:
-                    for np in niveauParcours:
-                        numEdts = Edt.objects.filter(
-                            date__range=(lundi, samedi),
-                            numClasse__niveau=np.niveau,
-                            numParcours=np.numParcours,
-                        ).values_list("numEdt", flat=True)
-                        response = listeEdtParNumEdts(sorted(list(numEdts)))
-                        donnees[f"{np.niveau} {np.numParcours.codeParcours}"] = (
-                            response["context"]
-                        )
-
-                    return Response({"donnee": donnees}, status=response["status"])
-                return Response(
-                    {"error": "Niveau parcours introuvable"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+                donnees = get_edt_par_niveauParcours_date(dateStr, numNiveauParcours)
+                return Response({"donnee": donnees}, status=status.HTTP_200_OK)
             return Response(
-                {"error": "Niveau parcours invalide"},
+                {"error": "Niveau parcours introuvable"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(
