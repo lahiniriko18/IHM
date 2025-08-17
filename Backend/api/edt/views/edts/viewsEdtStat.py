@@ -1,12 +1,11 @@
 from common.services.serviceEdt import listeEdtParNumEdts
+from common.services.serviceEdtStat import get_edt_par_niveauParcours_date
 from common.utils.date_utils import get_semaine_by_date
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ....etablissements.models import NiveauParcours
 from ...models import Edt
-from common.services.serviceEdtStat import get_edt_par_niveauParcours_date
 
 
 class EdtSemaineView(APIView):

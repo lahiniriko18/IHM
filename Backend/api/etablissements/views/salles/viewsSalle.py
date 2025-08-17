@@ -15,29 +15,7 @@ class SalleView(APIView):
     def get(self, request):
         salles = Salle.objects.all().order_by("-numSalle")
         donnees = SalleSerializer(salles, many=True).data
-        dateActuel = date.today()
-        heureActuel = datetime.now().time()
-        for i, salle in enumerate(salles):
-            edt = salle.edts.filter(
-                date=dateActuel, heureDebut__lte=heureActuel, heureFin__gte=heureActuel
-            ).exists()
-            if edt == salle.statut:
-                donnees[i]["statut"] = not edt
-                serializerModif = SalleSerializer(salle, donnees[i])
-                if serializerModif.is_valid():
-                    serializerModif.save()
-                else:
-                    return Response(
-                        serializerModif.errors, status=status.HTTP_400_BAD_REQUEST
-                    )
-            edts = salle.edts.all()
-            heureTotal = timedelta()
-            for edt in edts:
-                debut = datetime.combine(datetime.today(), edt.heureDebut)
-                fin = datetime.combine(datetime.today(), edt.heureFin)
-                heureTotal += fin - debut
-            donnees[i]["heureTotal"] = heureTotal.total_seconds()
-        return Response(donnees, status=status.HTTP_200_OK)
+        return Response(donnees)
 
     def post(self, request):
         serializer = SalleSerializer(data=request.data)

@@ -38,7 +38,6 @@ class EdtProfesseurSerializer(serializers.Serializer):
         semaine = [
             datetime.strftime(lundi + timedelta(days=i), "%d-%m-%Y") for i in range(6)
         ]
-        print(semaine)
         donnees["semaine"] = semaine
 
         if anneeDebut != anneeFin:

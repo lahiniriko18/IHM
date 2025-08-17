@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from ....edt.models import Edt
+from ....etablissements.models import NiveauParcours, Salle
 from ...models import Salle
 from ...serializers.serializerSalle import SalleSerializer, SalleStatSerializer
 
@@ -35,4 +37,18 @@ class SalleStatView(APIView):
             return Response(donnees, status=status.HTTP_200_OK)
         return Response(
             {"erreur": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class SalleNiveauParcoursView(APIView):
+    def get(self, request, numNiveauParcours):
+        np = NiveauParcours.objects.filter(pk=numNiveauParcours).first()
+        if np:
+            salles = Salle.objects.filter(
+                edts__numParcours=np.numParcours, edts__numClasse__niveau=np.niveau
+            ).distinct()
+            donnees=SalleSerializer(salles,many=True).data
+            return Response(donnees)
+        return Response(
+            {"error": "Niveau parcours introuvable !"}, status=status.HTTP_404_NOT_FOUND
         )
