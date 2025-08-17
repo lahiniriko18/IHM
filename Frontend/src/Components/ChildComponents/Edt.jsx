@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Creatable from "react-select/creatable";
 import { useSidebar } from "../Context/SidebarContext";
 
-import { addDays, format, parseISO, startOfWeek } from "date-fns";
+import { addDays, format, parse, parseISO, startOfWeek } from "date-fns";
 function Edt() {
   const [isclicked, setIsclicked] = useState(false);
   const [search, setSearch] = useState(null);
@@ -630,6 +630,10 @@ function Edt() {
                           <button
                             className="p-1 rounded hover:bg-gray-200"
                             onClick={() => {
+                              if (!EDT.numNiveauParcours) {
+                                alert("numNiveauParcours manquant !");
+                                return;
+                              }
                               const newDataEdt = {
                                 numNiveauParcours: [],
                                 dateDebut: "",
@@ -638,8 +642,14 @@ function Edt() {
                               newDataEdt.numNiveauParcours.push(
                                 EDT.numNiveauParcours
                               );
-                              newDataEdt.dateDebut = EDT.dateDebut;
-                              newDataEdt.dateFin = EDT.dateFin;
+                              newDataEdt.dateDebut = format(
+                                parse(EDT.dateDebut, "dd-MM-yyyy", new Date()),
+                                "yyyy-MM-dd"
+                              );
+                              newDataEdt.dateFin = format(
+                                parse(EDT.dateFin, "dd-MM-yyyy", new Date()),
+                                "yyyy-MM-dd"
+                              );
                               versAFfichage(newDataEdt);
                             }}
                           >

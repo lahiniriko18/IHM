@@ -268,7 +268,7 @@ function EdtRead() {
 
   useEffect(() => {
     getDataNiveau();
-    console.log(ObjectParam)
+    console.log("ObjectState", ObjectParam);
   }, []);
 
   // Options pour select niveaux
