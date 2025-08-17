@@ -152,8 +152,8 @@ function EdtRead() {
           (ligne[jour] || [])
             .map((caseItem) => {
               return [
-                caseItem.numClasse
-                  ? getClasseLabel(caseItem.numClasse, numNiveau)
+                caseItem.classe
+                  ? getClasseLabel(caseItem.classe, numNiveau)
                   : "",
                 caseItem.matiere
                   ? getMatiereLabel(caseItem.matiere, numNiveau)
