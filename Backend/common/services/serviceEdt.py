@@ -107,6 +107,7 @@ def add_value_on_list_edt(edtSemaines):
             numParcours=edtSemaine["numParcours"],
             date__range=(edtSemaine["dateDebut"], edtSemaine["dateFin"]),
         ).values_list("numEdt", flat=True)
+        donnee["numNiveauParcours"] = niveauParcours["numNiveauParcours"]
         donnee["numEdts"] = list(numEdts)
 
         donnees.append(donnee)
