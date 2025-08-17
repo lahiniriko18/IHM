@@ -57,34 +57,8 @@ function EdtRead() {
   }
 
   //api
-  // const getDataClasse = async (numNiveauParcours) => {
-  //   try {
-  //     const response = await axios.get(
-  //       `http://127.0.0.1:8000/api/classe/niveau-parcours/${numNiveauParcours}`
-  //     );
-  //     if (response.status !== 200) {
-  //       throw new Error("Erreur code : " + response.status);
-  //     }
-  //     setListeClasse(response.data);
-  //   } catch (error) {
-  //     console.error(error.message);
-  //   }
-  // };
-  // const getNiveau = async (numNiveauParcours) => {
-  //   try {
-  //     const response = await axios.get(
-  //       `http://127.0.0.1:8000/api/niveau-parcours/${numNiveauParcours}`
-  //     );
-  //     if (response.status !== 200) {
-  //       throw new Error("Erreur code : " + response.status);
-  //     }
-  //     setNiveauSelected(response.data);
-  //   } catch (error) {
-  //     console.error(error.response.data);
-  //   }
-  // };
+
   // const getDataSalle = async (donnees) => {
-  //   // console.log(donnees);
 
   //   try {
   //     const response = await axios.post(
@@ -99,36 +73,7 @@ function EdtRead() {
   //     console.error(error.response.data);
   //   }
   // };
-  // const getDataMatiere = async (numNiveauParcours) => {
-  //   try {
-  //     const response = await axios.get(
-  //       `http://127.0.0.1:8000/api/matiere/niveau-parcours/${numNiveauParcours}`
-  //     );
-  //     if (response.status !== 200) {
-  //       throw new Error("Erreur code : " + response.status);
-  //     }
-  //     setListeMatiere(response.data);
-  //   } catch (error) {
-  //     console.error(error.message);
-  //   }
-  // };
-  // const getDataProfesseurs = async (numNiveauParcours) => {
-  //   try {
-  //     const response = await axios.get(
-  //       `http://127.0.0.1:8000/api/professeur/niveau-parcours/${numNiveauParcours}`
-  //     );
-  //     if (response.status !== 200) {
-  //       throw new Error("Erreur code : " + response.status);
-  //     }
-  //     setlisteProfesseur(response.data);
-  //   } catch (error) {
-  //     if (error.response) {
-  //       console.error("Erreur du serveur :", error.response.data);
-  //     } else {
-  //       console.error("Erreur inconnue :", error.message);
-  //     }
-  //   }
-  // };
+
   const getDataMatiere = async (numNiveauParcours) => {
     try {
       const response = await axios.get(
@@ -180,8 +125,7 @@ function EdtRead() {
   const getDataSalle = async (numNiveauParcours) => {
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/api/salle/liste/verifier/",
-        { numNiveauParcours }
+        `http://127.0.0.1:8000/api/salle/niveau-parcours/${numNiveauParcours}`
       );
       if (response.status !== 200)
         throw new Error("Erreur code : " + response.status);
@@ -221,62 +165,10 @@ function EdtRead() {
         throw new Error("Erreur code : " + response.status);
       }
       setListeEdtAvecNiveau(response.data);
-      console.log(response.data);
     } catch (error) {
       console.error(error.message);
     }
   };
-  // const getNiveauLabel = (numNiveau) => {
-  //   const found = listeNiveau.find((c) => c.numNiveauParcours === numNiveau);
-  //   if (!found) return "";
-  //   return (
-  //     found.niveau +
-  //     (found.numParcours.codeParcours
-  //       ? found.numParcours.codeParcours
-  //       : " - " + found.numParcours.nomParcours)
-  //   );
-  // };
-  // const getClasseLabel = (numClasse) => {
-  //   const found = listeClasse.find((c) => c.numClasse === numClasse);
-  //   if (!found) return "";
-  //   const parcours =
-  //     Array.isArray(found.parcours) && found.parcours.length > 0
-  //       ? found.parcours[0]
-  //       : {};
-  //   return (
-  //     found.niveau +
-  //     (parcours.codeParcours
-  //       ? parcours.codeParcours
-  //       : parcours.nomParcours
-  //       ? `-${parcours.nomParcours}-`
-  //       : "") +
-  //     (found.groupe
-  //       ? found.groupe.toString().split(" ").slice(1).join(" ")
-  //       : "")
-  //   );
-  // };
-
-  // const getMatiereLabel = (numMatiere) => {
-  //   const found = listeMatiere.find((m) => m.numMatiere === numMatiere);
-  //   return found ? found.codeMatiere || found.nomMatiere || "" : "";
-  // };
-
-  // const getProfLabel = (numProfesseur) => {
-  //   const found = listeProfesseur.find(
-  //     (p) => p.numProfesseur === numProfesseur
-  //   );
-  //   if (!found) return "";
-  //   return found.nomCourant
-  //     ? found.nomCourant
-  //     : found.prenomProfesseur
-  //     ? found.prenomProfesseur
-  //     : found.nomProfesseur;
-  // };
-
-  // const getSalleLabel = (numSalle) => {
-  //   const found = listeSalle.find((s) => s.numSalle === numSalle);
-  //   return found ? found.nomSalle : "";
-  // };
   const optionsNiveau = listeNiveau.map((Classe) => ({
     value: Classe.numNiveauParcours,
     label:
@@ -287,7 +179,6 @@ function EdtRead() {
   }));
   const getMatiereLabel = (numMatiere, numNiveau) => {
     const matieres = matieresParNiveau[numNiveau] || [];
-    console.log("matiere", matieres, numMatiere, numNiveau);
     const found = matieres.find((m) => m.numMatiere === numMatiere);
     return found ? found.codeMatiere || found.nomMatiere || "" : "";
   };
@@ -339,9 +230,6 @@ function EdtRead() {
     }
   }, [ObjectParametre]);
 
-  useEffect(() => {
-    console.log(ObjectParametre);
-  }, [ObjectParametre]);
   useEffect(() => {
     ObjectParametre.numNiveauParcours.forEach((numNiveau) => {
       getDataMatiere(numNiveau);
@@ -470,7 +358,9 @@ function EdtRead() {
                     Object.keys(listeEdtAvecNiveau.donnee).map((key) => {
                       const contenu =
                         listeEdtAvecNiveau.donnee[key].contenu || [];
-                      const numNiveau = Number(key);
+                      const numNiveau = Number(
+                        listeEdtAvecNiveau.donnee[key].numNiveauParcours
+                      );
                       const joursNiveau =
                         contenu.length > 0
                           ? Object.keys(contenu[0]).filter(
