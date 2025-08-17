@@ -1,16 +1,16 @@
 import axios from "axios";
 import { addDays, format, parseISO, startOfWeek } from "date-fns";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Creatable from "react-select/creatable";
 import { useSidebar } from "../../Context/SidebarContext";
-
 function EdtRead() {
   const { isReduire } = useSidebar();
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const ObjectParam = location.state?.ObjectParam || {};
   // Navigation
   const versGeneral = () => navigate("/edt");
   const versCreationEdt = () => navigate("/edt/nouveau-edt");
@@ -19,9 +19,8 @@ function EdtRead() {
   // États
   const [listeNiveau, setListeNiveau] = useState([]);
   const [listeEdtAvecNiveau, setListeEdtAvecNiveau] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const [ObjectParametre, setObjectParametre] = useState({
+  const [ObjectParametre, setObjectParametre] = useState(ObjectParam || {
     numNiveauParcours: [],
     dateDebut: "",
     dateFin: "",
@@ -38,6 +37,17 @@ function EdtRead() {
     if (!dateStr) return "";
     const [year, month, day] = dateStr.split("-");
     return `${day}-${month}-${year}`;
+  }
+  function formatHeure(heureStr) {
+    if (!heureStr && heureStr !== 0) return "";
+    if (typeof heureStr === "number") {
+      return `${heureStr}h`;
+    }
+    if (typeof heureStr === "string") {
+      const [h, m] = heureStr.split(":");
+      return m === "00" ? `${parseInt(h, 10)}h` : `${parseInt(h, 10)}h:${m}`;
+    }
+    return "";
   }
 
   // Sélection date -> semaine (lundi -> samedi)
@@ -89,8 +99,6 @@ function EdtRead() {
       setListeNiveau(response.data);
     } catch (error) {
       console.error(error.message);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -107,6 +115,7 @@ function EdtRead() {
       if (response.status !== 200)
         throw new Error("Erreur code : " + response.status);
       setListeEdtAvecNiveau(response.data);
+      console.log(response.data);
     } catch (error) {
       console.error(error.message);
     }
@@ -116,16 +125,21 @@ function EdtRead() {
   const handlePrint = () => {
     if (!listeEdtAvecNiveau.donnee) return;
 
-    const doc = new jsPDF({ orientation: "landscape" });
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: "a4",
+    });
 
     Object.keys(listeEdtAvecNiveau.donnee).forEach((key, index) => {
       const contenu = listeEdtAvecNiveau.donnee[key].contenu || [];
       const numNiveau = Number(
         listeEdtAvecNiveau.donnee[key].numNiveauParcours
       );
+      const titre = listeEdtAvecNiveau.donnee[key].titre;
       const joursNiveau =
-        contenu.length > 0
-          ? Object.keys(contenu[0]).filter((j) => j !== "Horaire")
+        titre && Array.isArray(titre) && titre.length > 0
+          ? Object.keys(titre[0])
           : [];
 
       // en-tête du tableau
@@ -162,22 +176,30 @@ function EdtRead() {
         `Emploi du temps - ${key} (du ${formatDateToDDMMYYYY(
           ObjectParametre.dateDebut
         )} au ${formatDateToDDMMYYYY(ObjectParametre.dateFin)})`,
-        14,
-        15
+        40,
+        40
       );
 
       // Tableau auto-formaté
-      doc.autoTable({
+      autoTable(doc, {
         head: head,
         body: body,
-        startY: 25,
-        styles: { fontSize: 8, cellPadding: 2 },
+        startY: 60,
+        styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak" },
         headStyles: { fillColor: [41, 128, 185] },
         theme: "grid",
+        columnStyles: {
+          0: { cellWidth: 80 }, // Horaire
+          // Les autres colonnes s'adaptent
+        },
+        margin: { left: 40, right: 40 },
+        // didDrawPage: (data) => {
+        //   // Optionnel: ajouter un titre ou un pied de page
+        // },
       });
 
       if (index < Object.keys(listeEdtAvecNiveau.donnee).length - 1) {
-        doc.addPage(); // nouvelle page pour l’EDT suivant
+        doc.addPage();
       }
     });
 
@@ -246,6 +268,7 @@ function EdtRead() {
 
   useEffect(() => {
     getDataNiveau();
+    console.log(ObjectParam)
   }, []);
 
   // Options pour select niveaux
@@ -266,7 +289,7 @@ function EdtRead() {
     >
       <div className="flex flex-col gap-1 h-full ">
         {/* Navigation */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 fixed top-14 bg-white z-30 w-full py-6">
           <button
             className="hover:scale-105 text-gray-500"
             onClick={versGeneral}
@@ -288,7 +311,7 @@ function EdtRead() {
         </div>
 
         {/* Filtres */}
-        <div className="flex justify-between items-center sticky top-0 w-full z-30">
+        <div className="flex justify-between items-center sticky top-8 w-full z-30 bg-white">
           <span className="text-blue-600 font-bold flex flex-row items-center z-50">
             Niveau :
             <Creatable
@@ -345,18 +368,18 @@ function EdtRead() {
         </div>
 
         {/* Affichage EDT */}
-        <div className="h-[73%] w-full m-4">
+        <div className="h-[73%] w-full my-8 ">
           {listeEdtAvecNiveau.donnee
             ? Object.keys(listeEdtAvecNiveau.donnee).map((key, index) => {
                 const contenu = listeEdtAvecNiveau.donnee[key].contenu || [];
                 const numNiveau = Number(
                   listeEdtAvecNiveau.donnee[key].numNiveauParcours
                 );
-                const joursNiveau =
-                  contenu.length > 0
-                    ? Object.keys(contenu[0]).filter((j) => j !== "Horaire")
+                const titre = listeEdtAvecNiveau.donnee[key].titre;
+                const joursOrdre =
+                  titre && Array.isArray(titre) && titre.length > 0
+                    ? Object.keys(titre[0])
                     : [];
-
                 return (
                   <div
                     key={key}
@@ -369,8 +392,8 @@ function EdtRead() {
                     <table className="w-full text-sm border-black border-collapse">
                       <thead>
                         <tr>
-                          <th className="border-r border-b border-black border-t-0 border-l-0"></th>
-                          {joursNiveau.map((jour, i) => (
+                          <th className="border-r max-w-10 border-b border-black border-t-0 border-l-0"></th>
+                          {joursOrdre.map((jour, i) => (
                             <th key={i} className="border border-black">
                               {jour}
                             </th>
@@ -380,13 +403,13 @@ function EdtRead() {
                       <tbody>
                         {contenu.map((ligne, i) => (
                           <tr key={i} className="border border-black">
-                            <td className="border border-black min-w-[120px]">
-                              <span className="flex justify-center">
-                                {ligne.Horaire?.heureDebut} -{" "}
-                                {ligne.Horaire?.heureFin}
+                            <td className="border border-black max-w-[30px]">
+                              <span className="flex justify-center  ">
+                                {formatHeure(ligne.Horaire?.heureDebut)} -{" "}
+                                {formatHeure(ligne.Horaire?.heureFin)}
                               </span>
                             </td>
-                            {joursNiveau.map((jour, j) => (
+                            {joursOrdre.map((jour, j) => (
                               <td
                                 key={j}
                                 className="border border-black min-h-24"
@@ -397,9 +420,9 @@ function EdtRead() {
                                       <div key={value}>
                                         <span className="flex flex-col w-full">
                                           <p>
-                                            {caseItem.numClasse
+                                            {caseItem.classe
                                               ? `${getClasseLabel(
-                                                  caseItem.numClasse,
+                                                  caseItem.classe,
                                                   numNiveau
                                                 )}`
                                               : ""}
