@@ -12,17 +12,25 @@ function EdtRead() {
   const versCreationEdt = () => navigate("/edt/nouveau-edt");
   const versAFfichage = () => navigate("/edt/affichage-edt");
   const [modele, setModele] = useState(1);
+  const [listeMatiere, setListeMatiere] = useState([]);
+  const [listeSalle, setListeSalle] = useState([]);
+  const [listeClasse, setListeClasse] = useState([]);
   const [listeEdtAvecNiveau, setListeEdtAvecNiveau] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [listeNiveau, setListeNiveau] = useState([]);
+  const [niveauSelected, setNiveauSelected] = useState([]);
+  const [edt, setEdt] = useState(listeEdtAvecNiveau || []);
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-
+  const [listeProfesseur, setlisteProfesseur] = useState([]);
   const [ObjectParametre, setObjectParametre] = useState({
     numNiveauParcours: [],
     dateDebut: "",
     dateFin: "",
   });
-  
+  const [matieresParNiveau, setMatieresParNiveau] = useState({});
+  const [profsParNiveau, setProfsParNiveau] = useState({});
+  const [classesParNiveau, setClassesParNiveau] = useState({});
+  const [sallesParNiveau, setSallesParNiveau] = useState({});
   const handleDateChange = (event) => {
     const date = event.target.value;
     if (date) {
@@ -47,6 +55,144 @@ function EdtRead() {
     const [year, month, day] = dateStr.split("-");
     return `${day}-${month}-${year}`;
   }
+
+  //api
+  // const getDataClasse = async (numNiveauParcours) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://127.0.0.1:8000/api/classe/niveau-parcours/${numNiveauParcours}`
+  //     );
+  //     if (response.status !== 200) {
+  //       throw new Error("Erreur code : " + response.status);
+  //     }
+  //     setListeClasse(response.data);
+  //   } catch (error) {
+  //     console.error(error.message);
+  //   }
+  // };
+  // const getNiveau = async (numNiveauParcours) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://127.0.0.1:8000/api/niveau-parcours/${numNiveauParcours}`
+  //     );
+  //     if (response.status !== 200) {
+  //       throw new Error("Erreur code : " + response.status);
+  //     }
+  //     setNiveauSelected(response.data);
+  //   } catch (error) {
+  //     console.error(error.response.data);
+  //   }
+  // };
+  // const getDataSalle = async (donnees) => {
+  //   // console.log(donnees);
+
+  //   try {
+  //     const response = await axios.post(
+  //       "http://127.0.0.1:8000/api/salle/liste/verifier/",
+  //       donnees
+  //     );
+  //     if (response.status !== 200) {
+  //       throw new Error("Erreur code : " + response.status);
+  //     }
+  //     setListeSalle(response.data);
+  //   } catch (error) {
+  //     console.error(error.response.data);
+  //   }
+  // };
+  // const getDataMatiere = async (numNiveauParcours) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://127.0.0.1:8000/api/matiere/niveau-parcours/${numNiveauParcours}`
+  //     );
+  //     if (response.status !== 200) {
+  //       throw new Error("Erreur code : " + response.status);
+  //     }
+  //     setListeMatiere(response.data);
+  //   } catch (error) {
+  //     console.error(error.message);
+  //   }
+  // };
+  // const getDataProfesseurs = async (numNiveauParcours) => {
+  //   try {
+  //     const response = await axios.get(
+  //       `http://127.0.0.1:8000/api/professeur/niveau-parcours/${numNiveauParcours}`
+  //     );
+  //     if (response.status !== 200) {
+  //       throw new Error("Erreur code : " + response.status);
+  //     }
+  //     setlisteProfesseur(response.data);
+  //   } catch (error) {
+  //     if (error.response) {
+  //       console.error("Erreur du serveur :", error.response.data);
+  //     } else {
+  //       console.error("Erreur inconnue :", error.message);
+  //     }
+  //   }
+  // };
+  const getDataMatiere = async (numNiveauParcours) => {
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/matiere/niveau-parcours/${numNiveauParcours}`
+      );
+      if (response.status !== 200)
+        throw new Error("Erreur code : " + response.status);
+      setMatieresParNiveau((prev) => ({
+        ...prev,
+        [numNiveauParcours]: response.data,
+      }));
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const getDataProfesseurs = async (numNiveauParcours) => {
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/professeur/niveau-parcours/${numNiveauParcours}`
+      );
+      if (response.status !== 200)
+        throw new Error("Erreur code : " + response.status);
+      setProfsParNiveau((prev) => ({
+        ...prev,
+        [numNiveauParcours]: response.data,
+      }));
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const getDataClasse = async (numNiveauParcours) => {
+    try {
+      const response = await axios.get(
+        `http://127.0.0.1:8000/api/classe/niveau-parcours/${numNiveauParcours}`
+      );
+      if (response.status !== 200)
+        throw new Error("Erreur code : " + response.status);
+      setClassesParNiveau((prev) => ({
+        ...prev,
+        [numNiveauParcours]: response.data,
+      }));
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const getDataSalle = async (numNiveauParcours) => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/salle/liste/verifier/",
+        { numNiveauParcours }
+      );
+      if (response.status !== 200)
+        throw new Error("Erreur code : " + response.status);
+      setSallesParNiveau((prev) => ({
+        ...prev,
+        [numNiveauParcours]: response.data,
+      }));
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
   const getDataNiveau = async () => {
     try {
       const response = await axios.get(
@@ -75,16 +221,62 @@ function EdtRead() {
         throw new Error("Erreur code : " + response.status);
       }
       setListeEdtAvecNiveau(response.data);
+      console.log(response.data);
     } catch (error) {
       console.error(error.message);
     }
   };
-  useEffect(() => {
-    getEdtAvecNiveau();
-  }, [ObjectParametre]);
-  useEffect(() => {
-    console.log(ObjectParametre);
-  }, [ObjectParametre]);
+  // const getNiveauLabel = (numNiveau) => {
+  //   const found = listeNiveau.find((c) => c.numNiveauParcours === numNiveau);
+  //   if (!found) return "";
+  //   return (
+  //     found.niveau +
+  //     (found.numParcours.codeParcours
+  //       ? found.numParcours.codeParcours
+  //       : " - " + found.numParcours.nomParcours)
+  //   );
+  // };
+  // const getClasseLabel = (numClasse) => {
+  //   const found = listeClasse.find((c) => c.numClasse === numClasse);
+  //   if (!found) return "";
+  //   const parcours =
+  //     Array.isArray(found.parcours) && found.parcours.length > 0
+  //       ? found.parcours[0]
+  //       : {};
+  //   return (
+  //     found.niveau +
+  //     (parcours.codeParcours
+  //       ? parcours.codeParcours
+  //       : parcours.nomParcours
+  //       ? `-${parcours.nomParcours}-`
+  //       : "") +
+  //     (found.groupe
+  //       ? found.groupe.toString().split(" ").slice(1).join(" ")
+  //       : "")
+  //   );
+  // };
+
+  // const getMatiereLabel = (numMatiere) => {
+  //   const found = listeMatiere.find((m) => m.numMatiere === numMatiere);
+  //   return found ? found.codeMatiere || found.nomMatiere || "" : "";
+  // };
+
+  // const getProfLabel = (numProfesseur) => {
+  //   const found = listeProfesseur.find(
+  //     (p) => p.numProfesseur === numProfesseur
+  //   );
+  //   if (!found) return "";
+  //   return found.nomCourant
+  //     ? found.nomCourant
+  //     : found.prenomProfesseur
+  //     ? found.prenomProfesseur
+  //     : found.nomProfesseur;
+  // };
+
+  // const getSalleLabel = (numSalle) => {
+  //   const found = listeSalle.find((s) => s.numSalle === numSalle);
+  //   return found ? found.nomSalle : "";
+  // };
   const optionsNiveau = listeNiveau.map((Classe) => ({
     value: Classe.numNiveauParcours,
     label:
@@ -93,14 +285,84 @@ function EdtRead() {
         ? Classe.numParcours.codeParcours
         : " - " + Classe.numParcours.nomParcours),
   }));
+  const getMatiereLabel = (numMatiere, numNiveau) => {
+    const matieres = matieresParNiveau[numNiveau] || [];
+    console.log("matiere", matieres, numMatiere, numNiveau);
+    const found = matieres.find((m) => m.numMatiere === numMatiere);
+    return found ? found.codeMatiere || found.nomMatiere || "" : "";
+  };
+
+  const getProfLabel = (numProfesseur, numNiveau) => {
+    const profs = profsParNiveau[numNiveau] || [];
+    const found = profs.find((p) => p.numProfesseur === numProfesseur);
+    if (!found) return "";
+    return found.nomCourant
+      ? found.nomCourant
+      : found.prenomProfesseur
+      ? found.prenomProfesseur
+      : found.nomProfesseur;
+  };
+
+  const getClasseLabel = (numClasse, numNiveau) => {
+    const classes = classesParNiveau[numNiveau] || [];
+    const found = classes.find((c) => c.numClasse === numClasse);
+    if (!found) return "";
+    const parcours =
+      Array.isArray(found.parcours) && found.parcours.length > 0
+        ? found.parcours[0]
+        : {};
+    return (
+      found.niveau +
+      (parcours.codeParcours
+        ? parcours.codeParcours
+        : parcours.nomParcours
+        ? `-${parcours.nomParcours}-`
+        : "") +
+      (found.groupe
+        ? found.groupe.toString().split(" ").slice(1).join(" ")
+        : "")
+    );
+  };
+
+  const getSalleLabel = (numSalle, numNiveau) => {
+    const salles = sallesParNiveau[numNiveau] || [];
+    const found = salles.find((s) => s.numSalle === numSalle);
+    return found ? found.nomSalle : "";
+  };
+
+  useEffect(() => {
+    if (
+      ObjectParametre.numNiveauParcours.length > 0 &&
+      ObjectParametre.dateDebut
+    ) {
+      getEdtAvecNiveau();
+    }
+  }, [ObjectParametre]);
+
+  useEffect(() => {
+    console.log(ObjectParametre);
+  }, [ObjectParametre]);
+  useEffect(() => {
+    ObjectParametre.numNiveauParcours.forEach((numNiveau) => {
+      getDataMatiere(numNiveau);
+      getDataProfesseurs(numNiveau);
+      getDataClasse(numNiveau);
+      getDataSalle(numNiveau);
+    });
+  }, [ObjectParametre.numNiveauParcours]);
   useEffect(() => {
     getDataNiveau();
+    // getDataClasse();
+    // getDataMatiere();
+    // getDataSalle();
+    // getDataProfesseurs();
+    // getNiveau();
   }, []);
   return (
     <div
       className={`${
         isReduire ? "left-20" : "left-56"
-      } fixed right-0 top-14 p-5 h-screen overflow-auto max-w-screen-xl bg-white z-40 transition-all duration-700`}
+      } fixed right-0 top-14 p-5 h-screen overflow-auto bg-white z-40 transition-all duration-700`}
     >
       <div className="flex flex-col gap-1 h-full ">
         <div className="flex gap-3">
@@ -198,81 +460,111 @@ function EdtRead() {
               </p>
             </div>
           ) :*/ modele === 1 ? (
-              <div className="overflow-auto h-full">
+              <div className="h-full">
                 <div className="text-center font-bold mb-4">
                   Emploi du temps pour la semaine du {ObjectParametre.dateDebut}{" "}
                   au {ObjectParametre.dateFin}
                 </div>
-                <p className="text-center"> L1 IG</p>
-                <table className="table-fixed  w-full text-sm border-black border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="border-r border-b border-black border-t-0 border-l-0"></th>
-                      <th className="border border-black">A</th>
-                      <th className="border border-black">B</th>
-                      <th className="border border-black">C</th>
-                      <th className="border border-black">D</th>
-                      <th className="border border-black">E</th>
-                      <th className="border border-black">F</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border border-black">
-                      <td className="border border-black w-1/2"> a</td>
-                      <td className="border border-black">b</td>
-                      <td className="border border-black">c</td>
-                      <td className="border border-black">d</td>
-                      <td className="border border-black">e</td>
-                      <td className="border border-black">f</td>
-                      <td className="border border-black">g</td>
-                    </tr>
-                    <tr className="border border-black">
-                      <td className="border border-black w-1/2"> a</td>
-                      <td className="border border-black">b</td>
-                      <td className="border border-black">c</td>
-                      <td className="border border-black">d</td>
-                      <td className="border border-black">e</td>
-                      <td className="border border-black">f</td>
-                      <td className="border border-black">g</td>
-                    </tr>
-                    <tr className="border border-black">
-                      <td className="border border-black w-1/2"> a</td>
-                      <td className="border border-black">b</td>
-                      <td className="border border-black">c</td>
-                      <td className="border border-black">d</td>
-                      <td className="border border-black">e</td>
-                      <td className="border border-black">f</td>
-                      <td className="border border-black">g</td>
-                    </tr>
-                    <tr className="border border-black">
-                      <td className="border border-black w-1/2"> a</td>
-                      <td className="border border-black">b</td>
-                      <td className="border border-black">c</td>
-                      <td className="border border-black">d</td>
-                      <td className="border border-black">e</td>
-                      <td className="border border-black">f</td>
-                      <td className="border border-black">g</td>
-                    </tr>
-                    <tr className="border border-black">
-                      <td className="border border-black w-1/2"> a</td>
-                      <td className="border border-black">b</td>
-                      <td className="border border-black">c</td>
-                      <td className="border border-black">d</td>
-                      <td className="border border-black">e</td>
-                      <td className="border border-black">f</td>
-                      <td className="border border-black">g</td>
-                    </tr>
-                    <tr className="border border-black">
-                      <td className="border border-black w-1/2"> a</td>
-                      <td className="border border-black">b</td>
-                      <td className="border border-black">c</td>
-                      <td className="border border-black">d</td>
-                      <td className="border border-black">e</td>
-                      <td className="border border-black">f</td>
-                      <td className="border border-black">g</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div className="overflow-y-auto h-[500px] w-full">
+                  {listeEdtAvecNiveau.donnee &&
+                    Object.keys(listeEdtAvecNiveau.donnee).map((key) => {
+                      const contenu =
+                        listeEdtAvecNiveau.donnee[key].contenu || [];
+                      const numNiveau = Number(key);
+                      const joursNiveau =
+                        contenu.length > 0
+                          ? Object.keys(contenu[0]).filter(
+                              (j) => j !== "Horaire"
+                            )
+                          : [];
+                      return (
+                        <div
+                          key={key}
+                          className="mb-8 overflow-auto min-h-[550px]"
+                        >
+                          <h2 className="text-center font-bold text-lg mb-2">
+                            {key}
+                          </h2>
+                          <table className=" w-full text-sm border-black border-collapse">
+                            <thead className="">
+                              <tr>
+                                <th className="border-r border-b border-black border-t-0 border-l-0"></th>
+                                {joursNiveau.map((jour, index) => (
+                                  <th
+                                    key={index}
+                                    className="border border-black"
+                                  >
+                                    {jour}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {contenu.map((ligne, i) => (
+                                <tr key={i} className="border border-black">
+                                  <td className="border border-black  min-w-[120px]">
+                                    <span className="flex justify-center">
+                                      {ligne.Horaire?.heureDebut} -{" "}
+                                      {ligne.Horaire?.heureFin}
+                                    </span>
+                                  </td>
+                                  {joursNiveau.map((jour, j) => (
+                                    <td
+                                      key={j}
+                                      className="border border-black min-h-24"
+                                    >
+                                      <div className="flex flex-row justify-start items-center w-full h-full">
+                                        {(ligne[jour] || []).map(
+                                          (caseItem, value) => (
+                                            <div key={value}>
+                                              <span className="flex flex-col w-full">
+                                                <p>
+                                                  {caseItem.numClasse
+                                                    ? `Classe: ${getClasseLabel(
+                                                        caseItem.numClasse,
+                                                        numNiveau
+                                                      )}`
+                                                    : ""}
+                                                </p>
+                                                <p>
+                                                  {caseItem.matiere
+                                                    ? `Matière: ${getMatiereLabel(
+                                                        caseItem.matiere,
+                                                        numNiveau
+                                                      )}`
+                                                    : ""}
+                                                </p>
+                                                <p>
+                                                  {caseItem.professeur
+                                                    ? `Prof: ${getProfLabel(
+                                                        caseItem.professeur,
+                                                        numNiveau
+                                                      )}`
+                                                    : ""}
+                                                </p>
+                                                <p>
+                                                  {caseItem.salle
+                                                    ? `Salle: ${getSalleLabel(
+                                                        caseItem.salle,
+                                                        numNiveau
+                                                      )}`
+                                                    : ""}
+                                                </p>
+                                              </span>
+                                            </div>
+                                          )
+                                        )}
+                                      </div>
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             ) : (
               <div className="overflow-auto  h-full">

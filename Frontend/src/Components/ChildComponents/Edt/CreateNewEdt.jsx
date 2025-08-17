@@ -830,6 +830,7 @@ function CreateNewEdt() {
     { value: "manuel", label: "Manuellement" },
     { value: "excel", label: "Importez depuis excel" },
   ];
+  
   const optionsSalle =
     listeSalle.length > 0
       ? listeSalle
