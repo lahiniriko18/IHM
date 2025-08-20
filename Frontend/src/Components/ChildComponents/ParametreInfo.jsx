@@ -169,7 +169,6 @@ function ParametreInfo() {
         throw new Error("Erreur code : " + response.status);
       }
       setlisteEtablissement(response.data);
-      setOriginalList(response.data);
     } catch (error) {
       if (error.response) {
         console.error("Erreur du serveur :", error.response.data);
@@ -294,9 +293,9 @@ function ParametreInfo() {
     }
     return pages;
   };
-  const versGeneral = () => {
-    navigate("/parametre");
-  };
+  // const versGeneral = () => {
+  //   navigate("/parametre");
+  // };
   const versInfo = () => {
     navigate("/parametre/info-etablisement");
   };
@@ -572,29 +571,29 @@ function ParametreInfo() {
         } fixed right-0 top-14 p-5 h-screen overflow-auto bg-white z-40 transition-all duration-700`}
       >
         <div className="flex flex-row gap-3 mb-3">
-          <button
+          {/* <button
             className=" hover:scale-105 text-gray-500"
             onClick={versGeneral}
           >
             Géneral
-          </button>
+          </button> */}
           <button
             className="font-bold hover:scale-105  text-bleu"
             onClick={versInfo}
           >
-            Informations
-          </button>
-          <button
-            className=" hover:scale-105 text-gray-500"
-            onClick={versSecurite}
-          >
-            Securité
+            Géneral
           </button>
           <button
             className=" hover:scale-105 text-gray-500"
             onClick={versProfile}
           >
             Profile
+          </button>
+          <button
+            className=" hover:scale-105 text-gray-500"
+            onClick={versSecurite}
+          >
+            Parametrage de compte
           </button>
         </div>
         <div className="flex justify-between w-full items-center mb-2">

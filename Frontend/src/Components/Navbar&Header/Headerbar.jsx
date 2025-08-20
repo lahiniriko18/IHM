@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useSidebar } from '../Context/SidebarContext';
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { useSidebar } from "../Context/SidebarContext";
 
 function Headerbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,15 +20,14 @@ function Headerbar() {
     "/professeur": "Professeur",
     "/mention": "Mentions",
     "/parcours": "Parcours",
-    "/parametre": "Paramètre",
+    "/parametre": "Configuration",
     "/utilisateur": "Utilisateur",
     "/rapport": "Rapport",
-
   };
 
   // Gérer les sous-routes comme "/salle/ajout"
-  const currentTitle = Object.keys(pageTitles).find(path =>
-    pathName === path || pathName.startsWith(path + "/")
+  const currentTitle = Object.keys(pageTitles).find(
+    (path) => pathName === path || pathName.startsWith(path + "/")
   );
   const lienActuel = pageTitles[currentTitle] || "Page";
 
@@ -39,14 +38,20 @@ function Headerbar() {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
-    <div className={`${isReduire ? "fixed top-0 right-0 left-16 h-14 flex justify-between items-center ps-5 pe-4 z-[51] transition-all duration-700" : "fixed top-0 right-0 left-52 h-14 flex justify-between items-center ps-5 pe-4 z-[51] transition-all duration-700"}`}>
+    <div
+      className={`${
+        isReduire
+          ? "fixed top-0 right-0 left-16 h-14 flex justify-between items-center ps-5 pe-4 z-[51] transition-all duration-700"
+          : "fixed top-0 right-0 left-52 h-14 flex justify-between items-center ps-5 pe-4 z-[51] transition-all duration-700"
+      }`}
+    >
       <h1 className="text-blue-600 font-extrabold text-2xl">{lienActuel}</h1>
 
       <div className="relative z-[52]" ref={dropdownRef}>
@@ -61,13 +66,22 @@ function Headerbar() {
         </div>
 
         <div
-          className={`absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-50 transition-all duration-200 transform ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-            }`}
+          className={`absolute right-0 mt-2 w-40 bg-white border rounded-md shadow-lg z-50 transition-all duration-200 transform ${
+            isOpen
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-95 pointer-events-none"
+          }`}
         >
           <ul className="text-sm text-gray-700">
-            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Profil</li>
-            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Paramètres</li>
-            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Déconnexion</li>
+            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              Profil
+            </li>
+            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              Paramètres
+            </li>
+            <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+              Déconnexion
+            </li>
           </ul>
         </div>
       </div>
