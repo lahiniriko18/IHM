@@ -1,13 +1,16 @@
 from datetime import datetime, timedelta
 
+from common.utils.date_utils import get_semaine_by_date
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db.models.functions import TruncDate
+from django.db.models import Count
 
-from ....edt.models import Edt
 from ....etablissements.models import NiveauParcours, Salle
 from ...models import Salle
 from ...serializers.serializerSalle import SalleSerializer, SalleStatSerializer
+from ....edt.models import Edt
 
 
 class SalleStatView(APIView):
@@ -47,8 +50,30 @@ class SalleNiveauParcoursView(APIView):
             salles = Salle.objects.filter(
                 edts__numParcours=np.numParcours, edts__numClasse__niveau=np.niveau
             ).distinct()
-            donnees=SalleSerializer(salles,many=True).data
+            donnees = SalleSerializer(salles, many=True).data
             return Response(donnees)
         return Response(
             {"error": "Niveau parcours introuvable !"}, status=status.HTTP_404_NOT_FOUND
         )
+
+
+class SalleOccupeParSemaineView(APIView):
+    def get(self, request):
+        today = datetime.now().date()
+        lundi, samedi = get_semaine_by_date(today.strftime("%d-%m-%Y"), 5)
+        edtEffetifs = (
+            Edt.objects.filter(date__range=[lundi, samedi])
+            .annotate(jour=TruncDate("date"))
+            .values("jour")
+            .annotate(nombre=Count("numSalle"))
+            .order_by("jour")
+        )
+        jourNombres = {edt["jour"]: edt["nombre"] for edt in edtEffetifs}
+        jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
+        donnees = []
+        for i in range(6):
+            jour = lundi + timedelta(days=i)
+            donnees.append(
+                {"jour": jours[i], "nombre": jourNombres.get(jour.date(), 0)}
+            )
+        return Response(donnees)

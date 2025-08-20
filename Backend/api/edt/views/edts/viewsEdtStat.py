@@ -1,9 +1,10 @@
-from common.services.serviceEdt import listeEdtParNumEdts
 from common.services.serviceEdtStat import get_edt_par_niveauParcours_date
-from common.utils.date_utils import get_semaine_by_date
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from datetime import datetime
+from django.db.models.functions import TruncMonth
+from django.db.models import Count
 
 from ...models import Edt
 
@@ -53,3 +54,34 @@ class EdtProfesseurSemaineView(APIView):
             {"error": "Date ou professeur introuvable"},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+class EdtEffectifMensuelleView(APIView):
+    def get(self, request):
+        today = datetime.now().date()
+        edtEffetifs = (
+            Edt.objects.filter(date__year=today.year)
+            .annotate(mois=TruncMonth("date"))
+            .values("mois")
+            .annotate(nombre=Count("numEdt"))
+            .order_by("mois")
+        )
+        moisNombres = {edt["mois"].month: edt["nombre"] for edt in edtEffetifs}
+        listeMois = [
+            "Janvier",
+            "Février",
+            "Mars",
+            "Avril",
+            "Mai",
+            "Juin",
+            "Juillet",
+            "Août",
+            "Septembre",
+            "Octobre",
+            "Novembre",
+            "Décembre",
+        ]
+        donnees = []
+        for i, m in enumerate(listeMois):
+            donnees.append({"mois": m, "nombre": moisNombres.get(i + 1, 0)})
+        return Response(donnees)

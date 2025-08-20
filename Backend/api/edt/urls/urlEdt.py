@@ -11,6 +11,7 @@ from ..views.edts.viewsEdtStat import (
     EdtNiveauSemaineView,
     EdtSemaineView,
     EdtProfesseurSemaineView,
+    EdtEffectifMensuelleView,
 )
 from ..views.edts.viewsModele import ModeleExcelView
 
@@ -31,4 +32,5 @@ urlpatterns = [
     path("semaine/", EdtSemaineView.as_view()),
     path("niveau-semaine/", EdtNiveauSemaineView.as_view()),
     path("professeur-semaine/", EdtProfesseurSemaineView.as_view()),
+    path("effectif-mensuelle/", EdtEffectifMensuelleView.as_view()),
 ]

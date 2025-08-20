@@ -11,11 +11,11 @@ class EffectifMatiereParNiveauView(APIView):
     def get(self, request):
         matiereNiveau = (
             NiveauParcours.objects.annotate(
-                niveauParcours=Concat(
+                name=Concat(
                     F("niveau"), Value(" "), F("numParcours__codeParcours")
                 )
             )
-            .annotate(effectif=Count("posseders__numMatiere"))
-            .values("niveauParcours", "effectif")
+            .annotate(value=Count("posseders__numMatiere"))
+            .values("name", "value")
         )
         return Response(matiereNiveau)
