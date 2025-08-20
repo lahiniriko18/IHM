@@ -37,3 +37,19 @@ class EdtNiveauSemaineView(APIView):
         return Response(
             {"error": "Date ou niveau introuvable"}, status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class EdtProfesseurSemaineView(APIView):
+    def post(self, request):
+        dateStr = request.data.get("date")
+        numProfesseur = request.data.get("numProfesseur")
+        if dateStr and numProfesseur and isinstance(numProfesseur, int):
+            numNiveauParcours = Edt.objects.filter(
+                numProfesseur=numProfesseur
+            ).values_list("numParcours__niveauParcours__numNiveauParcours", flat=True)
+            donnees = get_edt_par_niveauParcours_date(dateStr, numNiveauParcours)
+            return Response({"donnee": donnees}, status=status.HTTP_200_OK)
+        return Response(
+            {"error": "Date ou professeur introuvable"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
