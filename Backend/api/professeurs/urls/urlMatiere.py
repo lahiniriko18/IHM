@@ -5,6 +5,7 @@ from ..views.matieres.viewsMatiereDetail import (
     MatiereDetailView,
     MatiereNiveauParcoursView,
 )
+from ..views.matieres.viewsMatiereStat import EffectifMatiereParNiveauView
 
 urlpatterns = [
     path("", MatiereView.as_view(), name="matiere"),
@@ -19,5 +20,9 @@ urlpatterns = [
         "niveau-parcours/<int:numNiveauParcours>",
         MatiereNiveauParcoursView.as_view(),
         name="matiere.niveauParcours",
+    ),
+    path(
+        "effectif-par-niveau/",
+        EffectifMatiereParNiveauView.as_view(),
     ),
 ]
