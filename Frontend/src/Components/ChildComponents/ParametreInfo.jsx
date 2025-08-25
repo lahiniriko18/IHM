@@ -10,7 +10,7 @@ function ParametreInfo() {
   const [isclicked, setIsclicked] = useState(false);
   const [isadd, setisadd] = useState(true);
   const [listeEtablissement, setlisteEtablissement] = useState([]);
-  const [originalList, setOriginalList] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [id, setId] = useState();
   const [preview, setPreview] = useState(null);
@@ -25,13 +25,13 @@ function ParametreInfo() {
     contact: "",
   });
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [search, setSearch] = useState("");
+
   const [error, setError] = useState({
     status: false,
     composant: "",
     message: "",
   });
-  const [color, setColor] = useState("#fff");
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
 

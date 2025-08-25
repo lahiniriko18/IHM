@@ -1,44 +1,346 @@
-import React, { useEffect, useState } from 'react'
-
-import Creatable from 'react-select/creatable';
-import { useNavigate } from 'react-router-dom';
-import { useSidebar } from '../Context/SidebarContext';
-import axios from 'axios';
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Creatable from "react-select/creatable";
+import { toast } from "react-toastify";
+import { useSidebar } from "../Context/SidebarContext";
 function Professeur() {
   const { isReduire } = useSidebar();
+  const navigate = useNavigate();
+
+  // ---------- State ----------
   const [numEtablissement, setNumEtablissement] = useState();
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState("");
   const [listeProfesseur, setlisteProfesseur] = useState([]);
-  const [preview, setPreview] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
   const [originalList, setOriginalList] = useState([]);
+  const [listeMatiere, setListeMatiere] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [id, setId] = useState()
-  const [listeMatiere, setListeMatiere] = useState([]);
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [id, setId] = useState();
+  const [isclicked, setIsclicked] = useState(false);
+  const [isadd, setisadd] = useState(true);
+
+  // Upload/preview image
+  const [preview, setPreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileName, setFileName] = useState("Aucun fichier choisi");
   const [isphotosDeleted, setIsphotosDeleted] = useState(false);
-  const [error, setError] = useState({ status: false, composant: "", message: "" })
+
+  // Delete modal / selection
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isDeleteByCheckBox, setDeleteByChekbox] = useState(true);
+  const [checkedRows, setCheckedRows] = useState([]);
+
+  // Pagination
+  const nombreElemParPage = 8;
+  const [pageActuel, setPageActuel] = useState(1);
+
+  // Erreurs formulaire
+  const [error, setError] = useState({
+    status: false,
+    composant: "",
+    message: "",
+  });
+
+  // Données formulaire
   const [dataProfesseur, setdataProfesseur] = useState({
     nomProfesseur: "",
     prenomProfesseur: "",
     nomCourant: "",
     grade: "",
     sexe: "",
-    photos: "",
+    photos: null,
     contact: "",
     adresse: "",
     email: "",
     numEtablissement: null,
-    matieres: []
-  })
-  const [isDeleteByCheckBox, setDeleteByChekbox] = useState(true);
-  const [checkedRows, setCheckedRows] = useState([]);
-  const allChecked = checkedRows.length === listeProfesseur.length && listeProfesseur.length > 0;
+    matieres: [],
+  });
 
-  const handleCheck = (id) => {
+  const allChecked =
+    checkedRows.length === listeProfesseur.length && listeProfesseur.length > 0;
+
+  // ---------- Helpers ----------
+  const renameFile = (file) => {
+    const extension = file.name.split(".").pop();
+    const newFileName = `image_${Date.now()}.${extension}`;
+    return new File([file], newFileName, { type: file.type });
+  };
+
+  const buildFormData = (payload, file, deleted) => {
+    const formData = new FormData();
+
+    // Champs simples
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key !== "matieres" && key !== "photos") {
+        formData.append(key, value ?? "");
+      }
+    });
+
+    // Matieres[]
+    if (Array.isArray(payload.matieres)) {
+      payload.matieres.forEach((val) => {
+        formData.append("matieres[]", val);
+      });
+    }
+
+    // Image selon les 3 cas
+    if (file) {
+      console.log("oui");
+      const renamedFile = renameFile(file);
+      formData.append("photos", renamedFile); // Cas 1: nouvelle image
+    } else if (deleted) {
+      formData.append("photos", ""); // Cas 2: image supprimée → null
+    }
+    // Cas 3: pas de changement → NE RIEN ENVOYER pour `photos`
+    return formData;
+  };
+
+  // ---------- API ----------
+  const getDataMatiere = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/matiere/");
+      if (res.status !== 200) throw new Error("Erreur code : " + res.status);
+      setListeMatiere(res.data);
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getDataOneProf = async (pid) => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get(
+        `http://127.0.0.1:8000/api/professeur/detail/${pid}`
+      );
+      if (res.status !== 200) throw new Error("Erreur code : " + res.status);
+      return res.data;
+    } catch (e) {
+      toast.error(e.message);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getNumEtablissement = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/etablissement/");
+      if (res.status !== 200) throw new Error("Erreur code : " + res.status);
+      if (res.data.length > 0) {
+        setNumEtablissement(parseInt(res.data[0].numEtablissement));
+      } else {
+        setError({
+          status: true,
+          composant: "Etablissement",
+          message: "Aucun établissement trouvé !",
+        });
+      }
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getData = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get("http://127.0.0.1:8000/api/professeur/");
+      if (res.status !== 200) throw new Error("Erreur code : " + res.status);
+      setlisteProfesseur(res.data);
+      setOriginalList(res.data);
+    } catch (e) {
+      if (e.response) {
+        toast.error("Erreur du serveur :", e.response.data);
+      } else {
+        toast.error("Erreur inconnue :", e.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendData = async (payload) => {
+    try {
+      const formData = buildFormData(payload, selectedFile, isphotosDeleted);
+      const res = await axios.post(
+        "http://127.0.0.1:8000/api/professeur/ajouter/",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      if (res.status !== 201) throw new Error("Erreur " + res.status);
+      await getData();
+      toast.success("Professeur enregistré !");
+    } catch (e) {
+      toast.error("Erreur:", e.response?.data || e.message);
+    }
+  };
+
+  const putData = async (payload) => {
+    try {
+      const formData = buildFormData(payload, selectedFile, isphotosDeleted);
+      const res = await axios.put(
+        `http://127.0.0.1:8000/api/professeur/modifier/${id}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      if (res.status !== 200) throw new Error("Erreur code : " + res.status);
+      toast.success("✅ Professeur modifié !");
+      await getData();
+    } catch (e) {
+      if (e.response) {
+        toast.error(
+          `❌ Erreur serveur : ${e.response.data.message || "Bad request"}`
+        );
+      } else {
+        toast.error("⚠️ Erreur inconnue : " + e.message);
+      }
+    }
+  };
+
+  const removeProfesseur = async (pid) => {
+    try {
+      const res = await axios.delete(
+        `http://127.0.0.1:8000/api/professeur/supprimer/${parseInt(pid)}`
+      );
+      if (res.status !== 200 && res.status !== 204) {
+        throw new Error(`Erreur lors de la suppression : Code ${res.status}`);
+      }
+      toast.success(`Professeur ${pid} supprimé avec succès`);
+      await getData();
+    } catch (e) {
+      toast.error("Erreur:", e.message);
+    }
+  };
+
+  const removeProfesseurByCkeckBox = async () => {
+    const formData = new FormData();
+    if (Array.isArray(checkedRows)) {
+      checkedRows.forEach((val) =>
+        formData.append("numProfesseurs[]", parseInt(val))
+      );
+    }
+    try {
+      const res = await axios.post(
+        "http://127.0.0.1:8000/api/professeur/supprimer/liste/",
+        formData
+      );
+      if (res.status !== 200 && res.status !== 204) {
+        throw new Error(`Erreur lors de la suppression : Code ${res.status}`);
+      }
+      toast.success(`Professeurs supprimés avec succès`);
+      await getData();
+      setCheckedRows([]); // reset
+    } catch (e) {
+      toast.error("Erreur:", e.response?.data?.status || e.message);
+    }
+  };
+
+  // ---------- Effects ----------
+  useEffect(() => {
+    getData();
+    getNumEtablissement();
+    getDataMatiere();
+  }, []);
+
+  useEffect(() => {
+    if (numEtablissement) {
+      setdataProfesseur((prev) => ({
+        ...prev,
+        numEtablissement: parseInt(numEtablissement),
+      }));
+    }
+  }, [numEtablissement]);
+
+  // ---------- Options Select ----------
+  const optionsMatiere = listeMatiere
+    .slice()
+    .sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere))
+    .map((Matiere) => ({
+      value: Matiere.numMatiere,
+      label: Matiere.nomMatiere
+        ? Matiere.nomMatiere
+        : Matiere.codeMatiere
+        ? `(${Matiere.codeMatiere})`
+        : "",
+    }));
+
+  // ---------- Validation ----------
+  const validateForm = () => {
+    let isValid = true;
+
+    const contactRegex =
+      /^(\+261\s?(32|33|34|37|38)\s?\d{2}\s?\d{3}\s?\d{2}|(032|033|034|037|038)\s?\d{2}\s?\d{3}\s?\d{2})$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (dataProfesseur.nomProfesseur.trim() === "") {
+      setError({
+        composant: "nomProfesseur",
+        status: true,
+        message: "Nom ne peut pas être vide !",
+      });
+      isValid = false;
+    } else if (dataProfesseur.adresse.trim() === "") {
+      setError({
+        composant: "adresse",
+        status: true,
+        message: "L'adresse ne peut pas être vide !",
+      });
+      isValid = false;
+    } else if (!contactRegex.test(dataProfesseur.contact.trim())) {
+      setError({
+        composant: "contact",
+        status: true,
+        message: "Le contact doit respecter le format requis !",
+      });
+      isValid = false;
+    } else if (!emailRegex.test(dataProfesseur.email.trim())) {
+      setError({
+        composant: "email",
+        status: true,
+        message: "L'email doit être valide !",
+      });
+      isValid = false;
+    } else {
+      setError({ status: false, composant: "", message: "" });
+    }
+
+    return isValid;
+  };
+
+  // ---------- Handlers ----------
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+
+    if (value.trim() !== "") {
+      const v = value.toLowerCase();
+      const filtered = originalList.filter(
+        (p) =>
+          (p.nomProfesseur || "").toLowerCase().includes(v) ||
+          (p.prenomProfesseur || "").toLowerCase().includes(v) ||
+          (p.adresse || "").toLowerCase().includes(v) ||
+          (p.contact || "").toLowerCase().includes(v) ||
+          (p.email || "").toLowerCase().includes(v) ||
+          (p.numProfesseur || "").toString().includes(value)
+      );
+      setlisteProfesseur(filtered);
+      setPageActuel(1);
+    } else {
+      setlisteProfesseur(originalList);
+    }
+  };
+
+  const versDetails = (pid) => navigate(`/professeur/detail/${pid}`);
+
+  const handleCheck = (pid) => {
     setCheckedRows((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(pid) ? prev.filter((i) => i !== pid) : [...prev, pid]
     );
   };
 
@@ -49,334 +351,69 @@ function Professeur() {
       setCheckedRows(listeProfesseur.map((item) => item.numProfesseur));
     }
   };
+
   const handleDeletephotos = () => {
     setSelectedFile(null);
-
-    setIsphotosDeleted(true);
     setPreview(null);
-
-    document.getElementById('file-name').textContent = "Aucun fichier choisi";
+    setIsphotosDeleted(true);
+    setFileName("Aucun fichier choisi");
   };
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
     if (file) {
       setPreview(URL.createObjectURL(file));
       setSelectedFile(file);
-      document.getElementById('file-name').textContent = file.name;
-    }
-  };
-  const renameFile = (file) => {
-    const extension = file.name.split('.').pop();
-    const newFileName = `image_${Date.now()}.${extension}`;
-    return new File([file], newFileName, { type: file.type });
-  };
-  const getDataMatiere = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/api/matiere/");
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status);
-      }
-      setListeMatiere(response.data);
-      // ✅ Mise à jour ici
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setIsLoading(false);
-      console.log("Le tache est terminé");
-    }
-  };
-  const getDataOneProf = async (id) => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/professeur/detail/${id}`);
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status);
-      }
-      return response.data;
-    } catch (error) {
-      console.error(error.message);
-      return null;
-    } finally {
-      setIsLoading(false);
-      console.log("Le tache est terminé");
-    }
-  };
-  const getNumEtablissement = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/api/etablissement/");
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status);
-      }
-      if (response.data.length > 0) {
-        setNumEtablissement(parseInt(response.data[0].numEtablissement));
-      } else {
-        setError({ status: true, composant: "Etablissement", message: "Aucun établissement trouvé !" });
-      }
-    } catch (error) {
-      console.error(error.message);
-    } finally {
-      setIsLoading(false);
-
-    }
-  };
-  const sendData = async (dataProfesseur) => {
-    const formData = new FormData();
-
-    Object.entries(dataProfesseur).forEach(([key, value]) => {
-      if (key !== "matieres") {
-        formData.append(key, value);
-      }
-    });
-    if (Array.isArray(dataProfesseur.matieres)) {
-      dataProfesseur.matieres.forEach((val) => {
-        formData.append('matieres[]', val);
-      });
-    }
-
-    if (selectedFile) {
-      const renamedFile = renameFile(selectedFile);
-      formData.append('photos', renamedFile);
-    }
-
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/api/professeur/ajouter/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      });
-
-      if (response.status !== 201) throw new Error("Erreur " + response.status);
-      getData()
-      console.log("Établissement enregistré !");
-    } catch (error) {
-      console.error("Erreur:", error.response?.data || error.message);
-    }
-  }
-  const removeProfesseur = async (id) => {
-    try {
-      const response = await axios.delete(`http://127.0.0.1:8000/api/professeur/supprimer/${parseInt(id)}`)
-      if (response.status !== 200 && response.status !== 204) {
-        throw new Error(`Erreur lors de la suppression : Code ${response.status}`)
-      }
-      console.log(`professeur ${id} supprimé avec succès`);
-      getData()
-    } catch (error) {
-      console.log("Erreur:", error.message)
-    }
-  }
-  const removeProfesseurByCkeckBox = async () => {
-    const formData = new FormData();
-    if (Array.isArray(checkedRows)) {
-      checkedRows.forEach((val) => {
-        formData.append('numProfesseurs[]', parseInt(val));
-      });
-    }
-
-    try {
-      const response = await axios.post("http://127.0.0.1:8000/api/professeur/supprimer/liste/", formData);
-
-      if (response.status !== 200 && response.status !== 204) {
-        throw new Error(`Erreur lors de la suppression : Code ${response.status}`);
-      }
-
-      console.log(`Professeurs supprimés avec succès`);
-      getData();
-      setCheckedRows([]) // Recharge la liste après suppression
-    } catch (error) {
-      console.error("Erreur:", error.response.data?.status || error.message);
+      setIsphotosDeleted(false);
+      setFileName(file.name);
     }
   };
 
-  const putData = async (dataProfesseur) => {
-    const formData = new FormData();
-
-    Object.entries(dataProfesseur).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
-    if (Array.isArray(dataProfesseur.matieres)) {
-      dataProfesseur.matieres.forEach((val) => {
-        formData.append('matieres[]', val);
-      });
-    }
-    if (selectedFile) {
-      // Cas 3 : Nouveau photos sélectionné
-      const renamedFile = renameFile(selectedFile);
-      formData.append('photos', renamedFile);
-    } else if (isphotosDeleted) {
-      // Cas 2 : Utilisateur a supprimé le photos
-      formData.append('photos', '');
-    } else {
-      // Cas 1 : Aucun changement -> garder l'ancien chemin
-      formData.append('photos', `${dataProfesseur.photos}`);
-    }
-    try {
-      const response = await axios.put(`http://127.0.0.1:8000/api/professeur/modifier/${id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
-      })
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status)
-      }
-      console.log("ajouter")
-      getData()
-    } catch (error) {
-      if (error.response) {
-        console.error("Erreur du serveur :", error.response.data)
-      } else {
-        console.error("Erreur inconnue :", error.message)
-      }
-    } 
-  }
-  const getData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/api/professeur/");
-      if (response.status !== 200) {
-        throw new Error('Erreur code : ' + response.status);
-      }
-      setlisteProfesseur(response.data);
-      setOriginalList(response.data);
-
-    } catch (error) {
-      if (error.response) {
-        console.error("Erreur du serveur :", error.response.data)
-      } else {
-        console.error("Erreur inconnue :", error.message)
-      }
-    } finally {
-      setIsLoading(false);
-      ;
-    }
-  };
   const editProfesseur = async (numProfesseur) => {
-    const selectedprofesseur = await getDataOneProf(numProfesseur);
-    if (selectedprofesseur) {
-      setId(selectedprofesseur.numProfesseur);
-      if (selectedprofesseur.photos) {
-        setPreview(`${selectedprofesseur.photos}`);
-      } else {
-        setPreview(null);
-      }
-      setisadd(false);
-      setIsclicked(true);
+    const p = await getDataOneProf(numProfesseur);
+    if (!p) return;
 
-      setdataProfesseur({
-        nomProfesseur: selectedprofesseur.nomProfesseur || "",
-        prenomProfesseur: selectedprofesseur.prenomProfesseur || "",
-        nomCourant: selectedprofesseur.nomCourant || "",
-        grade: selectedprofesseur.grade || "",
-        sexe: selectedprofesseur.sexe || "",
-        photos: selectedprofesseur.photos || "",
-        contact: selectedprofesseur.contact || "",
-        adresse: selectedprofesseur.adresse || "",
-        email: selectedprofesseur.email || "",
-        numEtablissement: selectedprofesseur.numEtablissement || null,
-        matieres: Array.isArray(selectedprofesseur.matieres)
-          ? selectedprofesseur.matieres.map((m) =>
+    setId(p.numProfesseur);
+    setPreview(p.photos ? `${p.photos}` : null);
+    setSelectedFile(null);
+    setFileName("Aucun fichier choisi");
+    setIsphotosDeleted(false);
+
+    setisadd(false);
+    setIsclicked(true);
+
+    setdataProfesseur({
+      nomProfesseur: p.nomProfesseur || "",
+      prenomProfesseur: p.prenomProfesseur || "",
+      nomCourant: p.nomCourant || "",
+      grade: p.grade || "",
+      sexe: p.sexe || "",
+      photos: p.photos || "",
+      contact: p.contact || "",
+      adresse: p.adresse || "",
+      email: p.email || "",
+      numEtablissement: p.numEtablissement || null,
+      matieres: Array.isArray(p.matieres)
+        ? p.matieres.map((m) =>
             typeof m === "object" && m !== null
               ? m.numMatiere || m.value || ""
               : m
           )
-          : [],
-      });
-    }
+        : [],
+    });
   };
 
-  const confirmerSuppression = (id) => {
-    setId(id);
+  const confirmerSuppression = (pid) => {
+    setId(pid);
     setIsConfirmModalOpen(true);
-  }
-  useEffect(() => {
-    if (numEtablissement) {
-      setdataProfesseur((prev) => ({
-        ...prev,
-        numEtablissement: parseInt(numEtablissement),
-      }));
-    }
-  }, [numEtablissement]);
-  useEffect(() => {
-    getData()
-    getNumEtablissement()
-    getDataMatiere();
-
-  }, [])
-  const optionsMatiere = listeMatiere.sort((a, b) => a.nomMatiere.localeCompare(b.nomMatiere))
-    .map((Matiere) => ({
-      value: Matiere.numMatiere,
-      label: Matiere.nomMatiere ? Matiere.nomMatiere : (Matiere.codeMatiere ? ` (${Matiere.codeMatiere})` : ""),
-    }));
-
-  const validateForm = () => {
-    let isValid = true;
-
-    // Expression régulière pour valider le contact (avec ou sans espaces)
-    const contactRegex = /^(\+261\s?(32|33|34|37|38)\s?\d{2}\s?\d{3}\s?\d{2}|(032|033|034|037|038)\s?\d{2}\s?\d{3}\s?\d{2})$/;
-    // Expression régulière pour valider l'email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    // Vérification du nomProfesseur de l'établissement
-    if (dataProfesseur.nomProfesseur.trim() === "") {
-      setError({ composant: "nomProfesseur", status: true, message: "Nom ne peut pas être vide !" });
-      isValid = false;
-    }
-    // Vérification de l'adresse
-    else if (dataProfesseur.adresse.trim() === "") {
-      setError({ composant: "adresse", status: true, message: "L'adresse ne peut pas être vide !" });
-      isValid = false;
-    }
-    // Vérification du contact (doit correspondre au format spécifié)
-    else if (!contactRegex.test(dataProfesseur.contact.trim())) {
-      setError({ composant: "contact", status: true, message: "Le contact doit respecter le format requis !" });
-      isValid = false;
-    }
-    // Vérification de l'email (doit être un email valide)
-    else if (!emailRegex.test(dataProfesseur.email.trim())) {
-      setError({ composant: "email", status: true, message: "L'email doit être valide !" });
-      isValid = false;
-    }
-    // Réinitialisation des erreurs si tout est valide
-    else {
-      setError({ status: false, composant: "", message: "" });
-    }
-
-    return isValid;
   };
-  function handleSearch(e) {
-    const value = e.target.value;
-    setSearch(value);
 
-    if (value.trim() !== "") {
-      const filtered = originalList.filter((Professeur) =>
-        Professeur.nomProfesseur.toLowerCase().includes(value.toLowerCase()) ||
-        Professeur.prenomProfesseur.toLowerCase().includes(value.toLowerCase()) ||
-        // Professeur.nomCourant.toLowerCase().includes(value.toLowerCase()) ||
-        Professeur.adresse.toLowerCase().includes(value.toLowerCase()) ||
-        // Professeur.grade.toLowerCase().includes(value.toLowerCase()) ||
-        Professeur.contact.toLowerCase().includes(value.toLowerCase()) ||
-        // Professeur.sexe.toLowerCase().includes(value.toLowerCase()) ||
-        Professeur.email.toLowerCase().includes(value.toLowerCase()) ||
-        Professeur.numProfesseur.toString().includes(value)
-      );
-      setlisteProfesseur(filtered);
-    } else {
-      setlisteProfesseur(originalList);
-    }
-  }
-  const navigate = useNavigate();
-  const versDetails = (id) => {
-    navigate(`/professeur/detail/${id}`)
-  }
-  const [isclicked, setIsclicked] = useState(false)
-  const [isadd, setisadd] = useState(true)
-  const nombreElemParPage = 8;
-  const [pageActuel, setPageActuel] = useState(1);
-
+  // ---------- Pagination ----------
   const totalPages = Math.ceil(listeProfesseur.length / nombreElemParPage);
-  const currentData = listeProfesseur.slice((pageActuel - 1) * nombreElemParPage, pageActuel * nombreElemParPage);
+  const currentData = listeProfesseur.slice(
+    (pageActuel - 1) * nombreElemParPage,
+    pageActuel * nombreElemParPage
+  );
 
   const getPageNumbers = () => {
     const pages = [];
@@ -384,202 +421,291 @@ function Professeur() {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
       if (pageActuel <= 3) {
-        pages.push(1, 2, 3, '...', totalPages);
+        pages.push(1, 2, 3, "...", totalPages);
       } else if (pageActuel >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 2, totalPages - 1, totalPages);
+        pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
       } else {
-        pages.push(1, '...', pageActuel, '...', totalPages);
+        pages.push(1, "...", pageActuel, "...", totalPages);
       }
     }
     return pages;
-  }
+  };
 
+  // ---------- Render ----------
   return (
     <>
-      {/* modal */}
-      {(isclicked) ? (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center"
-          tabIndex="-1"
-        >
-          <div className="bg-white  w-[100%] sm:w-[90%] md:w-[70%] lg:w-[60%] max-h-[95%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
+      {/* Modal add/edit */}
+      {isclicked && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center">
+          <div className="bg-white w-[100%] sm:w-[90%] md:w-[70%] lg:w-[60%] max-h-[95%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
             <div className="flex justify-between items-center w-full">
-              {isadd ? (<h1 className="text-blue-600 text-xl font-bold">Nouvelle Professeur</h1>) : (<h1 className="text-blue-600 text-xl font-bold">Modification d'une Professeur</h1>)}
+              <h1 className="text-blue-600 text-xl font-bold">
+                {isadd
+                  ? "Nouvelle Professeur"
+                  : "Modification d'une Professeur"}
+              </h1>
               <img
                 src="/Icons/annuler.png"
                 alt="Quitter"
                 className="w-6 h-6 cursor-pointer"
                 onClick={() => {
                   setIsclicked(false);
-                  setError({ ...error, status: false })
-                  setdataProfesseur({ nomProfesseur: "", prenomProfesseur: "", adresse: "", contact: "", email: "", nomCourant: "", photos: "", grade: "", sexe: "" })
-                  setSelectedFile(null)
-                  setPreview(null)
+                  setError({ ...error, status: false });
+                  setdataProfesseur({
+                    nomProfesseur: "",
+                    prenomProfesseur: "",
+                    adresse: "",
+                    contact: "",
+                    email: "",
+                    nomCourant: "",
+                    photos: "",
+                    grade: "",
+                    sexe: "",
+                    matieres: [],
+                  });
+                  setSelectedFile(null);
+                  setPreview(null);
+                  setIsphotosDeleted(false);
+                  setFileName("Aucun fichier choisi");
                 }}
               />
             </div>
-            <div className="flex flex-row gap-5 h-[95%]">
-              {/* left section */}
-              <div className='flex gap-3 flex-col '>
-                <div className="flex flex-row w-full gap-2 items-center justify-between">
-                  <div className="flex flex-col w-full">
-                    <label className="font-semibold text-sm mb-1">Nom professeur</label>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Left: form */}
+              <div className="flex flex-col gap-3">
+                {/* Row 1 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="flex flex-col">
+                    <label className="font-semibold text-sm mb-1">
+                      Nom professeur
+                    </label>
                     <input
                       type="text"
                       value={dataProfesseur.nomProfesseur || ""}
-                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, nomProfesseur: e.target.value })}
+                      onChange={(e) =>
+                        setdataProfesseur({
+                          ...dataProfesseur,
+                          nomProfesseur: e.target.value,
+                        })
+                      }
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
-                    {
-                      (error.status && error.composant === "nomProfesseur") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                    }
+                    {error.status && error.composant === "nomProfesseur" && (
+                      <p className="text-red-600 text-sm">{error.message}</p>
+                    )}
                   </div>
 
-                  <div className="flex flex-col w-full">
-                    <label>Prénom</label>
+                  <div className="flex flex-col">
+                    <label className="font-semibold text-sm mb-1">Prénom</label>
                     <input
                       type="text"
                       value={dataProfesseur.prenomProfesseur || ""}
-                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, prenomProfesseur: e.target.value })}
+                      onChange={(e) =>
+                        setdataProfesseur({
+                          ...dataProfesseur,
+                          prenomProfesseur: e.target.value,
+                        })
+                      }
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
-
+                    {error.status && error.composant === "prenomProfesseur" && (
+                      <p className="text-red-600 text-sm">{error.message}</p>
+                    )}
                   </div>
-                  {
-                    (error.status && error.composant === "prenomProfesseur") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                  }
                 </div>
 
-                <div className="flex flex-row gap-2">
-                  <div className="flex flex-col w-full">
-                    <label className="font-semibold text-sm mb-1">Grade :</label>
+                {/* Row 2 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="flex flex-col">
+                    <label className="font-semibold text-sm mb-1">Grade</label>
                     <input
                       type="text"
                       value={dataProfesseur.grade || ""}
-                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, grade: e.target.value })}
+                      onChange={(e) =>
+                        setdataProfesseur({
+                          ...dataProfesseur,
+                          grade: e.target.value,
+                        })
+                      }
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
-                    {
-                      (error.status && error.composant === "grade") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                    }
+                    {error.status && error.composant === "grade" && (
+                      <p className="text-red-600 text-sm">{error.message}</p>
+                    )}
                   </div>
-                  <div className="flex flex-col w-full">
-                    <label className="font-semibold text-sm mb-1">Adresse :</label>
+
+                  <div className="flex flex-col">
+                    <label className="font-semibold text-sm mb-1">
+                      Adresse
+                    </label>
                     <input
                       type="text"
                       value={dataProfesseur.adresse || ""}
-                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, adresse: e.target.value })}
+                      onChange={(e) =>
+                        setdataProfesseur({
+                          ...dataProfesseur,
+                          adresse: e.target.value,
+                        })
+                      }
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
-                    {
-                      (error.status && error.composant === "adresse") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                    }
+                    {error.status && error.composant === "adresse" && (
+                      <p className="text-red-600 text-sm">{error.message}</p>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex flex-row w-full gap-2 items-center justify-between">
-                  <div className="flex flex-col w-full">
-                    <label className="font-semibold text-sm mb-1">Nom courant :</label>
+                {/* Row 3 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="flex flex-col">
+                    <label className="font-semibold text-sm mb-1">
+                      Nom courant
+                    </label>
                     <input
                       type="text"
                       value={dataProfesseur.nomCourant || ""}
-                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, nomCourant: e.target.value })}
-                      className="border border-gray-300 leading-9 px-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                      onChange={(e) =>
+                        setdataProfesseur({
+                          ...dataProfesseur,
+                          nomCourant: e.target.value,
+                        })
+                      }
+                      className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
-                    {
-                      (error.status && error.composant === "nomCourant") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                    }
+                    {error.status && error.composant === "nomCourant" && (
+                      <p className="text-red-600 text-sm">{error.message}</p>
+                    )}
                   </div>
 
-                  <div className="flex flex-col w-full">
+                  <div className="flex flex-col">
                     <label className="font-semibold text-sm mb-1">Sexe</label>
                     <Creatable
                       isClearable
                       placeholder="Sexe"
                       options={[
-                        { value: 'Masculin', label: 'Masculin' },
-                        { value: 'Féminin', label: 'Féminin' },
+                        { value: "Masculin", label: "Masculin" },
+                        { value: "Féminin", label: "Féminin" },
                       ]}
-                      value={dataProfesseur.sexe ? { label: dataProfesseur.sexe, value: dataProfesseur.sexe } : null}
-                      onChange={(selectedOption) =>
-                        setdataProfesseur({ ...dataProfesseur, sexe: selectedOption ? selectedOption.value : "" })
+                      value={
+                        dataProfesseur.sexe
+                          ? {
+                              label: dataProfesseur.sexe,
+                              value: dataProfesseur.sexe,
+                            }
+                          : null
+                      }
+                      onChange={(opt) =>
+                        setdataProfesseur({
+                          ...dataProfesseur,
+                          sexe: opt ? opt.value : "",
+                        })
                       }
                     />
-
                   </div>
                 </div>
-                <div className="flex flex-col w-full">
-                  <label className="font-semibold text-sm mb-1">Matiere</label>
+
+                {/* Row 4: Matières */}
+                <div className="flex flex-col">
+                  <label className="font-semibold text-sm mb-1">Matière</label>
                   <Creatable
                     isClearable
                     isMulti
                     isValidNewOption={() => false}
-                    placeholder="Choisir le matiere"
+                    placeholder="Choisir la matière"
                     options={optionsMatiere}
-                    onChange={(selectedOption) => {
+                    onChange={(opts) => {
                       setdataProfesseur((prev) => ({
                         ...prev,
-                        matieres: Array.isArray(selectedOption)
-                          ? selectedOption.map((opt) => opt.value)
-                          : []
+                        matieres: Array.isArray(opts)
+                          ? opts.map((o) => o.value)
+                          : [],
                       }));
                     }}
-                    value={optionsMatiere.filter((option) =>
-                      (dataProfesseur.matieres || []).includes(option.value)
+                    value={optionsMatiere.filter((o) =>
+                      (dataProfesseur.matieres || []).includes(o.value)
                     )}
                     className="text-sm"
                   />
-
                 </div>
-                <div className="flex flex-row w-full gap-2 items-center justify-between">
 
-                  <div className="flex flex-col w-full">
+                {/* Row 5 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="flex flex-col">
                     <label className="font-semibold text-sm mb-1">Email</label>
                     <input
                       type="text"
                       value={dataProfesseur.email || ""}
-                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, email: e.target.value })}
+                      onChange={(e) =>
+                        setdataProfesseur({
+                          ...dataProfesseur,
+                          email: e.target.value,
+                        })
+                      }
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
-                    {
-                      (error.status && error.composant === "email") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                    }
+                    {error.status && error.composant === "email" && (
+                      <p className="text-red-600 text-sm">{error.message}</p>
+                    )}
                   </div>
 
-
-                  <div className="flex flex-col w-full">
-                    <label className="font-semibold text-sm mb-1">Contact</label>
+                  <div className="flex flex-col">
+                    <label className="font-semibold text-sm mb-1">
+                      Contact
+                    </label>
                     <input
                       type="text"
                       value={dataProfesseur.contact || ""}
-                      onChange={(e) => setdataProfesseur({ ...dataProfesseur, contact: e.target.value })}
+                      onChange={(e) =>
+                        setdataProfesseur({
+                          ...dataProfesseur,
+                          contact: e.target.value,
+                        })
+                      }
                       className="border border-gray-300 p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
-                    {
-                      (error.status && error.composant === "contact") && (<p className='text-red-600 text-sm'>{error.message}</p>)
-                    }
+                    {error.status && error.composant === "contact" && (
+                      <p className="text-red-600 text-sm">{error.message}</p>
+                    )}
                   </div>
-
                 </div>
-
               </div>
-              {/*right section */}
-              <div className='w-[50%] flex justify-center items-center flex-col gap-2'>
+
+              {/* Right: photo */}
+              <div className="w-full lg:w-[90%] mx-auto flex justify-center items-center flex-col gap-3">
                 <div className="w-40 h-40 rounded-full bg-gray-200 relative">
-                  {preview && <img src="/Icons/supprimer.png" alt="preview" className="absolute top-0 left-36 w-7 cursor-pointer hover:scale-105 duration-200" onClick={handleDeletephotos} />}
-                  {preview && <img src={preview} alt="preview" className="w-40 h-40 rounded-full object-cover" />}
+                  {preview && (
+                    <img
+                      src="/Icons/supprimer.png"
+                      alt="Supprimer"
+                      title="Supprimer la photo"
+                      className="absolute top-0 left-36 w-7 cursor-pointer hover:scale-105 duration-200"
+                      onClick={handleDeletephotos}
+                    />
+                  )}
+                  {preview && (
+                    <img
+                      src={preview}
+                      alt="preview"
+                      className="w-40 h-40 rounded-full object-cover"
+                    />
+                  )}
                 </div>
+
                 <div className="flex flex-col justify-center w-full">
-                  <label className="font-semibold text-sm mb-1">Choisissez une photo : </label>
+                  <label className="font-semibold text-sm mb-1">
+                    Choisissez une photo :
+                  </label>
 
                   <div className="flex items-center justify-between gap-4">
-
-                    <span id="file-name" className="text-sm border px-4 py-2 w-full rounded text-gray-600">Aucun fichier choisi</span>
+                    <span className="text-sm border px-4 py-2 w-full rounded text-gray-600">
+                      {fileName}
+                    </span>
                     <label
                       htmlFor="fichier"
-                      className="cursor-pointer text-white px-4 py-2 rounded text-sm"
+                      className="cursor-pointer text-white px-3 py-2 rounded text-sm  transition"
                     >
-                      <img src="/Icons/dossier.png" alt="" />
+                      <img src="/Icons/dossier.png" alt="Parcourir" />
                     </label>
                   </div>
 
@@ -594,35 +720,48 @@ function Professeur() {
               </div>
             </div>
 
-            <input type="hidden" name="id" value={id || ""} onChange={(e) => setId(e.target.value)} />
+            <input
+              type="hidden"
+              name="id"
+              value={id || ""}
+              onChange={(e) => setId(e.target.value)}
+            />
+
             <div className="w-full flex justify-center">
               <button
                 className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
                 onClick={() => {
-                  if (validateForm()) {
-                    if (isadd) {
-                      const updateProfesseur = {
-                        ...dataProfesseur,
-                        numEtablissement: numEtablissement
-                      };
-                      sendData(updateProfesseur);
-                      console.log("Le données sont : ", dataProfesseur, "le type de données du matiere", typeof dataProfesseur.matieres[0])
-                      setSelectedFile(null)
-                      setIsclicked(false);
-                      setPreview(null)
-                    } else {
-                      const updateProfesseur = {
-                        ...dataProfesseur,
-                        numEtablissement: numEtablissement
-                      };
-                      putData(updateProfesseur);
-                      setSelectedFile(null)
-                      setIsclicked(false);
-                      setPreview(null)
-                    }
-                    setdataProfesseur({ nomProfesseur: "", prenomProfesseur: "", adresse: "", contact: "", email: "", nomCourant: "", photos: "", grade: "", sexe: "" })
+                  if (!validateForm()) return;
 
+                  const updatePayload = {
+                    ...dataProfesseur,
+                    numEtablissement: numEtablissement,
+                  };
+
+                  if (isadd) {
+                    sendData(updatePayload);
+                  } else {
+                    putData(updatePayload);
                   }
+
+                  // Reset contrôlé après action
+                  setSelectedFile(null);
+                  setPreview(null);
+                  setIsphotosDeleted(false);
+                  setFileName("Aucun fichier choisi");
+                  setIsclicked(false);
+                  setdataProfesseur({
+                    nomProfesseur: "",
+                    prenomProfesseur: "",
+                    adresse: "",
+                    contact: "",
+                    email: "",
+                    nomCourant: "",
+                    photos: "",
+                    grade: "",
+                    sexe: "",
+                    matieres: [],
+                  });
                 }}
               >
                 {isadd ? "AJOUTER" : "MODIFIER"}
@@ -630,199 +769,297 @@ function Professeur() {
             </div>
           </div>
         </div>
-      ) : ""}
-      {
-        (isConfirmModalOpen) && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center"
-            tabIndex="-1"
-          >
-            <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
-              <div className="flex justify-between items-center w-full">
-                <h1 className="text-blue-600 text-xl font-bold">Suppression professeur</h1>
-                <img
-                  src="/Icons/annuler.png"
-                  alt="Quitter"
-                  className="w-6 h-6 cursor-pointer"
-                  onClick={() => {
-                    setIsConfirmModalOpen(false);
-                    setId('')
-                  }}
-                />
-              </div>
-              <div className="flex flex-row gap-2">
-                <img src="/Icons/attention.png" alt="Attention" />
-                <p>Etes vous sur de vouloir supprimer le(s) professeur(s) selectionée ?</p>
-              </div>
-              <input type="hidden" name="id" value={id} onChange={(e) => setId(e.target.value)} />
-              <div className="w-full flex justify-center">
-                <button
-                  className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
-                  onClick={() => {
-                    if (isDeleteByCheckBox) {
-                      if (checkedRows.length !== 0) {
-                        removeProfesseurByCkeckBox()
-                      }
-                    } else {
-                      if (id !== "") {
-                        removeProfesseur(id)
-                      }
-                    }
+      )}
 
-                    setIsConfirmModalOpen(false);
-                  }}
-                >
-                  VALIDER
-                </button>
-              </div>
+      {/* Modal confirmation suppression */}
+      {isConfirmModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-[52] flex justify-center items-center">
+          <div className="bg-white w-[90%] sm:w-[70%] md:w-[50%] lg:w-[30%] max-h-[90%] overflow-y-auto p-5 rounded-lg shadow-lg space-y-4">
+            <div className="flex justify-between items-center w-full">
+              <h1 className="text-blue-600 text-xl font-bold">
+                Suppression professeur
+              </h1>
+              <img
+                src="/Icons/annuler.png"
+                alt="Quitter"
+                className="w-6 h-6 cursor-pointer"
+                onClick={() => {
+                  setIsConfirmModalOpen(false);
+                  setId("");
+                }}
+              />
             </div>
-          </div >
-        )
-      }
-      {/*Search */}
-      <div className="absolute top-0 left-[25%]  w-[60%]  h-14 flex justify-center items-center z-[51]">
 
-        <input
-          type="text"
-          placeholder='Rechercher ici...'
-          value={search}
-          onChange={handleSearch}
-          className="border p-2 ps-12 relative rounded w-[50%]  focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-        />
-        <img src="/Icons/rechercher.png" alt="Search" className='w-6 absolute left-[26%]' />
-      </div>
+            <div className="flex flex-row gap-2">
+              <img src="/Icons/attention.png" alt="Attention" />
+              <p>
+                Êtes-vous sûr de vouloir supprimer le(s) professeur(s)
+                sélectionné(s) ?
+              </p>
+            </div>
 
-      {/*Listes*/}
+            <input
+              type="hidden"
+              name="id"
+              value={id || ""}
+              onChange={(e) => setId(e.target.value)}
+            />
 
-      <div className={`${isReduire ? "fixed h-screen right-0 top-14 left-20 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700" : "fixed h-screen right-0 top-14 left-56 p-5 z-40 flex flex-col gap-3 overflow-auto bg-white rounded  transition-all duration-700"}`}>
-        <div className="flex justify-between w-full">
-          <h1 className="font-bold">Liste des Professeurs enregistrées</h1>
-          <button className="button flex gap-3 hover:scale-105 transition duration-200" onClick={() => { setIsclicked(true); setisadd(true); }}>
-            <img src="/Icons/plus-claire.png" alt="Plus" className='w-6 h-6' /> Nouveau
-          </button>
+            <div className="w-full flex justify-center">
+              <button
+                className="bg-blue-600 text-white font-semibold px-6 py-2 rounded hover:bg-blue-700 transition duration-200"
+                onClick={() => {
+                  if (isDeleteByCheckBox) {
+                    if (checkedRows.length !== 0) removeProfesseurByCkeckBox();
+                  } else {
+                    if (id) removeProfesseur(id);
+                  }
+                  setIsConfirmModalOpen(false);
+                }}
+              >
+                VALIDER
+              </button>
+            </div>
+          </div>
         </div>
-        {
-          isLoading ? (
-            <div className="w-full h-40 flex flex-col items-center  justify-center mt-[10%]">
+      )}
+
+      {/* LISTE + FILTRE (centrés, responsives) */}
+      <div
+        className={`${
+          isReduire
+            ? "fixed h-screen right-0 top-14 left-20"
+            : "fixed h-screen right-0 top-14 left-56"
+        } p-5 z-40 overflow-auto bg-white transition-all duration-700`}
+      >
+        {/* Wrapper centré */}
+        <div className="max-w-7xl mx-auto w-full flex flex-col gap-3">
+          {/* Titre + FILTRE + Nouveau */}
+          <div className="w-full">
+            <h1 className="font-bold mb-3">
+              Liste des Professeurs enregistrées
+            </h1>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+              <input
+                type="text"
+                placeholder="Filtrer par nom, email, adresse..."
+                value={search}
+                onChange={handleSearch}
+                className="border p-2 rounded w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              />
+
+              <button
+                className="button flex gap-3 hover:scale-105 transition duration-200"
+                onClick={() => {
+                  setIsclicked(true);
+                  setisadd(true);
+                  setId(undefined);
+                  setPreview(null);
+                  setSelectedFile(null);
+                  setIsphotosDeleted(false);
+                  setFileName("Aucun fichier choisi");
+                  setdataProfesseur({
+                    nomProfesseur: "",
+                    prenomProfesseur: "",
+                    nomCourant: "",
+                    grade: "",
+                    sexe: "",
+                    photos: "",
+                    contact: "",
+                    adresse: "",
+                    email: "",
+                    numEtablissement: numEtablissement ?? null,
+                    matieres: [],
+                  });
+                }}
+              >
+                <img
+                  src="/Icons/plus-claire.png"
+                  alt="Plus"
+                  className="w-6 h-6"
+                />
+                Nouveau
+              </button>
+            </div>
+          </div>
+
+          {/* Liste */}
+          {isLoading ? (
+            <div className="w-full h-40 flex flex-col items-center justify-center mt-[5%]">
               <div className="w-10 h-10 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
               <p className="text-gray-400 mt-2">Chargement des données...</p>
             </div>
           ) : listeProfesseur.length === 0 ? (
-            <div className="w-full h-40 flex flex-col items-center justify-center mt-[10%]">
-              <img src="/Icons/vide.png" alt="Vide" className='w-14' />
-              <p className='text-gray-400'>Aucun données trouvé</p>
+            <div className="w-full h-40 flex flex-col items-center justify-center mt-[5%]">
+              <img src="/Icons/vide.png" alt="Vide" className="w-14" />
+              <p className="text-gray-400">Aucune donnée trouvée</p>
             </div>
-          ) : (<div>
-            <div className="w-full border rounded-t-lg overflow-x-auto">
-              <table className="table-auto overflow-y w-full border-collapse">
-                <thead>
-                  <tr className="bg-blue-500 text-white text-sm ">
-                    <th className="px-4 py-4 cursor-pointer relative">
-                      <input
-                        className='cursor-pointer'
-                        type="checkbox"
-                        checked={allChecked}
-                        onChange={handleCheckAll}
-                      />
-                      {
-                        checkedRows.length > 0 && <button className="absolute right-[-6px] rounded hover:bg-opacity-80" onClick={() => {
-                          confirmerSuppression(1)
-                          setDeleteByChekbox(true)
-                        }}>
-                          <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
-                        </button>
-                      }
-                    </th>
-                    <th className="px-4 py-4">#</th>
-                    {/* <th className="px-4 py-4">PDP</th> */}
-                    <th className="px-4 py-4">Nom</th>
-                    <th className="px-4 py-4">Prenom</th>
-                    {/* <th className="px-4 py-4">Nom Courant</th> */}
-                    <th className="px-4 py-4">Email</th>
-                    <th className="px-4 py-4">adresse</th>
-                    {/* <th className="px-4 py-4">Grade</th> */}
-                    {/* <th className="px-4 py-4">Sexe</th> */}
-                    <th className="px-4 py-4">Contact</th>
-                    <th className="px-4 py-4">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm">
-                  {currentData.map((Professeur, index) => (
-                    <tr key={index} className="border-b transition-all duration-300  hover:bg-gray-100">
-                      <td className="px-4 py-2 text-center cursor-pointer"> <input
-                        type="checkbox"
-                        className='cursor-pointer'
-                        checked={checkedRows.includes(Professeur.numProfesseur)}
-                        onChange={() => handleCheck(Professeur.numProfesseur)}
-                      /></td>
-                      <td className="px-4 py-2 text-center">{Professeur.numProfesseur}</td>
-                      {/* <td className="px-4 py-2 text-center">
-                        {Professeur.photos && Professeur.photos !== "" && (
-                          <img src={Professeur.photos} alt="Logo établissement" className="w-8 h-8 rounded-full object-cover" />
+          ) : (
+            <div>
+              <div className="w-full border rounded-t-lg overflow-x-auto">
+                <table className="table-auto w-full border-collapse">
+                  <thead>
+                    <tr className="bg-blue-500 text-white text-sm">
+                      <th className="px-4 py-4 cursor-pointer relative">
+                        <input
+                          className="cursor-pointer"
+                          type="checkbox"
+                          checked={allChecked}
+                          onChange={handleCheckAll}
+                        />
+                        {checkedRows.length > 0 && (
+                          <button
+                            className="absolute right-[-6px] rounded hover:bg-opacity-80"
+                            onClick={() => {
+                              confirmerSuppression(1);
+                              setDeleteByChekbox(true);
+                            }}
+                            title="Supprimer la sélection"
+                          >
+                            <img
+                              src="/Icons/supprimer.png"
+                              alt="Supprimer"
+                              className="w-5"
+                            />
+                          </button>
                         )}
-                      </td> */}
-                      <td className="px-4 py-2 text-center">{Professeur.nomProfesseur}</td>
-                      <td className="px-4 py-2 text-center">{Professeur.prenomProfesseur}</td>
-                      {/* <td className="px-4 py-2 text-center">{Professeur.nomCourant}</td> */}
-                      <td className="px-4 py-2 text-center">{Professeur.email}</td>
-                      <td className="px-4 py-2 text-center">{Professeur.adresse}</td>
-                      {/* <td className="px-4 py-2 text-center">{Professeur.grade}</td> */}
-                      {/* <td className="px-4 py-2 text-center">{Professeur.sexe}</td> */}
-                      <td className="px-4 py-2 text-center">{Professeur.contact}</td>
-                      <td className="px-4 py-2 flex justify-center items-center gap-2">
-                        <button className="p-1 rounded hover:bg-gray-200">
-                          <img src="/Icons/modifier.png" alt="Modifier" className="w-5" onClick={async () => { setIsclicked(true); setisadd(false); await editProfesseur(Professeur.numProfesseur) }} />
-                        </button>
-                        <button className="p-1 rounded hover:bg-gray-200" onClick={() => confirmerSuppression(Professeur.numProfesseur)}>
-                          <img src="/Icons/supprimer.png" alt="Supprimer" className="w-5" />
-                        </button>
-                        <button className="p-1 rounded hover:bg-gray-200">
-                          <img src="/Icons/afficher.png" alt="Supprimer" className="w-5" onClick={() => versDetails(Professeur.numProfesseur)} />
-                        </button>
-                      </td>
+                      </th>
+                      <th className="px-4 py-4">#</th>
+                      <th className="px-4 py-4">Nom</th>
+                      <th className="px-4 py-4">Prénom</th>
+                      <th className="px-4 py-4">Email</th>
+                      <th className="px-4 py-4">Adresse</th>
+                      <th className="px-4 py-4">Contact</th>
+                      <th className="px-4 py-4">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="text-sm">
+                    {currentData.map((p, index) => (
+                      <tr
+                        key={p.numProfesseur ?? index}
+                        className="border-b transition-all duration-300 hover:bg-gray-100"
+                      >
+                        <td className="px-4 py-2 text-center">
+                          <input
+                            type="checkbox"
+                            className="cursor-pointer"
+                            checked={checkedRows.includes(p.numProfesseur)}
+                            onChange={() => handleCheck(p.numProfesseur)}
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {p.numProfesseur}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {p.nomProfesseur}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {p.prenomProfesseur}
+                        </td>
+                        <td className="px-4 py-2 text-center">{p.email}</td>
+                        <td className="px-4 py-2 text-center">{p.adresse}</td>
+                        <td className="px-4 py-2 text-center">{p.contact}</td>
+                        <td className="px-4 py-2 flex justify-center items-center gap-2">
+                          <button
+                            className="w-10 h-10 flex items-center justify-center rounded hover:bg-gray-200"
+                            title="Modifier"
+                            onClick={async () => {
+                              await editProfesseur(p.numProfesseur);
+                            }}
+                          >
+                            <img
+                              src="/Icons/modifier.png"
+                              alt="Modifier"
+                              className="w-5 h-5"
+                            />
+                          </button>
 
-            <footer className="w-full flex justify-center gap-2 p-4">
-              {/* Flèche précédente */}
-              <button
-                onClick={() => setPageActuel((prev) => Math.max(prev - 1, 1))}
-                disabled={pageActuel === 1}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 hover:scale-105 transition duration-200 disabled:opacity-50"
-              >
-                <img src="/Icons/vers-le-bas.png" alt="Précédent" className="w-5 rotate-90" />
-              </button>
+                          <button
+                            className="w-10 h-10 flex items-center justify-center rounded hover:bg-gray-200"
+                            title="Supprimer"
+                            onClick={() => {
+                              setDeleteByChekbox(false);
+                              confirmerSuppression(p.numProfesseur);
+                            }}
+                          >
+                            <img
+                              src="/Icons/supprimer.png"
+                              alt="Supprimer"
+                              className="w-5 h-5"
+                            />
+                          </button>
 
-              {/* Numéros de page */}
-              {getPageNumbers().map((page, idx) => (
+                          <button
+                            className="w-10 h-10 flex items-center justify-center rounded hover:bg-gray-200"
+                            title="Afficher"
+                            onClick={() => versDetails(p.numProfesseur)}
+                          >
+                            <img
+                              src="/Icons/afficher.png"
+                              alt="Afficher"
+                              className="w-5 h-5"
+                            />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <footer className="w-full flex justify-center gap-2 p-4">
                 <button
-                  key={idx}
-                  onClick={() => typeof page === 'number' && setPageActuel(page)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition duration-200 ${page === pageActuel ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:scale-105'
-                    }`}
+                  onClick={() => setPageActuel((prev) => Math.max(prev - 1, 1))}
+                  disabled={pageActuel === 1}
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 hover:scale-105 transition duration-200 disabled:opacity-50"
+                  title="Page précédente"
                 >
-                  {page}
+                  <img
+                    src="/Icons/vers-le-bas.png"
+                    alt="Précédent"
+                    className="w-5 rotate-90"
+                  />
                 </button>
-              ))}
 
-              {/* Flèche suivante */}
-              <button
-                onClick={() => setPageActuel((prev) => Math.min(prev + 1, totalPages))}
-                disabled={pageActuel === totalPages}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 hover:scale-105 transition duration-200 disabled:opacity-50"
-              >
-                <img src="/Icons/vers-le-bas.png" alt="Suivant" className="w-5 rotate-[270deg]" />
-              </button>
-            </footer>
-          </div>)
-        }
+                {getPageNumbers().map((page, idx) => (
+                  <button
+                    key={`${page}-${idx}`}
+                    onClick={() =>
+                      typeof page === "number" && setPageActuel(page)
+                    }
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition duration-200 ${
+                      page === pageActuel
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 hover:scale-105"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
 
+                <button
+                  onClick={() =>
+                    setPageActuel((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={pageActuel === totalPages}
+                  className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 hover:scale-105 transition duration-200 disabled:opacity-50"
+                  title="Page suivante"
+                >
+                  <img
+                    src="/Icons/vers-le-bas.png"
+                    alt="Suivant"
+                    className="w-5 rotate-[270deg]"
+                  />
+                </button>
+              </footer>
+            </div>
+          )}
+        </div>
       </div>
     </>
-  )
+  );
 }
 
-export default Professeur
+export default Professeur;

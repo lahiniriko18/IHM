@@ -56,10 +56,13 @@ eslint@^9.21.0 ^
 eslint-plugin-react-hooks@^5.1.0 ^
 eslint-plugin-react-refresh@^0.4.19 ^
 globals@^15.15.0 ^
+react-toastify ^
 postcss@^8.5.3 ^
 sass-embedded@^1.87.0 ^
 tailwindcss@^3.4.17 ^
-vite@^6.3.3
+vite@^6.3.3 ^
+--save react-toastify@^9.1.2 ^
+--save-dev @types/react-toastify@^9.1.2 ^
 
 echo ✅ Installation terminée !
 pause

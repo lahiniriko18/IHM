@@ -26,7 +26,6 @@ import RapportsFiltres from "./Components/ChildComponents/RapportsFiltres";
 import Salle from "./Components/ChildComponents/Salle";
 import Utilisateur from "./Components/ChildComponents/Utilisateur";
 import Applayout from "./Components/Layout/Applayout";
-
 function App() {
   const router = createBrowserRouter([
     {
